@@ -422,17 +422,14 @@ async function init() {
     if (snap.exists()) {
       names = snap.data();
       updateNames();
-      document.getElementById('loading').style.display = 'none';
     } else {
-      document.getElementById('loading').style.display = 'none';
       document.getElementById('nameSetup').style.display = 'flex';
     }
-    syncStatus('ok');
   } catch(e) {
-    document.getElementById('loading').style.display = 'none';
-    syncStatus('');
-    toast('연결 실패. 인터넷을 확인해주세요.');
+    console.error('settings load error:', e);
+    // 설정 로드 실패해도 계속 진행
   }
+  document.getElementById('loading').style.display = 'none';
   renderPeriod();
   subscribe();
   bindKeys();
@@ -460,8 +457,8 @@ function subscribe() {
     renderAll();
   }, function(err) {
     syncStatus('');
-    toast('데이터 로드 실패');
-    console.error(err);
+    console.error('Firestore error:', err.code, err.message);
+    toast('오류: ' + (err.code || err.message));
   });
 }
 
