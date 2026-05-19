@@ -639,9 +639,23 @@
           <option value="여행">✈ 여행</option>
           <option value="통신">📱 통신</option>
           <option value="주거">🏠 주거</option>
+          <option value="대출">🏦 대출</option>
+          <option value="애견용품">🐾 애견용품</option>
           <option value="기타">📦 기타</option>
         </select>
       </div>
+    </div>
+    <div class="form-group" style="margin-bottom:8px;">
+      <label class="form-label">지출처</label>
+      <select class="form-input" id="expensePayment">
+        <option value="신한 신용카드(오소리)">💳 신한 신용카드(오소리)</option>
+        <option value="국민 신용카드(오소리)">💳 국민 신용카드(오소리)</option>
+        <option value="삼성 신용카드(오소리)">💳 삼성 신용카드(오소리)</option>
+        <option value="현금(오소리)">💵 현금(오소리)</option>
+        <option value="현금(우리통장)">💵 현금(우리통장)</option>
+        <option value="현금(부엉이)">💵 현금(부엉이)</option>
+        <option value="휴대폰결제(부엉이)">📱 휴대폰결제(부엉이)</option>
+      </select>
     </div>
     <div class="form-group" style="margin-bottom:8px;">
       <label class="form-label">메모 (선택)</label>
@@ -931,6 +945,7 @@ function renderRecords() {
         '<div class="record-meta">' +
           '<span class="record-person-badge ' + pClass + '">' + esc(pName) + '</span>' +
           '<span class="category-tag">' + esc(r.category) + '</span>' +
+          (r.payment ? '<span class="category-tag">' + esc(r.payment) + '</span>' : '') +
           (date ? '<span>' + date + '</span>' : '') +
         '</div>' +
       '</div>' +
@@ -1051,6 +1066,7 @@ window.selectPerson = function(type, num) {
 window.addExpense = async function() {
   var amt = parseNum(document.getElementById('expenseAmount').value);
   var cat = document.getElementById('expenseCategory').value;
+  var payment = document.getElementById('expensePayment').value;
   var memo = document.getElementById('expensePlace').value.trim();
   if (!amt) { showToast('금액을 입력해주세요'); return; }
 
@@ -1061,7 +1077,7 @@ window.addExpense = async function() {
   try {
     var now = new Date();
     await addDoc(collection(db, 'records'), {
-      type: 'expense', amount: amt, category: cat, memo: memo,
+      type: 'expense', amount: amt, category: cat, payment: payment, memo: memo,
       person: expensePerson, month: currentMonth,
       date: now.toISOString().slice(0,10),
       createdAt: now.getTime()
