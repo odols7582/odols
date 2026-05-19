@@ -191,6 +191,16 @@
         <div class="sum-val exp" id="totalExpense">0 원</div>
       </div>
     </div>
+    <div class="sum-row" style="margin-top:10px;">
+      <div class="sum-item">
+        <div class="sum-label">💰 투자 납입</div>
+        <div class="sum-val exp" id="totalInvest">0 원</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-label">📈 투자 회수</div>
+        <div class="sum-val inc" id="totalReturn">0 원</div>
+      </div>
+    </div>
   </div>
 
   <div class="person-row">
@@ -238,6 +248,9 @@
           <option value="주거">🏠 주거</option>
           <option value="대출">🏦 대출</option>
           <option value="애견용품">🐾 애견용품</option>
+          <option value="주식 매수">📈 주식 매수</option>
+          <option value="코인 매수">🪙 코인 매수</option>
+          <option value="적금/예금">💰 적금/예금</option>
           <option value="기타">📦 기타</option>
         </select>
       </div>
@@ -279,6 +292,9 @@
           <option value="부업">💡 부업</option>
           <option value="용돈">💝 용돈</option>
           <option value="환급">💰 환급</option>
+          <option value="주식 매도">📈 주식 매도</option>
+          <option value="코인 매도">🪙 코인 매도</option>
+          <option value="배당/이자">💵 배당/이자</option>
           <option value="기타">📦 기타</option>
         </select>
       </div>
@@ -296,6 +312,11 @@
       <div class="chart-title">카테고리별 지출</div>
       <div class="chart-wrap" style="height:220px;"><canvas id="catChart" role="img" aria-label="카테고리별 지출 차트"></canvas></div>
       <div class="legend" id="catLegend"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">지출처별 지출</div>
+      <div class="chart-wrap" style="height:220px;"><canvas id="paymentChart" role="img" aria-label="지출처별 지출 차트"></canvas></div>
+      <div class="legend" id="paymentLegend"></div>
     </div>
     <div class="chart-box">
       <div class="chart-title">인물별 지출</div>
@@ -382,7 +403,7 @@ var names = { p1:'사람1', p2:'사람2' };
 var currentKey = getPeriodKey(new Date());
 var currentFilter = 'all';
 var ePerson = 1, iPerson = 1;
-var catChart = null, personChart = null, sumChart = null;
+var catChart = null, paymentChart = null, personChart = null, sumChart = null;
 var unsub = null;
 var COLORS = ['#534AB7','#D85A30','#1D9E75','#BA7517','#185FA5','#A32D2D','#3B6D11','#993556','#0F6E56','#E24B4A'];
 
@@ -501,16 +522,30 @@ function renderAll() {
 
 function renderSummary() {
   var inc=0, exp=0, p1i=0, p1e=0, p2i=0, p2e=0;
+  var investCats = ['주식 매수','코인 매수','적금/예금'];
+  var returnCats = ['주식 매도','코인 매도','배당/이자'];
+  var invest=0, ret=0;
+
   records.forEach(function(r) {
-    if (r.type==='income') { inc+=r.amount; if(r.person===1) p1i+=r.amount; else p2i+=r.amount; }
-    else { exp+=r.amount; if(r.person===1) p1e+=r.amount; else p2e+=r.amount; }
+    if (r.type==='income') {
+      inc+=r.amount;
+      if(r.person===1) p1i+=r.amount; else p2i+=r.amount;
+      if(returnCats.indexOf(r.category)>=0) ret+=r.amount;
+    } else {
+      exp+=r.amount;
+      if(r.person===1) p1e+=r.amount; else p2e+=r.amount;
+      if(investCats.indexOf(r.category)>=0) invest+=r.amount;
+    }
   });
+
   var bal = inc - exp;
   var el = document.getElementById('totalBalance');
   el.textContent = fmt(bal) + ' 원';
   el.className = 'sum-balance ' + (bal>=0?'pos':'neg');
   document.getElementById('totalIncome').textContent = fmt(inc) + ' 원';
   document.getElementById('totalExpense').textContent = fmt(exp) + ' 원';
+  document.getElementById('totalInvest').textContent = fmt(invest) + ' 원';
+  document.getElementById('totalReturn').textContent = fmt(ret) + ' 원';
   document.getElementById('p1income').textContent = fmt(p1i) + ' 원';
   document.getElementById('p1expense').textContent = fmt(p1e) + ' 원';
   document.getElementById('p2income').textContent = fmt(p2i) + ' 원';
@@ -572,6 +607,28 @@ function renderCharts() {
     }).join('');
   } else {
     document.getElementById('catLegend').innerHTML = '';
+  }
+
+  // 지출처별 차트
+  var payMap = {};
+  expenses.forEach(function(r){ var k=r.payment||'미분류'; payMap[k]=(payMap[k]||0)+r.amount; });
+  var payLabels = Object.keys(payMap);
+  var payData = payLabels.map(function(k){return payMap[k];});
+  var COLORS2 = ['#185FA5','#534AB7','#3B6D11','#993556','#BA7517','#0F6E56','#A32D2D','#888780'];
+
+  if (paymentChart) paymentChart.destroy();
+  if (payLabels.length) {
+    paymentChart = new Chart(document.getElementById('paymentChart').getContext('2d'), {
+      type:'doughnut',
+      data:{ labels:payLabels, datasets:[{ data:payData, backgroundColor:COLORS2.slice(0,payLabels.length), borderWidth:2, borderColor:'#fff' }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}} } }
+    });
+    document.getElementById('paymentLegend').innerHTML = payLabels.map(function(l,i){
+      var pct = Math.round(payData[i]/payData.reduce(function(a,b){return a+b;},0)*100);
+      return '<div class="leg-item"><div class="leg-dot" style="background:'+COLORS2[i]+'"></div>'+esc(l)+' '+pct+'%</div>';
+    }).join('');
+  } else {
+    document.getElementById('paymentLegend').innerHTML = '';
   }
 
   var p1e=0, p2e=0;
