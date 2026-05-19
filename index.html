@@ -449,21 +449,19 @@ function bindKeys() {
 function subscribe() {
   if (unsub) unsub();
   syncStatus('ing');
-  var r = getPeriodRange(currentKey);
   var q = query(
     collection(db,'records'),
-    where('date','>=',r.start),
-    where('date','<=',r.end),
-    orderBy('date','desc'),
+    where('period','==',currentKey),
     orderBy('createdAt','desc')
   );
   unsub = onSnapshot(q, function(snap) {
     records = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
     syncStatus('ok');
     renderAll();
-  }, function() {
+  }, function(err) {
     syncStatus('');
     toast('데이터 로드 실패');
+    console.error(err);
   });
 }
 
@@ -692,10 +690,9 @@ window.addExpense = async function() {
   try {
     var now = new Date();
     var dateStr = now.toISOString().slice(0,10);
-    // 날짜가 현재 기간에 속하는지 확인 후 저장
     await addDoc(collection(db,'records'), {
       type:'expense', amount:amt, category:cat, payment:payment, memo:memo,
-      person:ePerson, date:dateStr, createdAt:now.getTime()
+      person:ePerson, date:dateStr, period:currentKey, createdAt:now.getTime()
     });
     document.getElementById('expenseAmount').value = '';
     document.getElementById('expenseMemo').value = '';
@@ -715,7 +712,7 @@ window.addIncome = async function() {
     var now = new Date();
     await addDoc(collection(db,'records'), {
       type:'income', amount:amt, category:cat, memo:memo,
-      person:iPerson, date:now.toISOString().slice(0,10), createdAt:now.getTime()
+      person:iPerson, date:now.toISOString().slice(0,10), period:currentKey, createdAt:now.getTime()
     });
     document.getElementById('incomeAmount').value = '';
     document.getElementById('incomeMemo').value = '';
