@@ -18,12 +18,10 @@
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
-  /* 로딩 */
   .loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:600;}
   .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--p1);border-radius:50%;animation:spin .8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg)}}
 
-  /* 로그인 */
   .login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px;}
   .login-box{background:var(--surface);border-radius:24px;padding:32px 24px;width:100%;max-width:360px;text-align:center;border:1px solid var(--border);}
   .login-logo{font-size:48px;margin-bottom:12px;}
@@ -52,12 +50,11 @@
   .pin-key.del{font-size:14px;color:var(--muted);}
   .login-error{font-size:12px;color:var(--expense);margin-top:12px;min-height:18px;}
 
-  /* 헤더 */
   .header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
   .header-left{display:flex;align-items:center;gap:10px;}
-  .header-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;}
-  .header-avatar.p1{background:var(--p1-bg);color:var(--p1);}
-  .header-avatar.p2{background:var(--p2-bg);color:var(--p2);}
+  .header-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;}
+  .header-avatar.p1{background:var(--p1-bg);}
+  .header-avatar.p2{background:var(--p2-bg);}
   .header-name{font-size:15px;font-weight:700;}
   .header-right{display:flex;gap:8px;align-items:center;}
   .sync-wrap{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);}
@@ -67,9 +64,8 @@
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
   .btn-sm{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-family:inherit;color:var(--muted);cursor:pointer;}
   .btn-sm:hover{background:var(--border);}
-  .btn-notif{background:none;border:none;font-size:20px;cursor:pointer;padding:4px;}
+  .btn-notif{background:none;border:none;font-size:20px;cursor:pointer;padding:4px;line-height:1;}
 
-  /* 기간 네비 */
   .period-nav{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 16px 6px;}
   .period-nav button{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
   .period-nav button:hover{background:var(--border);}
@@ -79,7 +75,11 @@
 
   .container{max-width:480px;margin:0 auto;padding:12px 16px 100px;}
 
-  /* 요약 */
+  .notif-banner{background:var(--p1-bg);border:1px solid var(--p1);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:none;align-items:center;gap:10px;}
+  .notif-banner.show{display:flex;}
+  .notif-banner-text{flex:1;font-size:12px;font-weight:500;color:var(--p1);}
+  .notif-banner-btn{background:var(--p1);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+
   .summary-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:18px;margin-bottom:10px;}
   .sum-label{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:4px;}
   .sum-balance{font-size:28px;font-weight:700;letter-spacing:-.5px;margin-bottom:14px;}
@@ -91,7 +91,6 @@
   .sum-val.inc{color:var(--income);}
   .sum-val.exp{color:var(--expense);}
 
-  /* 인물별 */
   .person-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
   .pcard{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:14px;}
   .pcard.p1{border-top:3px solid var(--p1);}
@@ -103,12 +102,10 @@
   .pstat-l{color:var(--muted);}
   .pstat-v{font-weight:600;}
 
-  /* 탭 */
   .tabs{display:flex;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:4px;margin-bottom:10px;gap:4px;}
   .tab{flex:1;padding:9px;text-align:center;font-size:12px;font-weight:600;border-radius:10px;cursor:pointer;border:none;background:none;font-family:inherit;color:var(--muted);transition:all .15s;}
   .tab.active{background:var(--text);color:#fff;}
 
-  /* 폼 */
   .form-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:14px;margin-bottom:10px;display:none;}
   .form-card.show{display:block;}
   .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
@@ -124,7 +121,6 @@
   .submit-btn:hover{opacity:.85;}
   .submit-btn:disabled{opacity:.5;cursor:not-allowed;}
 
-  /* 차트 */
   .chart-box{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:14px;margin-bottom:10px;}
   .chart-title{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;}
   .chart-wrap{position:relative;width:100%;}
@@ -132,7 +128,6 @@
   .leg-item{display:flex;align-items:center;gap:4px;}
   .leg-dot{width:9px;height:9px;border-radius:2px;}
 
-  /* 내역 */
   .sec-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
   .filter-row{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;}
   .fbtn{padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:none;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--muted);}
@@ -156,13 +151,12 @@
   .rec-del:hover{color:var(--expense);}
   .empty{text-align:center;padding:36px 20px;color:var(--muted);font-size:13px;}
 
-  /* 푸시 배너 */
-  .notif-banner{background:var(--p1-bg);border:1px solid var(--p1);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;display:none;}
-  .notif-banner.show{display:flex;}
-  .notif-banner-text{flex:1;font-size:12px;font-weight:500;color:var(--p1);}
-  .notif-banner-btn{background:var(--p1);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .manual-notif-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+  .manual-notif-title{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;}
+  .manual-notif-row{display:flex;gap:8px;}
+  .manual-notif-btn{background:var(--p1);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;}
+  .manual-notif-btn:hover{opacity:.85;}
 
-  /* 토스트 */
   .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:9px 18px;border-radius:50px;font-size:12px;font-weight:500;opacity:0;transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap;}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
@@ -174,7 +168,6 @@
   <div style="font-size:13px;color:var(--muted);font-weight:500;">연결 중...</div>
 </div>
 
-<!-- 로그인 -->
 <div class="login-screen" id="loginScreen" style="display:none;">
   <div class="login-box">
     <div class="login-logo">🏠</div>
@@ -207,7 +200,7 @@
       <button class="pin-key" onclick="pinInput('7')">7</button>
       <button class="pin-key" onclick="pinInput('8')">8</button>
       <button class="pin-key" onclick="pinInput('9')">9</button>
-      <button class="pin-key" onclick="pinInput('0')" style="grid-column:2;">0</button>
+      <button class="pin-key" style="grid-column:2;" onclick="pinInput('0')">0</button>
       <button class="pin-key del" onclick="pinDelete()">⌫</button>
     </div>
     <div class="login-error" id="loginError"></div>
@@ -215,10 +208,9 @@
 </div>
 
 <div id="mainApp" style="display:none;">
-
 <div class="header">
   <div class="header-left">
-    <div class="header-avatar" id="headerAvatar">?</div>
+    <div class="header-avatar" id="headerAvatar"></div>
     <div class="header-name" id="headerName">가계부</div>
   </div>
   <div class="header-right">
@@ -226,7 +218,7 @@
       <div class="sync-dot" id="syncDot"></div>
       <span id="syncText">연결 중</span>
     </div>
-    <button class="btn-notif" id="notifBtn" onclick="requestNotif()" title="알림 설정">🔔</button>
+    <button class="btn-notif" id="notifBtn" onclick="setupNotification()" title="알림 설정">🔔</button>
     <button class="btn-sm" onclick="logout()">로그아웃</button>
   </div>
 </div>
@@ -241,34 +233,30 @@
 </div>
 
 <div class="container">
-
   <div class="notif-banner" id="notifBanner">
-    <span class="notif-banner-text">📱 알림을 허용하면 상대방 입력시 알려드려요!</span>
-    <button class="notif-banner-btn" onclick="requestNotif()">허용하기</button>
+    <span class="notif-banner-text">🔔 알림 허용하면 상대방 입력시 바로 알려드려요!</span>
+    <button class="notif-banner-btn" onclick="setupNotification()">허용하기</button>
+  </div>
+
+  <!-- 수동 알림 전송 버튼 -->
+  <div class="manual-notif-card" id="manualNotifCard" style="display:none;">
+    <div class="manual-notif-title">📣 상대방에게 알림 보내기</div>
+    <div class="manual-notif-row">
+      <input class="finput" id="manualNotifMsg" type="text" placeholder="메시지 입력 (예: 밥값 입력했어!)" maxlength="50">
+      <button class="manual-notif-btn" onclick="sendManualNotif()">전송</button>
+    </div>
   </div>
 
   <div class="summary-card">
     <div class="sum-label" id="sumLabel">이번 달 잔액</div>
-    <div class="sum-balance" id="totalBalance">0 원</div>
+    <div class="sum-balance pos" id="totalBalance">0 원</div>
     <div class="sum-row">
-      <div class="sum-item">
-        <div class="sum-label">총 수입</div>
-        <div class="sum-val inc" id="totalIncome">0 원</div>
-      </div>
-      <div class="sum-item">
-        <div class="sum-label">총 지출</div>
-        <div class="sum-val exp" id="totalExpense">0 원</div>
-      </div>
+      <div class="sum-item"><div class="sum-label">총 수입</div><div class="sum-val inc" id="totalIncome">0 원</div></div>
+      <div class="sum-item"><div class="sum-label">총 지출</div><div class="sum-val exp" id="totalExpense">0 원</div></div>
     </div>
     <div class="sum-row" style="margin-top:10px;">
-      <div class="sum-item">
-        <div class="sum-label">💰 투자 납입</div>
-        <div class="sum-val exp" id="totalInvest">0 원</div>
-      </div>
-      <div class="sum-item">
-        <div class="sum-label">📈 투자 회수</div>
-        <div class="sum-val inc" id="totalReturn">0 원</div>
-      </div>
+      <div class="sum-item"><div class="sum-label">💰 투자 납입</div><div class="sum-val exp" id="totalInvest">0 원</div></div>
+      <div class="sum-item"><div class="sum-label">📈 투자 회수</div><div class="sum-val inc" id="totalReturn">0 원</div></div>
     </div>
   </div>
 
@@ -291,7 +279,6 @@
     <button class="tab" id="tabChart" onclick="switchTab('chart')">차트</button>
   </div>
 
-  <!-- 지출 폼 -->
   <div class="form-card show" id="expenseForm">
     <div class="who-label">입력자: <span class="who-badge" id="expenseWho"></span></div>
     <div class="form-row">
@@ -340,7 +327,6 @@
     <button class="submit-btn" id="expenseSubmitBtn" onclick="addExpense()">지출 추가</button>
   </div>
 
-  <!-- 수입 폼 -->
   <div class="form-card" id="incomeForm">
     <div class="who-label">입력자: <span class="who-badge" id="incomeWho"></span></div>
     <div class="form-row">
@@ -369,29 +355,27 @@
     <button class="submit-btn" id="incomeSubmitBtn" style="background:var(--income);" onclick="addIncome()">수입 추가</button>
   </div>
 
-  <!-- 차트 -->
   <div id="chartSection" style="display:none;">
     <div class="chart-box">
       <div class="chart-title">카테고리별 지출</div>
-      <div class="chart-wrap" style="height:220px;"><canvas id="catChart" role="img" aria-label="카테고리별 지출"></canvas></div>
+      <div class="chart-wrap" style="height:220px;"><canvas id="catChart"></canvas></div>
       <div class="legend" id="catLegend"></div>
     </div>
     <div class="chart-box">
       <div class="chart-title">지출처별 지출</div>
-      <div class="chart-wrap" style="height:220px;"><canvas id="paymentChart" role="img" aria-label="지출처별 지출"></canvas></div>
+      <div class="chart-wrap" style="height:220px;"><canvas id="paymentChart"></canvas></div>
       <div class="legend" id="paymentLegend"></div>
     </div>
     <div class="chart-box">
       <div class="chart-title">인물별 지출</div>
-      <div class="chart-wrap" style="height:160px;"><canvas id="personChart" role="img" aria-label="인물별 지출"></canvas></div>
+      <div class="chart-wrap" style="height:160px;"><canvas id="personChart"></canvas></div>
     </div>
     <div class="chart-box">
       <div class="chart-title">수입 vs 지출</div>
-      <div class="chart-wrap" style="height:160px;"><canvas id="summaryChart" role="img" aria-label="수입지출 비교"></canvas></div>
+      <div class="chart-wrap" style="height:160px;"><canvas id="summaryChart"></canvas></div>
     </div>
   </div>
 
-  <!-- 내역 -->
   <div id="recordsSection">
     <div class="sec-title">내역</div>
     <div class="filter-row">
@@ -403,7 +387,6 @@
     </div>
     <div id="recordList"></div>
   </div>
-
 </div>
 </div>
 
@@ -412,6 +395,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, where, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA8CXDhPXN-v5dXS0QP3UY-xpcrhQURyMw",
@@ -422,16 +406,27 @@ const firebaseConfig = {
   appId: "1:501824901436:web:dd220698a0e2339ec20e39"
 };
 
+const VAPID_KEY = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+let messaging = null;
 
-// ── PIN 설정 (Firebase에서 관리) ──────────────────
+// Service Worker 등록
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/odols/sw.js')
+    .then(function(reg) {
+      console.log('SW 등록 완료:', reg.scope);
+      try { messaging = getMessaging(app); setupForegroundMessage(); } catch(e) {}
+    })
+    .catch(function(err) { console.log('SW 등록 실패:', err); });
+}
+
 const USERS = {
   osori: { name:'오소리', emoji:'🦡', class:'p1', person:1 },
   buengi: { name:'부엉이', emoji:'🦉', class:'p2', person:2 }
 };
 
-// ── 상태 ──────────────────────────────────────────
 var records = [];
 var currentKey = getPeriodKey(new Date());
 var currentFilter = 'all';
@@ -445,31 +440,19 @@ var COLORS2 = ['#185FA5','#534AB7','#3B6D11','#993556','#BA7517','#0F6E56','#A32
 
 // ── 기간 계산 ─────────────────────────────────────
 function getPeriodKey(date) {
-  var d = date||new Date(), y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
-  if (day<20){ m-=1; if(m<1){m=12;y-=1;} }
+  var d=date||new Date(), y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
+  if(day<20){m-=1; if(m<1){m=12;y-=1;}}
   return y+'-'+String(m).padStart(2,'0');
 }
-
 function getPeriodRange(key) {
   var parts=key.split('-'), y=parseInt(parts[0]), m=parseInt(parts[1]);
-  var endM=m+1, endY=y;
-  if(endM>12){endM=1;endY+=1;}
-  return {
-    start: y+'-'+String(m).padStart(2,'0')+'-20',
-    end: endY+'-'+String(endM).padStart(2,'0')+'-19'
-  };
+  var em=m+1, ey=y; if(em>12){em=1;ey+=1;}
+  return { start:y+'-'+String(m).padStart(2,'0')+'-20', end:ey+'-'+String(em).padStart(2,'0')+'-19' };
 }
+function periodLabel(key) { var p=key.split('-'); return parseInt(p[0])+'년 '+parseInt(p[1])+'월분'; }
+function periodRangeLabel(key) { var r=getPeriodRange(key); return r.start.slice(5).replace('-','/')+' ~ '+r.end.slice(5).replace('-','/'); }
 
-function periodLabel(key) {
-  var p=key.split('-'); return parseInt(p[0])+'년 '+parseInt(p[1])+'월분';
-}
-
-function periodRangeLabel(key) {
-  var r=getPeriodRange(key);
-  return r.start.slice(5).replace('-','/')+' ~ '+r.end.slice(5).replace('-','/');
-}
-
-// ── 싱크 상태 ─────────────────────────────────────
+// ── 싱크 ──────────────────────────────────────────
 function syncStatus(s) {
   var dot=document.getElementById('syncDot'), txt=document.getElementById('syncText');
   dot.className='sync-dot '+(s==='ok'?'ok':s==='ing'?'ing':'');
@@ -479,89 +462,53 @@ function syncStatus(s) {
 // ── 초기화 ────────────────────────────────────────
 async function init() {
   var saved = localStorage.getItem('currentUser');
-  if (saved) {
-    currentUser = JSON.parse(saved);
-    showMain();
-  } else {
-    document.getElementById('loading').style.display='none';
-    document.getElementById('loginScreen').style.display='flex';
-  }
+  if (saved) { currentUser=JSON.parse(saved); showMain(); }
+  else { document.getElementById('loading').style.display='none'; document.getElementById('loginScreen').style.display='flex'; }
 }
 
 // ── 로그인 ────────────────────────────────────────
 window.selectUser = function(userId) {
-  selectedUserId = userId;
-  pinBuffer = '';
-  updatePinDots();
+  selectedUserId=userId; pinBuffer=''; updatePinDots();
   document.getElementById('selectOsori').classList.toggle('selected', userId==='osori');
   document.getElementById('selectBuengi').classList.toggle('selected', userId==='buengi');
-  document.getElementById('pinLabel').textContent = USERS[userId].emoji + ' ' + USERS[userId].name + ' PIN 입력';
-  document.getElementById('loginError').textContent = '';
+  document.getElementById('pinLabel').textContent=USERS[userId].emoji+' '+USERS[userId].name+' PIN 입력';
+  document.getElementById('loginError').textContent='';
 };
-
 window.pinInput = async function(num) {
-  if (!selectedUserId) { document.getElementById('loginError').textContent = '먼저 사용자를 선택해주세요'; return; }
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += num;
-  updatePinDots();
-  if (pinBuffer.length === 4) {
-    await checkPin();
-  }
+  if(!selectedUserId){document.getElementById('loginError').textContent='먼저 사용자를 선택해주세요';return;}
+  if(pinBuffer.length>=4) return;
+  pinBuffer+=num; updatePinDots();
+  if(pinBuffer.length===4) await checkPin();
 };
-
-window.pinDelete = function() {
-  if (pinBuffer.length > 0) {
-    pinBuffer = pinBuffer.slice(0,-1);
-    updatePinDots();
-  }
-};
-
+window.pinDelete = function() { if(pinBuffer.length>0){pinBuffer=pinBuffer.slice(0,-1);updatePinDots();} };
 function updatePinDots() {
-  for (var i=0;i<4;i++) {
-    var dot = document.getElementById('dot'+i);
-    dot.className = 'pin-dot ' + (selectedUserId ? USERS[selectedUserId].class : '');
-    if (i < pinBuffer.length) dot.classList.add('filled');
+  for(var i=0;i<4;i++){
+    var dot=document.getElementById('dot'+i);
+    dot.className='pin-dot '+(selectedUserId?USERS[selectedUserId].class:'');
+    if(i<pinBuffer.length) dot.classList.add('filled');
   }
 }
-
 async function checkPin() {
   try {
-    var snap = await getDoc(doc(db,'settings','pins'));
-    var pins = snap.exists() ? snap.data() : {};
-
-    // 처음 설정이면 PIN 저장
-    if (!pins[selectedUserId]) {
-      await setDoc(doc(db,'settings','pins'), Object.assign(pins, {[selectedUserId]: pinBuffer}), {merge:true});
-      loginSuccess();
-      return;
+    var snap=await getDoc(doc(db,'settings','pins'));
+    var pins=snap.exists()?snap.data():{};
+    if(!pins[selectedUserId]){
+      await setDoc(doc(db,'settings','pins'),Object.assign(pins,{[selectedUserId]:pinBuffer}),{merge:true});
+      loginSuccess(); return;
     }
-
-    if (pins[selectedUserId] === pinBuffer) {
-      loginSuccess();
-    } else {
-      document.getElementById('loginError').textContent = '❌ PIN이 틀렸어요!';
-      pinBuffer = '';
-      updatePinDots();
-    }
-  } catch(e) {
-    document.getElementById('loginError').textContent = '연결 오류. 다시 시도해주세요.';
-    pinBuffer = '';
-    updatePinDots();
-  }
+    if(pins[selectedUserId]===pinBuffer){ loginSuccess(); }
+    else { document.getElementById('loginError').textContent='❌ PIN이 틀렸어요!'; pinBuffer=''; updatePinDots(); }
+  } catch(e) { document.getElementById('loginError').textContent='연결 오류. 다시 시도해주세요.'; pinBuffer=''; updatePinDots(); }
 }
-
 function loginSuccess() {
-  currentUser = USERS[selectedUserId];
-  currentUser.id = selectedUserId;
-  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+  currentUser=Object.assign({},USERS[selectedUserId],{id:selectedUserId});
+  localStorage.setItem('currentUser',JSON.stringify(currentUser));
   document.getElementById('loginScreen').style.display='none';
   showMain();
 }
-
 window.logout = function() {
-  localStorage.removeItem('currentUser');
-  currentUser = null;
-  if (unsub) unsub();
+  localStorage.removeItem('currentUser'); currentUser=null;
+  if(unsub) unsub();
   document.getElementById('mainApp').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   pinBuffer=''; selectedUserId=null;
@@ -574,133 +521,154 @@ window.logout = function() {
 function showMain() {
   document.getElementById('loading').style.display='none';
   document.getElementById('mainApp').style.display='block';
-
-  // 헤더 업데이트
-  var av = document.getElementById('headerAvatar');
-  av.textContent = currentUser.emoji;
-  av.className = 'header-avatar ' + currentUser.class;
-  document.getElementById('headerName').textContent = currentUser.name + '으로 로그인';
-
-  // 입력자 배지
-  document.getElementById('expenseWho').textContent = currentUser.emoji + ' ' + currentUser.name;
-  document.getElementById('expenseWho').className = 'who-badge ' + currentUser.class;
-  document.getElementById('incomeWho').textContent = currentUser.emoji + ' ' + currentUser.name;
-  document.getElementById('incomeWho').className = 'who-badge ' + currentUser.class;
-
-  renderPeriod();
-  subscribe();
-  bindKeys();
-  checkNotifPermission();
+  var av=document.getElementById('headerAvatar');
+  av.textContent=currentUser.emoji; av.className='header-avatar '+currentUser.class;
+  document.getElementById('headerName').textContent=currentUser.name+'으로 로그인';
+  document.getElementById('expenseWho').textContent=currentUser.emoji+' '+currentUser.name;
+  document.getElementById('expenseWho').className='who-badge '+currentUser.class;
+  document.getElementById('incomeWho').textContent=currentUser.emoji+' '+currentUser.name;
+  document.getElementById('incomeWho').className='who-badge '+currentUser.class;
+  renderPeriod(); subscribe(); bindKeys();
+  checkNotifStatus();
 }
 
-// ── 푸시 알림 ─────────────────────────────────────
-function checkNotifPermission() {
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'default') {
+// ── FCM 알림 ──────────────────────────────────────
+function checkNotifStatus() {
+  if(!('Notification' in window)) return;
+  if(Notification.permission==='default') {
     document.getElementById('notifBanner').classList.add('show');
+  } else if(Notification.permission==='granted') {
+    document.getElementById('notifBtn').textContent='🔔';
+    document.getElementById('notifBanner').classList.remove('show');
+    document.getElementById('manualNotifCard').style.display='block';
+    saveFcmToken();
+  } else {
+    document.getElementById('notifBtn').textContent='🔕';
   }
 }
 
-window.requestNotif = async function() {
-  if (!('Notification' in window)) { toast('이 브라우저는 알림을 지원하지 않아요'); return; }
-  var perm = await Notification.requestPermission();
-  document.getElementById('notifBanner').classList.remove('show');
-  if (perm === 'granted') {
-    toast('알림이 허용됐어요! 🔔');
-    document.getElementById('notifBtn').textContent = '🔔';
-  } else {
-    toast('알림이 거부됐어요');
-    document.getElementById('notifBtn').textContent = '🔕';
-  }
+window.setupNotification = async function() {
+  if(!('Notification' in window)){toast('이 브라우저는 알림을 지원하지 않아요');return;}
+  try {
+    var perm = await Notification.requestPermission();
+    document.getElementById('notifBanner').classList.remove('show');
+    if(perm==='granted'){
+      document.getElementById('notifBtn').textContent='🔔';
+      document.getElementById('manualNotifCard').style.display='block';
+      toast('알림 허용됐어요! 🔔');
+      await saveFcmToken();
+    } else {
+      document.getElementById('notifBtn').textContent='🔕';
+      toast('알림이 거부됐어요');
+    }
+  } catch(e) { toast('알림 설정 실패'); }
 };
 
-function sendNotif(title, body) {
-  if (!('Notification' in window)) return;
-  if (Notification.permission !== 'granted') return;
+// ── 수동 알림 전송 ────────────────────────────────
+window.sendManualNotif = async function() {
+  var msg = document.getElementById('manualNotifMsg').value.trim();
+  if(!msg){toast('메시지를 입력해주세요');return;}
+  if(!currentUser){toast('로그인이 필요해요');return;}
+
+  var otherUser = currentUser.id==='osori'?'buengi':'osori';
+  var myName = currentUser.name;
+
   try {
-    new Notification(title, { body: body, icon: '🏠', badge: '💰' });
-  } catch(e) {}
+    await addDoc(collection(db,'notifications'),{
+      from: currentUser.id,
+      to: otherUser,
+      message: msg,
+      senderName: myName,
+      createdAt: Date.now()
+    });
+    document.getElementById('manualNotifMsg').value='';
+    toast('알림 전송됨 📣');
+  } catch(e){ toast('전송 실패'); }
+};
+
+async function saveFcmToken() {
+  if(!messaging || !currentUser) return;
+  try {
+    var token = await getToken(messaging, { vapidKey: VAPID_KEY });
+    if(token) {
+      await setDoc(doc(db,'fcmTokens',currentUser.id), {
+        token: token, userId: currentUser.id, updatedAt: Date.now()
+      });
+      console.log('FCM 토큰 저장 완료');
+    }
+  } catch(e) { console.log('FCM 토큰 저장 실패:', e); }
 }
 
-// ── Firebase 구독 ─────────────────────────────────
-function subscribe() {
-  if (unsub) unsub();
-  syncStatus('ing');
-  var q = query(
-    collection(db,'records'),
-    where('period','==',currentKey),
-    orderBy('createdAt','desc')
-  );
-  var isFirst = true;
-  unsub = onSnapshot(q, function(snap) {
-    var newRecords = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+function setupForegroundMessage() {
+  if(!messaging) return;
+  onMessage(messaging, function(payload) {
+    var title = payload.notification?.title || '오소리 & 부엉이';
+    var body = payload.notification?.body || '새 내역이 추가됐어요!';
+    toast(title + ': ' + body);
+    // 포그라운드에서도 시스템 알림 표시
+    if(Notification.permission==='granted') {
+      new Notification(title, { body: body });
+    }
+  });
+}
 
-    // 상대방 입력 감지 → 푸시 알림
-    if (!isFirst && currentUser) {
-      snap.docChanges().forEach(function(change) {
-        if (change.type === 'added') {
-          var r = change.doc.data();
-          if (r.addedBy && r.addedBy !== currentUser.id) {
-            var who = USERS[r.addedBy] ? USERS[r.addedBy].name : '상대방';
-            var sign = r.type==='expense'?'-':'+';
-            sendNotif(
-              who + '이 입력했어요!',
-              sign + fmt(r.amount) + '원 · ' + r.category + (r.memo?' · '+r.memo:'')
-            );
+// ── 구독 ──────────────────────────────────────────
+function subscribe() {
+  if(unsub) unsub();
+  syncStatus('ing');
+  var q=query(collection(db,'records'),where('period','==',currentKey),orderBy('createdAt','desc'));
+  var isFirst=true;
+  unsub=onSnapshot(q, function(snap){
+    var newRecords=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    if(!isFirst && currentUser){
+      snap.docChanges().forEach(function(change){
+        if(change.type==='added'){
+          var r=change.doc.data();
+          if(r.addedBy && r.addedBy!==currentUser.id){
+            var who=USERS[r.addedBy]?USERS[r.addedBy].name:'상대방';
+            var sign=r.type==='expense'?'-':'+';
+            // 포그라운드 알림
+            if(Notification.permission==='granted'){
+              new Notification(who+'이 입력했어요! 💰', {
+                body: sign+fmt(r.amount)+'원 · '+r.category+(r.memo?' · '+r.memo:''),
+                icon: '/odols/icon.png'
+              });
+            }
+            toast(who+': '+sign+fmt(r.amount)+'원 입력됨');
           }
         }
       });
     }
-    isFirst = false;
-    records = newRecords;
-    syncStatus('ok');
-    renderAll();
-  }, function(err) {
-    syncStatus('');
-    console.error('Firestore error:', err.code, err.message);
-    toast('오류: ' + (err.code||err.message));
-  });
+    isFirst=false;
+    records=newRecords; syncStatus('ok'); renderAll();
+  }, function(err){ syncStatus(''); toast('오류: '+(err.code||err.message)); });
 }
 
 // ── 기간 네비 ─────────────────────────────────────
 function renderPeriod() {
-  document.getElementById('periodMain').textContent = periodLabel(currentKey);
-  document.getElementById('periodRange').textContent = periodRangeLabel(currentKey);
-  document.getElementById('sumLabel').textContent = periodLabel(currentKey) + ' 잔액';
+  document.getElementById('periodMain').textContent=periodLabel(currentKey);
+  document.getElementById('periodRange').textContent=periodRangeLabel(currentKey);
+  document.getElementById('sumLabel').textContent=periodLabel(currentKey)+' 잔액';
 }
-
 window.changePeriod = function(dir) {
   var parts=currentKey.split('-');
-  var d=new Date(parseInt(parts[0]), parseInt(parts[1])-1+dir, 1);
-  currentKey = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-  renderPeriod();
-  subscribe();
+  var d=new Date(parseInt(parts[0]),parseInt(parts[1])-1+dir,1);
+  currentKey=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  renderPeriod(); subscribe();
 };
 
 // ── 렌더 ──────────────────────────────────────────
-function renderAll() {
-  renderSummary();
-  renderRecords();
-  if (document.getElementById('chartSection').style.display!=='none') renderCharts();
-}
+function renderAll() { renderSummary(); renderRecords(); if(document.getElementById('chartSection').style.display!=='none') renderCharts(); }
 
 function renderSummary() {
   var inc=0,exp=0,p1i=0,p1e=0,p2i=0,p2e=0,invest=0,ret=0;
-  var investCats=['주식 매수','코인 매수','적금/예금'];
-  var returnCats=['주식 매도','코인 매도','배당/이자'];
-  records.forEach(function(r) {
-    if(r.type==='income'){
-      inc+=r.amount; if(r.person===1)p1i+=r.amount; else p2i+=r.amount;
-      if(returnCats.indexOf(r.category)>=0) ret+=r.amount;
-    } else {
-      exp+=r.amount; if(r.person===1)p1e+=r.amount; else p2e+=r.amount;
-      if(investCats.indexOf(r.category)>=0) invest+=r.amount;
-    }
+  var iCats=['주식 매수','코인 매수','적금/예금'], rCats=['주식 매도','코인 매도','배당/이자'];
+  records.forEach(function(r){
+    if(r.type==='income'){inc+=r.amount;if(r.person===1)p1i+=r.amount;else p2i+=r.amount;if(rCats.indexOf(r.category)>=0)ret+=r.amount;}
+    else{exp+=r.amount;if(r.person===1)p1e+=r.amount;else p2e+=r.amount;if(iCats.indexOf(r.category)>=0)invest+=r.amount;}
   });
-  var bal=inc-exp;
-  var el=document.getElementById('totalBalance');
-  el.textContent=fmt(bal)+' 원';
-  el.className='sum-balance '+(bal>=0?'pos':'neg');
+  var bal=inc-exp, el=document.getElementById('totalBalance');
+  el.textContent=fmt(bal)+' 원'; el.className='sum-balance '+(bal>=0?'pos':'neg');
   document.getElementById('totalIncome').textContent=fmt(inc)+' 원';
   document.getElementById('totalExpense').textContent=fmt(exp)+' 원';
   document.getElementById('totalInvest').textContent=fmt(invest)+' 원';
@@ -716,125 +684,74 @@ function filteredRecords() {
   if(currentFilter==='p1') return records.filter(function(r){return r.person===1;});
   if(currentFilter==='p2') return records.filter(function(r){return r.person===2;});
   if(currentFilter==='income') return records.filter(function(r){return r.type==='income';});
-  if(currentFilter==='expense') return records.filter(function(r){return r.type==='expense';});
-  return records;
+  return records.filter(function(r){return r.type==='expense';});
 }
 
 function renderRecords() {
   var fr=filteredRecords(), list=document.getElementById('recordList');
   if(!fr.length){list.innerHTML='<div class="empty">이번 기간 내역이 없어요</div>';return;}
   list.innerHTML=fr.map(function(r){
-    var sign=r.type==='income'?'+':'-';
-    var pClass='p'+r.person;
-    var pEmoji=r.person===1?'🦡':'🦉';
-    var pName=r.person===1?'오소리':'부엉이';
+    var sign=r.type==='income'?'+':'-', pClass='p'+r.person;
+    var pEmoji=r.person===1?'🦡':'🦉', pName=r.person===1?'오소리':'부엉이';
     var date=r.date?r.date.slice(5).replace('-','/'):'';
-    return '<div class="rec-item">'+
-      '<div class="rec-dot '+r.type+'"></div>'+
-      '<div class="rec-info">'+
-        '<div class="rec-place">'+esc(r.memo||r.category)+'</div>'+
-        '<div class="rec-meta">'+
-          '<span class="badge '+pClass+'">'+pEmoji+' '+esc(pName)+'</span>'+
-          '<span class="tag">'+esc(r.category)+'</span>'+
-          (r.payment?'<span class="tag">'+esc(r.payment)+'</span>':'')+
-          (date?'<span>'+date+'</span>':'')+
-        '</div>'+
-      '</div>'+
-      '<div class="rec-amt '+r.type+'">'+sign+fmt(r.amount)+'원</div>'+
-      '<button class="rec-del" onclick="delRecord(\''+r.id+'\')">×</button>'+
-    '</div>';
+    return '<div class="rec-item"><div class="rec-dot '+r.type+'"></div>'+
+      '<div class="rec-info"><div class="rec-place">'+esc(r.memo||r.category)+'</div>'+
+      '<div class="rec-meta"><span class="badge '+pClass+'">'+pEmoji+' '+esc(pName)+'</span>'+
+      '<span class="tag">'+esc(r.category)+'</span>'+(r.payment?'<span class="tag">'+esc(r.payment)+'</span>':'')+
+      (date?'<span>'+date+'</span>':'')+
+      '</div></div><div class="rec-amt '+r.type+'">'+sign+fmt(r.amount)+'원</div>'+
+      '<button class="rec-del" onclick="delRecord(\''+r.id+'\')">×</button></div>';
   }).join('');
 }
 
 function renderCharts() {
   var expenses=records.filter(function(r){return r.type==='expense';});
-  var catMap={};
-  expenses.forEach(function(r){catMap[r.category]=(catMap[r.category]||0)+r.amount;});
-  var catLabels=Object.keys(catMap), catData=catLabels.map(function(k){return catMap[k];});
-
+  var catMap={};expenses.forEach(function(r){catMap[r.category]=(catMap[r.category]||0)+r.amount;});
+  var cL=Object.keys(catMap),cD=cL.map(function(k){return catMap[k];});
   if(catChart) catChart.destroy();
-  if(catLabels.length){
-    catChart=new Chart(document.getElementById('catChart').getContext('2d'),{
-      type:'doughnut',
-      data:{labels:catLabels,datasets:[{data:catData,backgroundColor:COLORS.slice(0,catLabels.length),borderWidth:2,borderColor:'#fff'}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}}}
-    });
-    document.getElementById('catLegend').innerHTML=catLabels.map(function(l,i){
-      var pct=Math.round(catData[i]/catData.reduce(function(a,b){return a+b;},0)*100);
-      return '<div class="leg-item"><div class="leg-dot" style="background:'+COLORS[i]+'"></div>'+esc(l)+' '+pct+'%</div>';
-    }).join('');
+  if(cL.length){
+    catChart=new Chart(document.getElementById('catChart').getContext('2d'),{type:'doughnut',data:{labels:cL,datasets:[{data:cD,backgroundColor:COLORS.slice(0,cL.length),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}}}});
+    document.getElementById('catLegend').innerHTML=cL.map(function(l,i){var p=Math.round(cD[i]/cD.reduce(function(a,b){return a+b;},0)*100);return '<div class="leg-item"><div class="leg-dot" style="background:'+COLORS[i]+'"></div>'+esc(l)+' '+p+'%</div>';}).join('');
   } else { document.getElementById('catLegend').innerHTML=''; }
 
-  var payMap={};
-  expenses.forEach(function(r){var k=r.payment||'미분류';payMap[k]=(payMap[k]||0)+r.amount;});
-  var payLabels=Object.keys(payMap), payData=payLabels.map(function(k){return payMap[k];});
-
+  var payMap={};expenses.forEach(function(r){var k=r.payment||'미분류';payMap[k]=(payMap[k]||0)+r.amount;});
+  var pL=Object.keys(payMap),pD=pL.map(function(k){return payMap[k];});
   if(payChart) payChart.destroy();
-  if(payLabels.length){
-    payChart=new Chart(document.getElementById('paymentChart').getContext('2d'),{
-      type:'doughnut',
-      data:{labels:payLabels,datasets:[{data:payData,backgroundColor:COLORS2.slice(0,payLabels.length),borderWidth:2,borderColor:'#fff'}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}}}
-    });
-    document.getElementById('paymentLegend').innerHTML=payLabels.map(function(l,i){
-      var pct=Math.round(payData[i]/payData.reduce(function(a,b){return a+b;},0)*100);
-      return '<div class="leg-item"><div class="leg-dot" style="background:'+COLORS2[i]+'"></div>'+esc(l)+' '+pct+'%</div>';
-    }).join('');
+  if(pL.length){
+    payChart=new Chart(document.getElementById('paymentChart').getContext('2d'),{type:'doughnut',data:{labels:pL,datasets:[{data:pD,backgroundColor:COLORS2.slice(0,pL.length),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}}}});
+    document.getElementById('paymentLegend').innerHTML=pL.map(function(l,i){var p=Math.round(pD[i]/pD.reduce(function(a,b){return a+b;},0)*100);return '<div class="leg-item"><div class="leg-dot" style="background:'+COLORS2[i]+'"></div>'+esc(l)+' '+p+'%</div>';}).join('');
   } else { document.getElementById('paymentLegend').innerHTML=''; }
 
-  var p1e=0,p2e=0;
-  expenses.forEach(function(r){if(r.person===1)p1e+=r.amount;else p2e+=r.amount;});
+  var p1e=0,p2e=0;expenses.forEach(function(r){if(r.person===1)p1e+=r.amount;else p2e+=r.amount;});
   if(personChart) personChart.destroy();
-  personChart=new Chart(document.getElementById('personChart').getContext('2d'),{
-    type:'bar',
-    data:{labels:['🦡 오소리','🦉 부엉이'],datasets:[{data:[p1e,p2e],backgroundColor:['#534AB7','#D85A30'],borderRadius:6,borderSkipped:false}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return fmt(v);},font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false},ticks:{font:{size:12}}}}}
-  });
+  personChart=new Chart(document.getElementById('personChart').getContext('2d'),{type:'bar',data:{labels:['🦡 오소리','🦉 부엉이'],datasets:[{data:[p1e,p2e],backgroundColor:['#534AB7','#D85A30'],borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return fmt(v);},font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false},ticks:{font:{size:12}}}}}});
 
   var incT=records.filter(function(r){return r.type==='income';}).reduce(function(a,r){return a+r.amount;},0);
   var expT=expenses.reduce(function(a,r){return a+r.amount;},0);
   if(sumChart) sumChart.destroy();
-  sumChart=new Chart(document.getElementById('summaryChart').getContext('2d'),{
-    type:'bar',
-    data:{labels:['수입','지출'],datasets:[{data:[incT,expT],backgroundColor:['#1D9E75','#D85A30'],borderRadius:6,borderSkipped:false}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return fmt(v);},font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false},ticks:{font:{size:12}}}}}
-  });
+  sumChart=new Chart(document.getElementById('summaryChart').getContext('2d'),{type:'bar',data:{labels:['수입','지출'],datasets:[{data:[incT,expT],backgroundColor:['#1D9E75','#D85A30'],borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return fmt(v);},font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false},ticks:{font:{size:12}}}}}});
 }
 
 window.switchTab=function(tab){
   ['expenseForm','incomeForm'].forEach(function(id){document.getElementById(id).classList.remove('show');});
   document.getElementById('chartSection').style.display='none';
-  document.getElementById('recordsSection').style.display='';
+  document.getElementById('recordsSection').style.display='none';
   ['tabExpense','tabIncome','tabChart'].forEach(function(id){document.getElementById(id).classList.remove('active');});
-  if(tab==='expense'){document.getElementById('expenseForm').classList.add('show');document.getElementById('tabExpense').classList.add('active');}
-  else if(tab==='income'){document.getElementById('incomeForm').classList.add('show');document.getElementById('tabIncome').classList.add('active');}
-  else{document.getElementById('chartSection').style.display='';document.getElementById('recordsSection').style.display='none';document.getElementById('tabChart').classList.add('active');renderCharts();}
+  if(tab==='expense'){document.getElementById('expenseForm').classList.add('show');document.getElementById('recordsSection').style.display='';document.getElementById('tabExpense').classList.add('active');}
+  else if(tab==='income'){document.getElementById('incomeForm').classList.add('show');document.getElementById('recordsSection').style.display='';document.getElementById('tabIncome').classList.add('active');}
+  else{document.getElementById('chartSection').style.display='';document.getElementById('tabChart').classList.add('active');renderCharts();}
 };
-
-window.setFilter=function(f,btn){
-  currentFilter=f;
-  document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');
-  renderRecords();
-};
+window.setFilter=function(f,btn){currentFilter=f;document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderRecords();};
 
 window.addExpense=async function(){
   var amt=parseNum(document.getElementById('expenseAmount').value);
   if(!amt){toast('금액을 입력해주세요');return;}
-  var cat=document.getElementById('expenseCategory').value;
-  var payment=document.getElementById('expensePayment').value;
-  var memo=document.getElementById('expenseMemo').value.trim();
   var btn=document.getElementById('expenseSubmitBtn');
   btn.disabled=true; syncStatus('ing');
   try{
     var now=new Date();
-    await addDoc(collection(db,'records'),{
-      type:'expense',amount:amt,category:cat,payment:payment,memo:memo,
-      person:currentUser.person,addedBy:currentUser.id,
-      date:now.toISOString().slice(0,10),period:currentKey,createdAt:now.getTime()
-    });
-    document.getElementById('expenseAmount').value='';
-    document.getElementById('expenseMemo').value='';
+    await addDoc(collection(db,'records'),{type:'expense',amount:amt,category:document.getElementById('expenseCategory').value,payment:document.getElementById('expensePayment').value,memo:document.getElementById('expenseMemo').value.trim(),person:currentUser.person,addedBy:currentUser.id,date:now.toISOString().slice(0,10),period:currentKey,createdAt:now.getTime()});
+    document.getElementById('expenseAmount').value='';document.getElementById('expenseMemo').value='';
     toast('지출 추가됨 💸');
   }catch(e){toast('저장 실패');}
   btn.disabled=false;
@@ -843,28 +760,18 @@ window.addExpense=async function(){
 window.addIncome=async function(){
   var amt=parseNum(document.getElementById('incomeAmount').value);
   if(!amt){toast('금액을 입력해주세요');return;}
-  var cat=document.getElementById('incomeCategory').value;
-  var memo=document.getElementById('incomeMemo').value.trim();
   var btn=document.getElementById('incomeSubmitBtn');
   btn.disabled=true; syncStatus('ing');
   try{
     var now=new Date();
-    await addDoc(collection(db,'records'),{
-      type:'income',amount:amt,category:cat,memo:memo,
-      person:currentUser.person,addedBy:currentUser.id,
-      date:now.toISOString().slice(0,10),period:currentKey,createdAt:now.getTime()
-    });
-    document.getElementById('incomeAmount').value='';
-    document.getElementById('incomeMemo').value='';
+    await addDoc(collection(db,'records'),{type:'income',amount:amt,category:document.getElementById('incomeCategory').value,memo:document.getElementById('incomeMemo').value.trim(),person:currentUser.person,addedBy:currentUser.id,date:now.toISOString().slice(0,10),period:currentKey,createdAt:now.getTime()});
+    document.getElementById('incomeAmount').value='';document.getElementById('incomeMemo').value='';
     toast('수입 추가됨 💰');
   }catch(e){toast('저장 실패');}
   btn.disabled=false;
 };
 
-window.delRecord=async function(id){
-  try{await deleteDoc(doc(db,'records',id));toast('삭제됨');}
-  catch(e){toast('삭제 실패');}
-};
+window.delRecord=async function(id){try{await deleteDoc(doc(db,'records',id));toast('삭제됨');}catch(e){toast('삭제 실패');}};
 
 function bindKeys(){
   document.getElementById('expenseAmount').addEventListener('keypress',function(e){if(e.key==='Enter')addExpense();});
@@ -876,11 +783,7 @@ function bindKeys(){
 function fmt(n){return Math.abs(Math.round(n)).toLocaleString('ko-KR');}
 function parseNum(v){return parseInt(String(v).replace(/[^0-9]/g,''))||0;}
 function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function toast(msg){
-  var t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(function(){t.classList.remove('show');},2200);
-}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
 
 init();
 </script>
