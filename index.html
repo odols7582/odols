@@ -157,6 +157,34 @@
   .manual-notif-btn{background:var(--p1);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;}
   .manual-notif-btn:hover{opacity:.85;}
 
+  /* D-day */
+  .dday-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+  .dday-item:last-child{border-bottom:none;}
+  .dday-name{font-size:13px;font-weight:600;}
+  .dday-date{font-size:11px;color:var(--muted);margin-top:2px;}
+  .dday-count{font-size:16px;font-weight:700;color:var(--p1);flex-shrink:0;}
+  .dday-count.today{color:var(--income);}
+  .dday-count.past{color:var(--muted);}
+  .dday-add-row{display:flex;gap:8px;margin-top:12px;align-items:center;}
+  .dday-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px 6px;}
+  .dday-del:hover{color:var(--expense);}
+
+  /* 일정 */
+  .schedule-item{background:var(--bg);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;}
+  .schedule-date-col{text-align:center;min-width:42px;flex-shrink:0;}
+  .schedule-month{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;}
+  .schedule-day{font-size:20px;font-weight:700;line-height:1.1;color:var(--p1);}
+  .schedule-time{font-size:10px;color:var(--muted);margin-top:2px;}
+  .schedule-info{flex:1;min-width:0;}
+  .schedule-content{font-size:13px;font-weight:600;}
+  .schedule-tags{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap;}
+  .schedule-tag{font-size:9px;font-weight:500;padding:2px 7px;border-radius:20px;background:var(--surface);color:var(--muted);border:1px solid var(--border);}
+  .schedule-tag.alarm{background:var(--p1-bg);color:var(--p1);border-color:var(--p1-bg);}
+  .schedule-tag.repeat{background:var(--p2-bg);color:var(--p2);border-color:var(--p2-bg);}
+  .schedule-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:4px;flex-shrink:0;}
+  .schedule-del:hover{color:var(--expense);}
+  .schedule-item.past-schedule{opacity:.5;}
+
   /* 섹션 블록 */
   .section-block{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:10px;overflow:hidden;}
   .section-block-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;font-size:13px;font-weight:700;cursor:pointer;user-select:none;}
@@ -260,6 +288,78 @@
   <div class="notif-banner" id="notifBanner">
     <span class="notif-banner-text">🔔 알림 허용하면 상대방 입력시 바로 알려드려요!</span>
     <button class="notif-banner-btn" onclick="setupNotification()">허용하기</button>
+  </div>
+
+  <!-- 0. 기념일 & D-day -->
+  <div class="section-block">
+    <div class="section-block-header" onclick="toggleSection('ddayBlock')">
+      <span>💑 기념일 & D-day</span>
+      <span class="section-toggle" id="ddayBlockArrow">▲</span>
+    </div>
+    <div id="ddayBlock" style="padding:0 14px 14px;">
+      <div id="ddayList"></div>
+      <div class="dday-add-row">
+        <input class="finput" id="ddayName" placeholder="기념일 이름 (예: 처음 만난 날)" style="flex:1;">
+        <input class="finput" id="ddayDate" type="date" style="width:140px;">
+        <button class="manual-notif-btn" onclick="addDday()">추가</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 0-1. 일정 관리 -->
+  <div class="section-block">
+    <div class="section-block-header" onclick="toggleSection('scheduleBlock')">
+      <span>📅 일정 관리</span>
+      <span class="section-toggle" id="scheduleBlockArrow">▲</span>
+    </div>
+    <div id="scheduleBlock">
+      <div class="form-card show" style="border-radius:0;border-left:none;border-right:none;border-top:none;margin-bottom:0;">
+        <div class="form-row">
+          <div class="fgroup" style="margin-bottom:0;">
+            <label class="flabel">날짜</label>
+            <input class="finput" id="scheduleDate" type="date">
+          </div>
+          <div class="fgroup" style="margin-bottom:0;">
+            <label class="flabel">시간</label>
+            <input class="finput" id="scheduleTime" type="time">
+          </div>
+        </div>
+        <div class="fgroup">
+          <label class="flabel">내용</label>
+          <input class="finput" id="scheduleContent" type="text" placeholder="일정 내용을 입력해주세요">
+        </div>
+        <div class="form-row">
+          <div class="fgroup" style="margin-bottom:0;">
+            <label class="flabel">알림</label>
+            <select class="finput" id="scheduleAlarm">
+              <option value="none">알림 없음</option>
+              <option value="1day">1일 전</option>
+              <option value="1hour">1시간 전</option>
+              <option value="10min">10분 전</option>
+            </select>
+          </div>
+          <div class="fgroup" style="margin-bottom:0;">
+            <label class="flabel">반복</label>
+            <select class="finput" id="scheduleRepeat">
+              <option value="none">반복 없음</option>
+              <option value="daily">매일</option>
+              <option value="weekly">매주</option>
+              <option value="monthly">매월</option>
+              <option value="yearly">매년</option>
+            </select>
+          </div>
+        </div>
+        <button class="submit-btn" style="background:var(--p1);margin-top:8px;" onclick="addSchedule()">일정 추가</button>
+      </div>
+      <div style="padding:8px 14px 14px;">
+        <div class="filter-row" style="margin-bottom:8px;">
+          <button class="fbtn active" onclick="setScheduleFilter('upcoming',this)">다가오는</button>
+          <button class="fbtn" onclick="setScheduleFilter('all',this)">전체</button>
+          <button class="fbtn" onclick="setScheduleFilter('past',this)">지난</button>
+        </div>
+        <div id="scheduleList"></div>
+      </div>
+    </div>
   </div>
 
   <!-- 1. 할일 섹션 (항상 표시) -->
@@ -589,7 +689,7 @@ function showMain() {
   document.getElementById('incomeWho').className='who-badge '+currentUser.class;
   document.getElementById('todoWho').textContent=currentUser.emoji+' '+currentUser.name;
   document.getElementById('todoWho').className='who-badge '+currentUser.class;
-  renderPeriod(); subscribe(); subscribeTodos(); bindKeys();
+  renderPeriod(); subscribe(); subscribeTodos(); subscribeDdays(); subscribeSchedules(); initScheduleDate(); bindKeys();
   checkNotifStatus();
 }
 
@@ -815,7 +915,178 @@ window.toggleSection = function(id) {
   }
 };
 
-// ── 할일 관리 ──────────────────────────────────────
+// ── D-day 관리 ────────────────────────────────────
+var ddays = [];
+var ddayUnsub = null;
+
+function subscribeDdays() {
+  if(ddayUnsub) return;
+  var q = query(collection(db,'ddays'), orderBy('date','asc'));
+  ddayUnsub = onSnapshot(q, function(snap){
+    ddays = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    renderDdays();
+  }, function(err){ console.error('ddays error:', err); });
+}
+
+function renderDdays() {
+  var list = document.getElementById('ddayList');
+  if(!ddays.length){ list.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0;">기념일을 추가해보세요 💑</div>'; return; }
+  var today = new Date(); today.setHours(0,0,0,0);
+  list.innerHTML = ddays.map(function(d){
+    var target = new Date(d.date); target.setHours(0,0,0,0);
+    var diff = Math.round((target - today) / (1000*60*60*24));
+    var diffText, cls;
+    if(diff===0){ diffText='D-DAY'; cls='today'; }
+    else if(diff>0){ diffText='D-'+diff; cls=''; }
+    else { diffText='D+'+Math.abs(diff); cls='past'; }
+    var anniv = '';
+    if(diff<=0){
+      var years = today.getFullYear() - target.getFullYear();
+      if(years>0) anniv = ' ('+years+'주년)';
+    }
+    return '<div class="dday-item">'+
+      '<div>'+
+        '<div class="dday-name">'+esc(d.name)+anniv+'</div>'+
+        '<div class="dday-date">'+d.date+'</div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px;">'+
+        '<div class="dday-count '+cls+'">'+diffText+'</div>'+
+        '<button class="dday-del" onclick="delDday(\''+d.id+'\')">×</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+window.addDday = async function() {
+  var name = document.getElementById('ddayName').value.trim();
+  var date = document.getElementById('ddayDate').value;
+  if(!name||!date){toast('이름과 날짜를 입력해주세요');return;}
+  try {
+    await addDoc(collection(db,'ddays'),{ name:name, date:date, createdAt:Date.now() });
+    document.getElementById('ddayName').value='';
+    document.getElementById('ddayDate').value='';
+    toast('기념일 추가됨 💑');
+  } catch(e){ toast('저장 실패'); }
+};
+
+window.delDday = async function(id) {
+  try { await deleteDoc(doc(db,'ddays',id)); toast('삭제됨'); }
+  catch(e){ toast('삭제 실패'); }
+};
+
+// ── 일정 관리 ─────────────────────────────────────
+var schedules = [];
+var scheduleUnsub = null;
+var scheduleFilter = 'upcoming';
+
+const ALARM_LABELS = { none:'알림없음', '1day':'1일 전', '1hour':'1시간 전', '10min':'10분 전' };
+const REPEAT_LABELS = { none:'', daily:'매일', weekly:'매주', monthly:'매월', yearly:'매년' };
+
+function subscribeSchedules() {
+  if(scheduleUnsub) return;
+  var q = query(collection(db,'schedules'), orderBy('datetime','asc'));
+  scheduleUnsub = onSnapshot(q, function(snap){
+    schedules = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    renderSchedules();
+  }, function(err){ console.error('schedules error:', err); });
+}
+
+function initScheduleDate() {
+  var now = new Date();
+  document.getElementById('scheduleDate').value = now.toISOString().slice(0,10);
+  document.getElementById('scheduleTime').value = String(now.getHours()).padStart(2,'0')+':00';
+}
+
+function filteredSchedules() {
+  var now = new Date().getTime();
+  if(scheduleFilter==='upcoming') return schedules.filter(function(s){return s.datetime>=now;});
+  if(scheduleFilter==='past') return schedules.filter(function(s){return s.datetime<now;});
+  return schedules;
+}
+
+function renderSchedules() {
+  var fs = filteredSchedules();
+  var list = document.getElementById('scheduleList');
+  if(!fs.length){ list.innerHTML='<div class="empty">일정이 없어요</div>'; return; }
+  var now = new Date().getTime();
+  list.innerHTML = fs.map(function(s){
+    var dt = new Date(s.datetime);
+    var isPast = s.datetime < now;
+    var month = (dt.getMonth()+1)+'월';
+    var day = dt.getDate();
+    var timeStr = String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+    var alarmLabel = ALARM_LABELS[s.alarm]||'';
+    var repeatLabel = REPEAT_LABELS[s.repeat]||'';
+    return '<div class="schedule-item'+(isPast?' past-schedule':'')+'">'+
+      '<div class="schedule-date-col">'+
+        '<div class="schedule-month">'+month+'</div>'+
+        '<div class="schedule-day">'+day+'</div>'+
+        '<div class="schedule-time">'+timeStr+'</div>'+
+      '</div>'+
+      '<div class="schedule-info">'+
+        '<div class="schedule-content">'+esc(s.content)+'</div>'+
+        '<div class="schedule-tags">'+
+          (s.alarm!=='none'?'<span class="schedule-tag alarm">🔔 '+esc(alarmLabel)+'</span>':'')+
+          (s.repeat!=='none'?'<span class="schedule-tag repeat">🔁 '+esc(repeatLabel)+'</span>':'')+
+        '</div>'+
+      '</div>'+
+      '<button class="schedule-del" onclick="delSchedule(\''+s.id+'\')">×</button>'+
+    '</div>';
+  }).join('');
+}
+
+window.addSchedule = async function() {
+  var date = document.getElementById('scheduleDate').value;
+  var time = document.getElementById('scheduleTime').value;
+  var content = document.getElementById('scheduleContent').value.trim();
+  var alarm = document.getElementById('scheduleAlarm').value;
+  var repeat = document.getElementById('scheduleRepeat').value;
+  if(!date||!content){toast('날짜와 내용을 입력해주세요');return;}
+  var datetime = new Date(date+'T'+(time||'00:00')).getTime();
+  try {
+    await addDoc(collection(db,'schedules'),{
+      date:date, time:time||'', datetime:datetime,
+      content:content, alarm:alarm, repeat:repeat,
+      addedBy:currentUser.id, createdAt:Date.now()
+    });
+    document.getElementById('scheduleContent').value='';
+    document.getElementById('scheduleAlarm').value='none';
+    document.getElementById('scheduleRepeat').value='none';
+    toast('일정 추가됨 📅');
+    scheduleAlarmCheck();
+  } catch(e){ toast('저장 실패'); }
+};
+
+window.delSchedule = async function(id) {
+  try { await deleteDoc(doc(db,'schedules',id)); toast('삭제됨'); }
+  catch(e){ toast('삭제 실패'); }
+};
+
+window.setScheduleFilter = function(f, btn) {
+  scheduleFilter = f;
+  document.querySelectorAll('#scheduleBlock .fbtn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderSchedules();
+};
+
+// 알림 시간 체크 (브라우저 로컬 알림)
+function scheduleAlarmCheck() {
+  if(Notification.permission!=='granted') return;
+  schedules.forEach(function(s){
+    if(s.alarm==='none') return;
+    var offset = s.alarm==='1day'?86400000 : s.alarm==='1hour'?3600000 : 600000;
+    var alarmTime = s.datetime - offset;
+    var now = Date.now();
+    var diff = alarmTime - now;
+    if(diff>0 && diff<86400000*2){ // 2일 이내 알림만 예약
+      setTimeout(function(){
+        new Notification('📅 일정 알림', {
+          body: (s.alarm==='1day'?'내일 ':s.alarm==='1hour'?'1시간 후 ':'10분 후 ') + s.content,
+        });
+      }, diff);
+    }
+  });
+}
 function subscribeTodos() {
   if(todoUnsub) return; // 이미 구독중
   var q = query(collection(db,'todos'), orderBy('createdAt','desc'));
