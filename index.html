@@ -686,10 +686,18 @@ let messaging = null;
 
 // Service Worker 등록
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/odols/sw.js')
+  navigator.serviceWorker.register('/odols/sw.js', { scope: '/odols/' })
     .then(function(reg) {
       console.log('SW 등록 완료:', reg.scope);
-      try { messaging = getMessaging(app); setupForegroundMessage(); } catch(e) {}
+      try {
+        messaging = getMessaging(app);
+        // FCM용 SW 경로 명시적 지정
+        navigator.serviceWorker.register('/odols/firebase-messaging-sw.js', { scope: '/odols/' })
+          .then(function(fcmReg) {
+            console.log('FCM SW 등록 완료:', fcmReg.scope);
+          }).catch(function(e){ console.log('FCM SW 등록 실패:', e); });
+        setupForegroundMessage();
+      } catch(e) { console.log('Messaging 초기화 실패:', e); }
     })
     .catch(function(err) { console.log('SW 등록 실패:', err); });
 }
@@ -839,7 +847,12 @@ window.showDebug = async function() {
   if(messaging && Notification.permission === 'granted') {
     try {
       var VAPID = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
-      var token = await getToken(messaging, { vapidKey: VAPID });
+      var swReg = await navigator.serviceWorker.getRegistration('/odols/');
+      lines.push('📋 SW 등록: ' + (swReg ? swReg.scope : '없음'));
+      var token = await getToken(messaging, {
+        vapidKey: VAPID,
+        serviceWorkerRegistration: swReg
+      });
       if(token) {
         lines.push('✅ FCM 토큰 획득 성공!');
         lines.push('🔑 토큰: ' + token.slice(0,40) + '...');
@@ -948,7 +961,11 @@ window.sendManualNotif = async function() {
 async function saveFcmToken() {
   if(!messaging || !currentUser) return;
   try {
-    var token = await getToken(messaging, { vapidKey: VAPID_KEY });
+    var swReg = await navigator.serviceWorker.getRegistration('/odols/');
+    var token = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: swReg
+    });
     if(token) {
       await setDoc(doc(db,'fcmTokens',currentUser.id), {
         token: token, userId: currentUser.id, updatedAt: Date.now()
