@@ -1,6 +1,9 @@
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
+const CACHE_NAME = 'gaegyebu-v1';
+const APP_URL = 'https://odols7582.github.io/odols/';
+
 firebase.initializeApp({
   apiKey: "AIzaSyA8CXDhPXN-v5dXS0QP3UY-xpcrhQURyMw",
   authDomain: "ggom-922e9.firebaseapp.com",
@@ -12,18 +15,31 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// 앱 설치시 캐시
+self.addEventListener('install', function(e) {
+  console.log('SW 설치됨');
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', function(e) {
+  console.log('SW 활성화됨');
+  e.waitUntil(clients.claim());
+});
+
 // 백그라운드 메시지 수신
 messaging.onBackgroundMessage(function(payload) {
-  console.log('백그라운드 메시지 수신:', payload);
-  var title = (payload.notification && payload.notification.title) || '오소리 & 부엉이 가계부';
-  var body = (payload.notification && payload.notification.body) || '새로운 알림이 있어요!';
-  self.registration.showNotification(title, {
+  console.log('백그라운드 메시지:', payload);
+  var title = (payload.notification && payload.notification.title) || '오소리 & 부엉이';
+  var body = (payload.notification && payload.notification.body) || '새 알림이 있어요!';
+
+  return self.registration.showNotification(title, {
     body: body,
-    icon: 'https://odols7582.github.io/odols/icon.png',
-    badge: 'https://odols7582.github.io/odols/icon.png',
-    tag: 'ledger-notification',
+    icon: APP_URL + 'icon-192.png',
+    badge: APP_URL + 'icon-192.png',
+    tag: 'gaegyebu-' + Date.now(),
     requireInteraction: false,
-    data: payload.data || {}
+    vibrate: [200, 100, 200],
+    data: { url: APP_URL }
   });
 });
 
@@ -39,7 +55,7 @@ self.addEventListener('notificationclick', function(event) {
         }
       }
       if (clients.openWindow) {
-        return clients.openWindow('https://odols7582.github.io/odols/');
+        return clients.openWindow(APP_URL);
       }
     })
   );

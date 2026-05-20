@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>오소리 & 부엉이 가계부</title>
+<link rel="manifest" href="/odols/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="우리가계부">
+<meta name="theme-color" content="#312E81">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
@@ -103,6 +109,11 @@
   .period-range{font-size:11px;color:var(--muted);margin-top:2px;}
 
   .container{max-width:480px;margin:0 auto;padding:12px 16px 100px;}
+
+  .pwa-banner{background:#EEF2FF;border:1.5px solid #C7D2FE;border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .pwa-banner-text{flex:1;font-size:12px;font-weight:500;color:#4338CA;}
+  .pwa-banner-btn{background:#4338CA;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .pwa-banner-close{background:none;border:none;cursor:pointer;color:#7C8DBE;font-size:14px;padding:2px 4px;flex-shrink:0;}
 
   .notif-banner{background:var(--p1-bg);border:1px solid var(--p1);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:none;align-items:center;gap:10px;}
   .notif-banner.show{display:flex;}
@@ -376,6 +387,13 @@
   <div class="notif-banner" id="notifBanner">
     <span class="notif-banner-text">🔔 알림 허용하면 상대방 입력시 바로 알려드려요!</span>
     <button class="notif-banner-btn" onclick="setupNotification()">허용하기</button>
+  </div>
+
+  <!-- PWA 설치 배너 -->
+  <div class="pwa-banner" id="pwaBanner" style="display:none;">
+    <span class="pwa-banner-text">📲 앱으로 설치하면 푸시 알림이 더 잘 와요!</span>
+    <button class="pwa-banner-btn" onclick="installPWA()">설치하기</button>
+    <button class="pwa-banner-close" onclick="document.getElementById('pwaBanner').style.display='none'">✕</button>
   </div>
 
   <!-- 0. 기념일 & D-day -->
@@ -781,9 +799,41 @@ function showMain() {
   document.getElementById('todoWho').className='who-badge '+currentUser.class;
   renderPeriod(); subscribe(); subscribeTodos(); subscribeDdays(); subscribeSchedules(); initScheduleDate(); bindKeys();
   checkNotifStatus();
+  // PWA 설치 배너
+  if(deferredPrompt) document.getElementById('pwaBanner').style.display = 'flex';
 }
 
-// ── FCM 알림 ──────────────────────────────────────
+// ── PWA 설치 ──────────────────────────────────────
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  // 로그인 후 배너 표시
+  if(document.getElementById('mainApp').style.display !== 'none') {
+    document.getElementById('pwaBanner').style.display = 'flex';
+  }
+});
+
+window.installPWA = async function() {
+  if(!deferredPrompt) {
+    toast('이미 설치됐거나 브라우저가 지원하지 않아요');
+    return;
+  }
+  deferredPrompt.prompt();
+  var result = await deferredPrompt.userChoice;
+  if(result.outcome === 'accepted') {
+    toast('앱 설치 완료! 🎉');
+    document.getElementById('pwaBanner').style.display = 'none';
+  }
+  deferredPrompt = null;
+};
+
+window.addEventListener('appinstalled', function() {
+  toast('앱으로 설치됐어요! 🎉');
+  document.getElementById('pwaBanner').style.display = 'none';
+  deferredPrompt = null;
+});
 function checkNotifStatus() {
   if(!('Notification' in window)) return;
   if(Notification.permission==='default') {
