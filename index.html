@@ -368,6 +368,7 @@
       <span id="syncText">연결 중</span>
     </div>
     <button class="btn-notif" id="notifBtn" onclick="setupNotification()" title="알림 설정">🔔</button>
+    <button class="btn-sm" onclick="showDebug()" style="font-size:10px;">🔧</button>
     <button class="btn-sm" onclick="logout()">로그아웃</button>
   </div>
 </div>
@@ -394,6 +395,13 @@
     <span class="pwa-banner-text">📲 앱으로 설치하면 푸시 알림이 더 잘 와요!</span>
     <button class="pwa-banner-btn" onclick="installPWA()">설치하기</button>
     <button class="pwa-banner-close" onclick="document.getElementById('pwaBanner').style.display='none'">✕</button>
+  </div>
+
+  <!-- 토큰 디버그 -->
+  <div id="debugBox" style="display:none;background:#1a1917;color:#86EFAC;border-radius:10px;padding:12px;margin-bottom:10px;font-size:10px;word-break:break-all;line-height:1.6;">
+    <div style="font-weight:700;margin-bottom:6px;color:#FCA5A5;">🔧 디버그 정보</div>
+    <div id="debugText"></div>
+    <button onclick="document.getElementById('debugBox').style.display='none'" style="margin-top:8px;background:#D85A30;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">닫기</button>
   </div>
 
   <!-- 0. 기념일 & D-day -->
@@ -803,7 +811,57 @@ function showMain() {
   if(deferredPrompt) document.getElementById('pwaBanner').style.display = 'flex';
 }
 
-// ── PWA 설치 ──────────────────────────────────────
+// ── 디버그 ────────────────────────────────────────
+window.showDebug = async function() {
+  var box = document.getElementById('debugBox');
+  var txt = document.getElementById('debugText');
+  box.style.display = 'block';
+  txt.innerHTML = '로딩 중...';
+
+  var lines = [];
+  lines.push('📱 브라우저: ' + navigator.userAgent.slice(0,60));
+  lines.push('🔔 알림 권한: ' + (typeof Notification !== 'undefined' ? Notification.permission : '미지원'));
+  lines.push('⚙️ SW 지원: ' + ('serviceWorker' in navigator ? '✅' : '❌'));
+  lines.push('💬 Messaging: ' + (messaging ? '✅' : '❌'));
+  lines.push('👤 현재 사용자: ' + (currentUser ? currentUser.id : '없음'));
+
+  if('serviceWorker' in navigator) {
+    try {
+      var regs = await navigator.serviceWorker.getRegistrations();
+      lines.push('📋 SW 등록수: ' + regs.length);
+      if(regs.length > 0) {
+        lines.push('📋 SW 범위: ' + regs[0].scope);
+        lines.push('📋 SW 상태: ' + (regs[0].active ? regs[0].active.state : '없음'));
+      }
+    } catch(e){ lines.push('SW 오류: '+e.message); }
+  }
+
+  if(messaging && Notification.permission === 'granted') {
+    try {
+      var VAPID = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
+      var token = await getToken(messaging, { vapidKey: VAPID });
+      if(token) {
+        lines.push('✅ FCM 토큰 획득 성공!');
+        lines.push('🔑 토큰: ' + token.slice(0,40) + '...');
+        // 토큰 저장 시도
+        await setDoc(doc(db,'fcmTokens',currentUser.id), {
+          token: token, userId: currentUser.id, updatedAt: Date.now()
+        });
+        lines.push('✅ Firestore 저장 성공!');
+        toast('토큰 저장 완료! ✅');
+      } else {
+        lines.push('❌ FCM 토큰 없음');
+      }
+    } catch(e){
+      lines.push('❌ FCM 오류: ' + e.message);
+      lines.push('❌ 오류코드: ' + e.code);
+    }
+  } else {
+    lines.push('⚠️ 알림 미허용 상태 - 먼저 🔔 버튼 클릭');
+  }
+
+  txt.innerHTML = lines.join('<br>');
+};
 let deferredPrompt = null;
 
 window.addEventListener('beforeinstallprompt', function(e) {
