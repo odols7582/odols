@@ -1334,7 +1334,7 @@ function renderInvest() {
   document.getElementById('investTotal').textContent = fmt(totalIn)+'원';
   document.getElementById('investReturn').textContent = fmt(totalOut)+'원';
   var netEl = document.getElementById('investNet');
-  netEl.textContent = (net>=0?'+':'')+fmt(Math.abs(net))+'원';
+  netEl.textContent = (net>=0?'+':'-')+fmt(Math.abs(net))+'원';
   netEl.style.color = net>=0?'#0F766E':'#DC2626';
 
   // 항목별 차트
