@@ -157,6 +157,22 @@
   .manual-notif-btn{background:var(--p1);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;}
   .manual-notif-btn:hover{opacity:.85;}
 
+  /* 할일 */
+  .todo-item{background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:opacity .2s;}
+  .todo-item.done-item{opacity:.6;}
+  .todo-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s;}
+  .todo-check.done{background:var(--income);border-color:var(--income);color:#fff;}
+  .todo-check.pending{background:none;border-color:var(--p1);}
+  .todo-info{flex:1;min-width:0;}
+  .todo-content{font-size:13px;font-weight:600;}
+  .todo-content.done-text{text-decoration:line-through;color:var(--muted);}
+  .todo-meta{font-size:10px;color:var(--muted);margin-top:3px;display:flex;gap:6px;align-items:center;}
+  .todo-status{font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;}
+  .todo-status.pending{background:var(--p1-bg);color:var(--p1);}
+  .todo-status.done{background:#e8fef4;color:var(--income);}
+  .todo-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:4px;flex-shrink:0;}
+  .todo-del:hover{color:var(--expense);}
+
   .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:9px 18px;border-radius:50px;font-size:12px;font-weight:500;opacity:0;transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap;}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
@@ -277,6 +293,7 @@
     <button class="tab active" id="tabExpense" onclick="switchTab('expense')">지출</button>
     <button class="tab" id="tabIncome" onclick="switchTab('income')">수입</button>
     <button class="tab" id="tabChart" onclick="switchTab('chart')">차트</button>
+    <button class="tab" id="tabTodo" onclick="switchTab('todo')">할일</button>
   </div>
 
   <div class="form-card show" id="expenseForm">
@@ -387,6 +404,30 @@
     </div>
     <div id="recordList"></div>
   </div>
+
+  <!-- 할일 섹션 -->
+  <div id="todoSection" style="display:none;">
+    <!-- 할일 입력 폼 -->
+    <div class="form-card show" id="todoForm">
+      <div class="who-label">입력자: <span class="who-badge" id="todoWho"></span></div>
+      <div class="fgroup">
+        <label class="flabel">할일 내용</label>
+        <input class="finput" id="todoContent" type="text" placeholder="할일을 입력해주세요">
+      </div>
+      <button class="submit-btn" style="background:var(--p1);" onclick="addTodo()">할일 추가</button>
+    </div>
+
+    <!-- 필터 -->
+    <div class="filter-row">
+      <button class="fbtn active" onclick="setTodoFilter('all',this)">전체</button>
+      <button class="fbtn" onclick="setTodoFilter('pending',this)">처리중</button>
+      <button class="fbtn" onclick="setTodoFilter('done',this)">완료</button>
+      <button class="fbtn" id="todoFilterP1" onclick="setTodoFilter('p1',this)">🦡 오소리</button>
+      <button class="fbtn" id="todoFilterP2" onclick="setTodoFilter('p2',this)">🦉 부엉이</button>
+    </div>
+
+    <div id="todoList"></div>
+  </div>
 </div>
 </div>
 
@@ -394,7 +435,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, where, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, where, orderBy, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
 const firebaseConfig = {
@@ -428,6 +469,9 @@ const USERS = {
 };
 
 var records = [];
+var todos = [];
+var todoFilter = 'all';
+var todoUnsub = null;
 var currentKey = getPeriodKey(new Date());
 var currentFilter = 'all';
 var currentUser = null;
@@ -528,6 +572,8 @@ function showMain() {
   document.getElementById('expenseWho').className='who-badge '+currentUser.class;
   document.getElementById('incomeWho').textContent=currentUser.emoji+' '+currentUser.name;
   document.getElementById('incomeWho').className='who-badge '+currentUser.class;
+  document.getElementById('todoWho').textContent=currentUser.emoji+' '+currentUser.name;
+  document.getElementById('todoWho').className='who-badge '+currentUser.class;
   renderPeriod(); subscribe(); bindKeys();
   checkNotifStatus();
 }
@@ -736,10 +782,95 @@ window.switchTab=function(tab){
   ['expenseForm','incomeForm'].forEach(function(id){document.getElementById(id).classList.remove('show');});
   document.getElementById('chartSection').style.display='none';
   document.getElementById('recordsSection').style.display='none';
-  ['tabExpense','tabIncome','tabChart'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  document.getElementById('todoSection').style.display='none';
+  ['tabExpense','tabIncome','tabChart','tabTodo'].forEach(function(id){document.getElementById(id).classList.remove('active');});
   if(tab==='expense'){document.getElementById('expenseForm').classList.add('show');document.getElementById('recordsSection').style.display='';document.getElementById('tabExpense').classList.add('active');}
   else if(tab==='income'){document.getElementById('incomeForm').classList.add('show');document.getElementById('recordsSection').style.display='';document.getElementById('tabIncome').classList.add('active');}
-  else{document.getElementById('chartSection').style.display='';document.getElementById('tabChart').classList.add('active');renderCharts();}
+  else if(tab==='chart'){document.getElementById('chartSection').style.display='';document.getElementById('tabChart').classList.add('active');renderCharts();}
+  else if(tab==='todo'){document.getElementById('todoSection').style.display='';document.getElementById('tabTodo').classList.add('active');subscribeTodos();}
+};
+
+// ── 할일 관리 ──────────────────────────────────────
+function subscribeTodos() {
+  if(todoUnsub) return; // 이미 구독중
+  var q = query(collection(db,'todos'), orderBy('createdAt','desc'));
+  todoUnsub = onSnapshot(q, function(snap){
+    todos = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    renderTodos();
+  }, function(err){ console.error('todos error:', err); });
+}
+
+function filteredTodos() {
+  if(todoFilter==='all') return todos;
+  if(todoFilter==='pending') return todos.filter(function(t){return t.status==='pending';});
+  if(todoFilter==='done') return todos.filter(function(t){return t.status==='done';});
+  if(todoFilter==='p1') return todos.filter(function(t){return t.person===1;});
+  if(todoFilter==='p2') return todos.filter(function(t){return t.person===2;});
+  return todos;
+}
+
+function renderTodos() {
+  var ft = filteredTodos();
+  var list = document.getElementById('todoList');
+  if(!ft.length){ list.innerHTML='<div class="empty">할일이 없어요 😊</div>'; return; }
+  list.innerHTML = ft.map(function(t){
+    var isDone = t.status==='done';
+    var pClass = 'p'+t.person;
+    var pEmoji = t.person===1?'🦡':'🦉';
+    var pName = t.person===1?'오소리':'부엉이';
+    var date = t.date||'';
+    return '<div class="todo-item '+(isDone?'done-item':'')+'">'+
+      '<button class="todo-check '+(isDone?'done':'pending')+'" onclick="toggleTodo(\''+t.id+'\',\''+t.status+'\')">'+
+        (isDone?'✓':'')+'</button>'+
+      '<div class="todo-info">'+
+        '<div class="todo-content'+(isDone?' done-text':'')+'">'+esc(t.content)+'</div>'+
+        '<div class="todo-meta">'+
+          '<span class="badge '+pClass+'">'+pEmoji+' '+esc(pName)+'</span>'+
+          '<span class="todo-status '+(isDone?'done':'pending')+'">'+(isDone?'완료':'처리중')+'</span>'+
+          (date?'<span>'+date+'</span>':'')+
+        '</div>'+
+      '</div>'+
+      '<button class="todo-del" onclick="delTodo(\''+t.id+'\')">×</button>'+
+    '</div>';
+  }).join('');
+}
+
+window.addTodo = async function() {
+  var content = document.getElementById('todoContent').value.trim();
+  if(!content){toast('내용을 입력해주세요');return;}
+  try {
+    var now = new Date();
+    await addDoc(collection(db,'todos'),{
+      content: content,
+      status: 'pending',
+      person: currentUser.person,
+      addedBy: currentUser.id,
+      date: now.toISOString().slice(0,10),
+      createdAt: now.getTime()
+    });
+    document.getElementById('todoContent').value='';
+    toast('할일 추가됨 ✅');
+  } catch(e){ toast('저장 실패'); }
+};
+
+window.toggleTodo = async function(id, currentStatus) {
+  var newStatus = currentStatus==='pending'?'done':'pending';
+  try {
+    await updateDoc(doc(db,'todos',id),{ status: newStatus });
+    toast(newStatus==='done'?'완료! 🎉':'다시 처리중으로 변경됨');
+  } catch(e){ toast('변경 실패'); }
+};
+
+window.delTodo = async function(id) {
+  try { await deleteDoc(doc(db,'todos',id)); toast('삭제됨'); }
+  catch(e){ toast('삭제 실패'); }
+};
+
+window.setTodoFilter = function(f, btn) {
+  todoFilter = f;
+  document.querySelectorAll('#todoSection .fbtn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderTodos();
 };
 window.setFilter=function(f,btn){currentFilter=f;document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderRecords();};
 
@@ -778,6 +909,7 @@ function bindKeys(){
   document.getElementById('expenseMemo').addEventListener('keypress',function(e){if(e.key==='Enter')addExpense();});
   document.getElementById('incomeAmount').addEventListener('keypress',function(e){if(e.key==='Enter')addIncome();});
   document.getElementById('incomeMemo').addEventListener('keypress',function(e){if(e.key==='Enter')addIncome();});
+  document.getElementById('todoContent').addEventListener('keypress',function(e){if(e.key==='Enter')addTodo();});
 }
 
 function fmt(n){return Math.abs(Math.round(n)).toLocaleString('ko-KR');}
