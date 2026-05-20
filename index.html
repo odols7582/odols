@@ -157,6 +157,12 @@
   .manual-notif-btn{background:var(--p1);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;}
   .manual-notif-btn:hover{opacity:.85;}
 
+  /* 섹션 블록 */
+  .section-block{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:10px;overflow:hidden;}
+  .section-block-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;font-size:13px;font-weight:700;cursor:pointer;user-select:none;}
+  .section-block-header:hover{background:var(--bg);}
+  .section-toggle{font-size:11px;color:var(--muted);}
+
   /* 할일 */
   .todo-item{background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:opacity .2s;}
   .todo-item.done-item{opacity:.6;}
@@ -249,12 +255,40 @@
 </div>
 
 <div class="container">
+
+  <!-- 알림 배너 -->
   <div class="notif-banner" id="notifBanner">
     <span class="notif-banner-text">🔔 알림 허용하면 상대방 입력시 바로 알려드려요!</span>
     <button class="notif-banner-btn" onclick="setupNotification()">허용하기</button>
   </div>
 
-  <!-- 수동 알림 전송 버튼 -->
+  <!-- 1. 할일 섹션 (항상 표시) -->
+  <div class="section-block">
+    <div class="section-block-header" onclick="toggleSection('todoBlock')">
+      <span>📋 할일 관리</span>
+      <span class="section-toggle" id="todoBlockArrow">▲</span>
+    </div>
+    <div id="todoBlock">
+      <div class="form-card show" style="border-radius:0 0 var(--radius) var(--radius);border-top:none;margin-bottom:0;">
+        <div class="who-label">입력자: <span class="who-badge" id="todoWho"></span></div>
+        <div class="fgroup">
+          <label class="flabel">할일 내용</label>
+          <input class="finput" id="todoContent" type="text" placeholder="할일을 입력해주세요">
+        </div>
+        <button class="submit-btn" style="background:var(--p1);" onclick="addTodo()">할일 추가</button>
+      </div>
+      <div class="filter-row" style="margin-top:8px;">
+        <button class="fbtn active" onclick="setTodoFilter('all',this)">전체</button>
+        <button class="fbtn" onclick="setTodoFilter('pending',this)">처리중</button>
+        <button class="fbtn" onclick="setTodoFilter('done',this)">완료</button>
+        <button class="fbtn" onclick="setTodoFilter('p1',this)">🦡 오소리</button>
+        <button class="fbtn" onclick="setTodoFilter('p2',this)">🦉 부엉이</button>
+      </div>
+      <div id="todoList"></div>
+    </div>
+  </div>
+
+  <!-- 2. 메시지 푸시 -->
   <div class="manual-notif-card" id="manualNotifCard" style="display:none;">
     <div class="manual-notif-title">📣 상대방에게 알림 보내기</div>
     <div class="manual-notif-row">
@@ -263,37 +297,11 @@
     </div>
   </div>
 
-  <div class="summary-card">
-    <div class="sum-label" id="sumLabel">이번 달 잔액</div>
-    <div class="sum-balance pos" id="totalBalance">0 원</div>
-    <div class="sum-row">
-      <div class="sum-item"><div class="sum-label">총 수입</div><div class="sum-val inc" id="totalIncome">0 원</div></div>
-      <div class="sum-item"><div class="sum-label">총 지출</div><div class="sum-val exp" id="totalExpense">0 원</div></div>
-    </div>
-    <div class="sum-row" style="margin-top:10px;">
-      <div class="sum-item"><div class="sum-label">💰 투자 납입</div><div class="sum-val exp" id="totalInvest">0 원</div></div>
-      <div class="sum-item"><div class="sum-label">📈 투자 회수</div><div class="sum-val inc" id="totalReturn">0 원</div></div>
-    </div>
-  </div>
-
-  <div class="person-row">
-    <div class="pcard p1">
-      <div class="pname">🦡 오소리</div>
-      <div class="pstat"><span class="pstat-l">수입</span><span class="pstat-v" id="p1income" style="color:var(--income)">0</span></div>
-      <div class="pstat"><span class="pstat-l">지출</span><span class="pstat-v" id="p1expense" style="color:var(--expense)">0</span></div>
-    </div>
-    <div class="pcard p2">
-      <div class="pname">🦉 부엉이</div>
-      <div class="pstat"><span class="pstat-l">수입</span><span class="pstat-v" id="p2income" style="color:var(--income)">0</span></div>
-      <div class="pstat"><span class="pstat-l">지출</span><span class="pstat-v" id="p2expense" style="color:var(--expense)">0</span></div>
-    </div>
-  </div>
-
+  <!-- 3. 지출/수입/차트 입력 -->
   <div class="tabs">
     <button class="tab active" id="tabExpense" onclick="switchTab('expense')">지출</button>
     <button class="tab" id="tabIncome" onclick="switchTab('income')">수입</button>
     <button class="tab" id="tabChart" onclick="switchTab('chart')">차트</button>
-    <button class="tab" id="tabTodo" onclick="switchTab('todo')">할일</button>
   </div>
 
   <div class="form-card show" id="expenseForm">
@@ -393,6 +401,7 @@
     </div>
   </div>
 
+  <!-- 4. 내역 -->
   <div id="recordsSection">
     <div class="sec-title">내역</div>
     <div class="filter-row">
@@ -405,29 +414,35 @@
     <div id="recordList"></div>
   </div>
 
-  <!-- 할일 섹션 -->
-  <div id="todoSection" style="display:none;">
-    <!-- 할일 입력 폼 -->
-    <div class="form-card show" id="todoForm">
-      <div class="who-label">입력자: <span class="who-badge" id="todoWho"></span></div>
-      <div class="fgroup">
-        <label class="flabel">할일 내용</label>
-        <input class="finput" id="todoContent" type="text" placeholder="할일을 입력해주세요">
-      </div>
-      <button class="submit-btn" style="background:var(--p1);" onclick="addTodo()">할일 추가</button>
+  <!-- 5. 잔액 요약 -->
+  <div class="summary-card">
+    <div class="sum-label" id="sumLabel">이번 달 잔액</div>
+    <div class="sum-balance pos" id="totalBalance">0 원</div>
+    <div class="sum-row">
+      <div class="sum-item"><div class="sum-label">총 수입</div><div class="sum-val inc" id="totalIncome">0 원</div></div>
+      <div class="sum-item"><div class="sum-label">총 지출</div><div class="sum-val exp" id="totalExpense">0 원</div></div>
     </div>
-
-    <!-- 필터 -->
-    <div class="filter-row">
-      <button class="fbtn active" onclick="setTodoFilter('all',this)">전체</button>
-      <button class="fbtn" onclick="setTodoFilter('pending',this)">처리중</button>
-      <button class="fbtn" onclick="setTodoFilter('done',this)">완료</button>
-      <button class="fbtn" id="todoFilterP1" onclick="setTodoFilter('p1',this)">🦡 오소리</button>
-      <button class="fbtn" id="todoFilterP2" onclick="setTodoFilter('p2',this)">🦉 부엉이</button>
+    <div class="sum-row" style="margin-top:10px;">
+      <div class="sum-item"><div class="sum-label">💰 투자 납입</div><div class="sum-val exp" id="totalInvest">0 원</div></div>
+      <div class="sum-item"><div class="sum-label">📈 투자 회수</div><div class="sum-val inc" id="totalReturn">0 원</div></div>
     </div>
-
-    <div id="todoList"></div>
   </div>
+
+  <div class="person-row">
+    <div class="pcard p1">
+      <div class="pname">🦡 오소리</div>
+      <div class="pstat"><span class="pstat-l">수입</span><span class="pstat-v" id="p1income" style="color:var(--income)">0</span></div>
+      <div class="pstat"><span class="pstat-l">지출</span><span class="pstat-v" id="p1expense" style="color:var(--expense)">0</span></div>
+    </div>
+    <div class="pcard p2">
+      <div class="pname">🦉 부엉이</div>
+      <div class="pstat"><span class="pstat-l">수입</span><span class="pstat-v" id="p2income" style="color:var(--income)">0</span></div>
+      <div class="pstat"><span class="pstat-l">지출</span><span class="pstat-v" id="p2expense" style="color:var(--expense)">0</span></div>
+    </div>
+  </div>
+
+</div>
+</div>
 </div>
 </div>
 
@@ -574,7 +589,7 @@ function showMain() {
   document.getElementById('incomeWho').className='who-badge '+currentUser.class;
   document.getElementById('todoWho').textContent=currentUser.emoji+' '+currentUser.name;
   document.getElementById('todoWho').className='who-badge '+currentUser.class;
-  renderPeriod(); subscribe(); bindKeys();
+  renderPeriod(); subscribe(); subscribeTodos(); bindKeys();
   checkNotifStatus();
 }
 
@@ -782,12 +797,22 @@ window.switchTab=function(tab){
   ['expenseForm','incomeForm'].forEach(function(id){document.getElementById(id).classList.remove('show');});
   document.getElementById('chartSection').style.display='none';
   document.getElementById('recordsSection').style.display='none';
-  document.getElementById('todoSection').style.display='none';
-  ['tabExpense','tabIncome','tabChart','tabTodo'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  ['tabExpense','tabIncome','tabChart'].forEach(function(id){document.getElementById(id).classList.remove('active');});
   if(tab==='expense'){document.getElementById('expenseForm').classList.add('show');document.getElementById('recordsSection').style.display='';document.getElementById('tabExpense').classList.add('active');}
   else if(tab==='income'){document.getElementById('incomeForm').classList.add('show');document.getElementById('recordsSection').style.display='';document.getElementById('tabIncome').classList.add('active');}
   else if(tab==='chart'){document.getElementById('chartSection').style.display='';document.getElementById('tabChart').classList.add('active');renderCharts();}
-  else if(tab==='todo'){document.getElementById('todoSection').style.display='';document.getElementById('tabTodo').classList.add('active');subscribeTodos();}
+};
+
+window.toggleSection = function(id) {
+  var el = document.getElementById(id);
+  var arrow = document.getElementById(id+'Arrow');
+  if(el.style.display==='none'){
+    el.style.display='';
+    if(arrow) arrow.textContent='▲';
+  } else {
+    el.style.display='none';
+    if(arrow) arrow.textContent='▼';
+  }
 };
 
 // ── 할일 관리 ──────────────────────────────────────
