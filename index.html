@@ -539,6 +539,7 @@
           <option value="통신">📱 통신</option>
           <option value="주거">🏠 주거</option>
           <option value="대출">🏦 대출</option>
+          <option value="보험">🛡 보험</option>
           <option value="애견용품">🐾 애견용품</option>
           <option value="주식 매수">📈 주식 매수</option>
           <option value="코인 매수">🪙 코인 매수</option>
@@ -684,18 +685,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 let messaging = null;
 
-// Service Worker 등록
+// Service Worker 등록 - firebase-messaging-sw.js 하나로 통합
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/odols/sw.js', { scope: '/odols/' })
+  navigator.serviceWorker.register('/odols/firebase-messaging-sw.js', { scope: '/odols/' })
     .then(function(reg) {
-      console.log('SW 등록 완료:', reg.scope);
+      console.log('FCM SW 등록 완료:', reg.scope);
       try {
         messaging = getMessaging(app);
-        // FCM용 SW 경로 명시적 지정
-        navigator.serviceWorker.register('/odols/firebase-messaging-sw.js', { scope: '/odols/' })
-          .then(function(fcmReg) {
-            console.log('FCM SW 등록 완료:', fcmReg.scope);
-          }).catch(function(e){ console.log('FCM SW 등록 실패:', e); });
         setupForegroundMessage();
       } catch(e) { console.log('Messaging 초기화 실패:', e); }
     })
