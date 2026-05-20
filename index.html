@@ -8,12 +8,41 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
   :root {
-    --bg:#f7f6f3; --surface:#fff; --border:#e8e5df;
-    --text:#1a1917; --muted:#888780;
+    --bg:#f0f2f8; --surface:#fff; --border:#dde2f0;
+    --text:#1a1917; --muted:#7a8099;
     --income:#1D9E75; --expense:#D85A30;
     --p1:#534AB7; --p2:#D85A30;
     --p1-bg:#EEEDFE; --p2-bg:#FAECE7;
     --radius:14px;
+
+    /* 섹션별 색상 */
+    --dday-color:#7C3AED;     /* 퍼플 - 기념일 */
+    --dday-bg:#F5F0FF;
+    --dday-border:#C4B5FD;
+
+    --schedule-color:#0369A1;  /* 딥블루 - 일정 */
+    --schedule-bg:#EFF6FF;
+    --schedule-border:#BAE6FD;
+
+    --todo-color:#0891B2;      /* 시안 - 할일 */
+    --todo-bg:#ECFEFF;
+    --todo-border:#A5F3FC;
+
+    --msg-color:#6366F1;       /* 인디고 - 메시지 */
+    --msg-bg:#EEF2FF;
+    --msg-border:#C7D2FE;
+
+    --ledger-color:#0F766E;    /* 틸 - 가계부 입력 */
+    --ledger-bg:#F0FDFA;
+    --ledger-border:#99F6E4;
+
+    --record-color:#1D4ED8;    /* 블루 - 내역 */
+    --record-bg:#EFF6FF;
+    --record-border:#BFDBFE;
+
+    --summary-color:#4338CA;   /* 인디고다크 - 잔액 */
+    --summary-bg:#EEF2FF;
+    --summary-border:#C7D2FE;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
@@ -186,10 +215,69 @@
   .schedule-item.past-schedule{opacity:.5;}
 
   /* 섹션 블록 */
-  .section-block{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:10px;overflow:hidden;}
+  .section-block{border-radius:var(--radius);margin-bottom:12px;overflow:hidden;border:1.5px solid var(--border);}
   .section-block-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;font-size:13px;font-weight:700;cursor:pointer;user-select:none;}
-  .section-block-header:hover{background:var(--bg);}
-  .section-toggle{font-size:11px;color:var(--muted);}
+  .section-block-header:hover{filter:brightness(.97);}
+  .section-toggle{font-size:11px;opacity:.7;}
+
+  /* 기념일 섹션 */
+  .section-block.dday{border-color:var(--dday-border);}
+  .section-block.dday .section-block-header{background:linear-gradient(135deg,var(--dday-color),#9F7AEA);color:#fff;}
+  .section-block.dday > div{background:var(--dday-bg);}
+
+  /* 일정 섹션 */
+  .section-block.schedule{border-color:var(--schedule-border);}
+  .section-block.schedule .section-block-header{background:linear-gradient(135deg,var(--schedule-color),#0EA5E9);color:#fff;}
+  .section-block.schedule > div{background:var(--schedule-bg);}
+
+  /* 할일 섹션 */
+  .section-block.todo{border-color:var(--todo-border);}
+  .section-block.todo .section-block-header{background:linear-gradient(135deg,var(--todo-color),#06B6D4);color:#fff;}
+  .section-block.todo > div{background:var(--todo-bg);}
+
+  /* 가계부 탭 */
+  .tabs{display:flex;background:linear-gradient(135deg,var(--ledger-color),#14B8A6);border-radius:var(--radius);padding:5px;margin-bottom:10px;gap:4px;border:none;}
+  .tab{flex:1;padding:9px;text-align:center;font-size:12px;font-weight:600;border-radius:10px;cursor:pointer;border:none;background:none;font-family:inherit;color:rgba(255,255,255,.7);transition:all .15s;}
+  .tab.active{background:rgba(255,255,255,.95);color:var(--ledger-color);}
+
+  /* 내역 섹션 타이틀 */
+  .records-header{background:linear-gradient(135deg,var(--record-color),#3B82F6);border-radius:var(--radius) var(--radius) 0 0;padding:11px 16px;margin-bottom:0;}
+  .records-header .sec-title{color:#fff;margin-bottom:0;}
+
+  /* 잔액 요약 카드 색상 */
+  .summary-card{background:linear-gradient(135deg,var(--summary-color),#6366F1);border:none;}
+  .summary-card .sum-label{color:rgba(255,255,255,.75);}
+  .summary-card .sum-balance{color:#fff;}
+  .summary-card .sum-item{background:rgba(255,255,255,.15);}
+  .summary-card .sum-item .sum-label{color:rgba(255,255,255,.7);}
+  .summary-card .sum-val.inc{color:#86EFAC;}
+  .summary-card .sum-val.exp{color:#FCA5A5;}
+
+  /* 인물별 카드 */
+  .pcard.p1{border-color:var(--dday-border);border-top:3px solid var(--dday-color);}
+  .pcard.p2{border-color:var(--msg-border);border-top:3px solid var(--msg-color);}
+  .pcard.p1 .pname{color:var(--dday-color);}
+  .pcard.p2 .pname{color:var(--msg-color);}
+
+  /* 메시지 카드 */
+  .manual-notif-card{background:var(--msg-bg);border:1.5px solid var(--msg-border);border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+  .manual-notif-title{font-size:12px;font-weight:700;color:var(--msg-color);margin-bottom:8px;}
+  .manual-notif-btn{background:var(--msg-color);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;}
+
+  /* 헤더 그라디언트 */
+  .header{background:linear-gradient(135deg,#1E1B4B,#312E81);border-bottom:none;}
+  .header-name{color:#fff;}
+  .sync-wrap{color:rgba(255,255,255,.7);}
+  .btn-sm{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.9);}
+  .btn-sm:hover{background:rgba(255,255,255,.25);}
+  .btn-notif{color:#fff;}
+
+  /* 기간 네비 */
+  .period-nav{background:var(--bg);padding:14px 16px 8px;}
+  .period-main{color:var(--summary-color);}
+
+  /* 폼 카드 내부 색상 조정 */
+  .form-card{background:#fff;}
 
   /* 할일 */
   .todo-item{background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:opacity .2s;}
@@ -291,7 +379,7 @@
   </div>
 
   <!-- 0. 기념일 & D-day -->
-  <div class="section-block">
+  <div class="section-block dday">
     <div class="section-block-header" onclick="toggleSection('ddayBlock')">
       <span>💑 기념일 & D-day</span>
       <span class="section-toggle" id="ddayBlockArrow">▲</span>
@@ -307,7 +395,7 @@
   </div>
 
   <!-- 0-1. 일정 관리 -->
-  <div class="section-block">
+  <div class="section-block schedule">
     <div class="section-block-header" onclick="toggleSection('scheduleBlock')">
       <span>📅 일정 관리</span>
       <span class="section-toggle" id="scheduleBlockArrow">▲</span>
@@ -363,7 +451,7 @@
   </div>
 
   <!-- 1. 할일 섹션 (항상 표시) -->
-  <div class="section-block">
+  <div class="section-block todo">
     <div class="section-block-header" onclick="toggleSection('todoBlock')">
       <span>📋 할일 관리</span>
       <span class="section-toggle" id="todoBlockArrow">▲</span>
@@ -503,7 +591,9 @@
 
   <!-- 4. 내역 -->
   <div id="recordsSection">
-    <div class="sec-title">내역</div>
+    <div class="records-header">
+      <div class="sec-title">📋 내역</div>
+    </div>
     <div class="filter-row">
       <button class="fbtn active" onclick="setFilter('all',this)">전체</button>
       <button class="fbtn" onclick="setFilter('p1',this)">🦡 오소리</button>
