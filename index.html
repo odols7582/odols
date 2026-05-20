@@ -628,7 +628,7 @@
           <div style="font-size:14px;font-weight:700;color:#0891B2;" id="investReturn">0원</div>
         </div>
         <div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #BAE6FD;">
-          <div style="font-size:10px;color:#0F766E;font-weight:600;margin-bottom:4px;">💹 순손익</div>
+          <div style="font-size:10px;color:#0F766E;font-weight:600;margin-bottom:4px;">💹 순손익 (회수-납입)</div>
           <div style="font-size:14px;font-weight:700;" id="investNet">0원</div>
         </div>
       </div>
@@ -1334,7 +1334,7 @@ function renderInvest() {
   document.getElementById('investTotal').textContent = fmt(totalIn)+'원';
   document.getElementById('investReturn').textContent = fmt(totalOut)+'원';
   var netEl = document.getElementById('investNet');
-  netEl.textContent = (net>=0?'+':'')+fmt(net)+'원';
+  netEl.textContent = (net>=0?'+':'')+fmt(Math.abs(net))+'원';
   netEl.style.color = net>=0?'#0F766E':'#DC2626';
 
   // 항목별 차트
@@ -1429,17 +1429,23 @@ function subscribeDdays() {
 function renderDdays() {
   var list = document.getElementById('ddayList');
   if(!ddays.length){ list.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0;">기념일을 추가해보세요 💑</div>'; return; }
-  var today = new Date(); today.setHours(0,0,0,0);
+
+  // 오늘 날짜를 로컬 기준으로 정확히 계산
+  var now = new Date();
+  var todayStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  var todayMs = new Date(todayStr).getTime();
+
   list.innerHTML = ddays.map(function(d){
-    var target = new Date(d.date); target.setHours(0,0,0,0);
-    var diff = Math.round((target - today) / (1000*60*60*24));
+    var targetMs = new Date(d.date).getTime();
+    var diff = Math.round((todayMs - targetMs) / (1000*60*60*24));
     var diffText, cls;
     if(diff===0){ diffText='D-DAY'; cls='today'; }
-    else if(diff>0){ diffText='D-'+diff; cls=''; }
-    else { diffText='D+'+Math.abs(diff); cls='past'; }
+    else if(diff<0){ diffText='D'+diff; cls=''; } // 미래
+    else { diffText='D+'+diff; cls='past'; } // 과거
+
     var anniv = '';
-    if(diff<=0){
-      var years = today.getFullYear() - target.getFullYear();
+    if(diff>=0){
+      var years = now.getFullYear() - new Date(d.date).getFullYear();
       if(years>0) anniv = ' ('+years+'주년)';
     }
     return '<div class="dday-item">'+
