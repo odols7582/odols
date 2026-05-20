@@ -548,23 +548,27 @@
   </div>
 
   <div id="chartSection" style="display:none;">
+    <!-- 카테고리별 지출 + 전월 비교 -->
     <div class="chart-box">
-      <div class="chart-title">카테고리별 지출</div>
-      <div class="chart-wrap" style="height:220px;"><canvas id="catChart"></canvas></div>
+      <div class="chart-title">카테고리별 지출 (전월 비교)</div>
+      <div class="chart-wrap" style="height:260px;"><canvas id="catChart"></canvas></div>
       <div class="legend" id="catLegend"></div>
     </div>
+    <!-- 지출처별 -->
     <div class="chart-box">
       <div class="chart-title">지출처별 지출</div>
       <div class="chart-wrap" style="height:220px;"><canvas id="paymentChart"></canvas></div>
       <div class="legend" id="paymentLegend"></div>
     </div>
+    <!-- 인물별 -->
     <div class="chart-box">
       <div class="chart-title">인물별 지출</div>
-      <div class="chart-wrap" style="height:160px;"><canvas id="personChart"></canvas></div>
+      <div class="chart-wrap" style="height:180px;"><canvas id="personChart"></canvas></div>
     </div>
+    <!-- 수입 vs 지출 -->
     <div class="chart-box">
       <div class="chart-title">수입 vs 지출</div>
-      <div class="chart-wrap" style="height:160px;"><canvas id="summaryChart"></canvas></div>
+      <div class="chart-wrap" style="height:180px;"><canvas id="summaryChart"></canvas></div>
     </div>
   </div>
 
@@ -591,10 +595,6 @@
       <div class="sum-item"><div class="sum-label">총 수입</div><div class="sum-val inc" id="totalIncome">0 원</div></div>
       <div class="sum-item"><div class="sum-label">총 지출</div><div class="sum-val exp" id="totalExpense">0 원</div></div>
     </div>
-    <div class="sum-row" style="margin-top:10px;">
-      <div class="sum-item"><div class="sum-label">💰 투자 납입</div><div class="sum-val exp" id="totalInvest">0 원</div></div>
-      <div class="sum-item"><div class="sum-label">📈 투자 회수</div><div class="sum-val inc" id="totalReturn">0 원</div></div>
-    </div>
   </div>
 
   <div class="person-row">
@@ -606,7 +606,40 @@
     <div class="pcard p2">
       <div class="pname">🦉 부엉이</div>
       <div class="pstat"><span class="pstat-l">수입</span><span class="pstat-v" id="p2income" style="color:var(--income)">0</span></div>
-      <div class="pstat"><span class="pstat-v" id="p2expense" style="color:var(--expense)">0</span></div>
+      <div class="pstat"><span class="pstat-l">지출</span><span class="pstat-v" id="p2expense" style="color:var(--expense)">0</span></div>
+    </div>
+  </div>
+
+  <!-- 3-1. 투자 전용 섹션 -->
+  <div class="section-block" style="border-color:#A5F3FC;margin-bottom:12px;">
+    <div class="section-block-header" onclick="toggleSection('investBlock')" style="background:linear-gradient(135deg,#0369A1,#0EA5E9);color:#fff;">
+      <span>📈 투자 레포트</span>
+      <span class="section-toggle" id="investBlockArrow">▲</span>
+    </div>
+    <div id="investBlock" style="padding:14px;background:#EFF6FF;">
+      <!-- 투자 요약 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #BAE6FD;">
+          <div style="font-size:10px;color:#0369A1;font-weight:600;margin-bottom:4px;">💰 총 납입</div>
+          <div style="font-size:14px;font-weight:700;color:#0369A1;" id="investTotal">0원</div>
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #BAE6FD;">
+          <div style="font-size:10px;color:#0891B2;font-weight:600;margin-bottom:4px;">📤 총 회수</div>
+          <div style="font-size:14px;font-weight:700;color:#0891B2;" id="investReturn">0원</div>
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #BAE6FD;">
+          <div style="font-size:10px;color:#0F766E;font-weight:600;margin-bottom:4px;">💹 순손익</div>
+          <div style="font-size:14px;font-weight:700;" id="investNet">0원</div>
+        </div>
+      </div>
+      <!-- 투자 항목별 차트 -->
+      <div style="background:#fff;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid #BAE6FD;">
+        <div style="font-size:11px;font-weight:700;color:#0369A1;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">항목별 납입 현황</div>
+        <div class="chart-wrap" style="height:180px;"><canvas id="investChart"></canvas></div>
+      </div>
+      <!-- 투자 내역 리스트 -->
+      <div style="font-size:11px;font-weight:700;color:#0369A1;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">투자 내역</div>
+      <div id="investList"></div>
     </div>
   </div>
 
@@ -868,7 +901,7 @@ function showMain() {
   document.getElementById('incomeWho').className='who-badge '+currentUser.class;
   document.getElementById('todoWho').textContent=currentUser.emoji+' '+currentUser.name;
   document.getElementById('todoWho').className='who-badge '+currentUser.class;
-  renderPeriod(); subscribe(); subscribeTodos(); subscribeDdays(); subscribeSchedules(); initScheduleDate(); bindKeys();
+  renderPeriod(); subscribe(); subscribePrevRecords(); subscribeTodos(); subscribeDdays(); subscribeSchedules(); initScheduleDate(); bindKeys();
   checkNotifStatus();
   // PWA 설치 배너
   if(deferredPrompt) document.getElementById('pwaBanner').style.display = 'flex';
@@ -1085,25 +1118,27 @@ window.changePeriod = function(dir) {
   var parts=currentKey.split('-');
   var d=new Date(parseInt(parts[0]),parseInt(parts[1])-1+dir,1);
   currentKey=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-  renderPeriod(); subscribe();
+  renderPeriod(); subscribe(); subscribePrevRecords();
 };
 
 // ── 렌더 ──────────────────────────────────────────
-function renderAll() { renderSummary(); renderRecords(); if(document.getElementById('chartSection').style.display!=='none') renderCharts(); }
+function renderAll() { renderSummary(); renderRecords(); renderInvest(); if(document.getElementById('chartSection').style.display!=='none') renderCharts(); }
 
 function renderSummary() {
-  var inc=0,exp=0,p1i=0,p1e=0,p2i=0,p2e=0,invest=0,ret=0;
-  var iCats=['주식 매수','코인 매수','적금/예금'], rCats=['주식 매도','코인 매도','배당/이자'];
+  var inc=0,exp=0,p1i=0,p1e=0,p2i=0,p2e=0;
+  var investCats=['주식 매수','코인 매수','적금/예금'];
   records.forEach(function(r){
-    if(r.type==='income'){inc+=r.amount;if(r.person===1)p1i+=r.amount;else p2i+=r.amount;if(rCats.indexOf(r.category)>=0)ret+=r.amount;}
-    else{exp+=r.amount;if(r.person===1)p1e+=r.amount;else p2e+=r.amount;if(iCats.indexOf(r.category)>=0)invest+=r.amount;}
+    if(r.type==='income'){inc+=r.amount;if(r.person===1)p1i+=r.amount;else p2i+=r.amount;}
+    else{
+      if(investCats.indexOf(r.category)<0){ // 투자 제외한 지출만 집계
+        exp+=r.amount;if(r.person===1)p1e+=r.amount;else p2e+=r.amount;
+      }
+    }
   });
   var bal=inc-exp, el=document.getElementById('totalBalance');
   el.textContent=fmt(bal)+' 원'; el.className='sum-balance '+(bal>=0?'pos':'neg');
   document.getElementById('totalIncome').textContent=fmt(inc)+' 원';
   document.getElementById('totalExpense').textContent=fmt(exp)+' 원';
-  document.getElementById('totalInvest').textContent=fmt(invest)+' 원';
-  document.getElementById('totalReturn').textContent=fmt(ret)+' 원';
   document.getElementById('p1income').textContent=fmt(p1i)+' 원';
   document.getElementById('p1expense').textContent=fmt(p1e)+' 원';
   document.getElementById('p2income').textContent=fmt(p2i)+' 원';
@@ -1175,32 +1210,185 @@ window.saveEdit = async function() {
   } catch(e){ toast('수정 실패'); }
 };
 
+var investChart = null;
+
 function renderCharts() {
-  var expenses=records.filter(function(r){return r.type==='expense';});
-  var catMap={};expenses.forEach(function(r){catMap[r.category]=(catMap[r.category]||0)+r.amount;});
-  var cL=Object.keys(catMap),cD=cL.map(function(k){return catMap[k];});
+  var expenses = records.filter(function(r){return r.type==='expense';});
+  var investCats = ['주식 매수','코인 매수','적금/예금'];
+  // 투자 제외한 지출만
+  var nonInvestExp = expenses.filter(function(r){return investCats.indexOf(r.category)<0;});
+
+  // 전월 period 계산
+  var parts = currentKey.split('-');
+  var py = parseInt(parts[0]), pm = parseInt(parts[1])-1;
+  if(pm<1){pm=12;py-=1;}
+  var prevKey = py+'-'+String(pm).padStart(2,'0');
+
+  // 전월 데이터 가져오기 (구독된 records에서 period로 필터)
+  // 전월은 별도 쿼리 없이 Firestore에서 한번에 가져오는 방식 사용
+  // 여기선 전월 catMap을 빈값으로 처리 (실시간 구독 데이터만 사용)
+  // 전월 비교를 위해 prevRecords 전역 변수 활용
+  var prevExpenses = (window.prevRecords||[]).filter(function(r){return r.type==='expense' && investCats.indexOf(r.category)<0;});
+  var prevCatMap = {};
+  prevExpenses.forEach(function(r){prevCatMap[r.category]=(prevCatMap[r.category]||0)+r.amount;});
+
+  // 카테고리별 (투자 제외) + 전월 비교 막대그래프
+  var catMap = {};
+  nonInvestExp.forEach(function(r){catMap[r.category]=(catMap[r.category]||0)+r.amount;});
+  var cL = Object.keys(catMap).sort(function(a,b){return catMap[b]-catMap[a];});
+  var cD = cL.map(function(k){return catMap[k];});
+  var pD = cL.map(function(k){return prevCatMap[k]||0;});
+
   if(catChart) catChart.destroy();
   if(cL.length){
-    catChart=new Chart(document.getElementById('catChart').getContext('2d'),{type:'doughnut',data:{labels:cL,datasets:[{data:cD,backgroundColor:COLORS.slice(0,cL.length),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}}}});
-    document.getElementById('catLegend').innerHTML=cL.map(function(l,i){var p=Math.round(cD[i]/cD.reduce(function(a,b){return a+b;},0)*100);return '<div class="leg-item"><div class="leg-dot" style="background:'+COLORS[i]+'"></div>'+esc(l)+' '+p+'%</div>';}).join('');
+    catChart = new Chart(document.getElementById('catChart').getContext('2d'), {
+      type:'bar',
+      data:{
+        labels:cL,
+        datasets:[
+          {label:'이번달', data:cD, backgroundColor:'#6366F1', borderRadius:6, borderSkipped:false},
+          {label:'전월', data:pD, backgroundColor:'#C7D2FE', borderRadius:6, borderSkipped:false}
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{display:true, position:'top', labels:{font:{size:11}}},
+          tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}},
+          datalabels:{
+            anchor:'end', align:'top', font:{size:9, weight:'bold'},
+            formatter:function(v){return v>0?fmt(v)+'원':'';},
+            color:'#374151'
+          }
+        },
+        scales:{
+          y:{beginAtZero:true, ticks:{callback:function(v){return fmt(v);}, font:{size:10}}, grid:{color:'rgba(0,0,0,0.05)'}},
+          x:{grid:{display:false}, ticks:{font:{size:10}}}
+        }
+      }
+    });
+    // 카테고리 범례에 전월 비교 표시
+    document.getElementById('catLegend').innerHTML = cL.map(function(l){
+      var cur = catMap[l]||0, prev = prevCatMap[l]||0;
+      var diff = cur - prev;
+      var diffStr = diff===0?'':diff>0?'<span style="color:#D85A30;font-size:9px;">▲'+fmt(diff)+'</span>':'<span style="color:#1D9E75;font-size:9px;">▼'+fmt(Math.abs(diff))+'</span>';
+      return '<div class="leg-item">'+esc(l)+' '+fmt(cur)+'원 '+diffStr+'</div>';
+    }).join('');
   } else { document.getElementById('catLegend').innerHTML=''; }
 
+  // 지출처별 도넛
   var payMap={};expenses.forEach(function(r){var k=r.payment||'미분류';payMap[k]=(payMap[k]||0)+r.amount;});
-  var pL=Object.keys(payMap),pD=pL.map(function(k){return payMap[k];});
+  var pL=Object.keys(payMap),pDat=pL.map(function(k){return payMap[k];});
   if(payChart) payChart.destroy();
   if(pL.length){
-    payChart=new Chart(document.getElementById('paymentChart').getContext('2d'),{type:'doughnut',data:{labels:pL,datasets:[{data:pD,backgroundColor:COLORS2.slice(0,pL.length),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}}}});
-    document.getElementById('paymentLegend').innerHTML=pL.map(function(l,i){var p=Math.round(pD[i]/pD.reduce(function(a,b){return a+b;},0)*100);return '<div class="leg-item"><div class="leg-dot" style="background:'+COLORS2[i]+'"></div>'+esc(l)+' '+p+'%</div>';}).join('');
+    payChart=new Chart(document.getElementById('paymentChart').getContext('2d'),{type:'doughnut',data:{labels:pL,datasets:[{data:pDat,backgroundColor:COLORS2.slice(0,pL.length),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}}}});
+    document.getElementById('paymentLegend').innerHTML=pL.map(function(l,i){var p=Math.round(pDat[i]/pDat.reduce(function(a,b){return a+b;},0)*100);return '<div class="leg-item"><div class="leg-dot" style="background:'+COLORS2[i]+'"></div>'+esc(l)+' '+p+'%</div>';}).join('');
   } else { document.getElementById('paymentLegend').innerHTML=''; }
 
-  var p1e=0,p2e=0;expenses.forEach(function(r){if(r.person===1)p1e+=r.amount;else p2e+=r.amount;});
+  // 인물별 막대 + 금액 표시
+  var p1e=0,p2e=0;
+  nonInvestExp.forEach(function(r){if(r.person===1)p1e+=r.amount;else p2e+=r.amount;});
   if(personChart) personChart.destroy();
-  personChart=new Chart(document.getElementById('personChart').getContext('2d'),{type:'bar',data:{labels:['🦡 오소리','🦉 부엉이'],datasets:[{data:[p1e,p2e],backgroundColor:['#534AB7','#D85A30'],borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return fmt(v);},font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false},ticks:{font:{size:12}}}}}});
+  personChart=new Chart(document.getElementById('personChart').getContext('2d'),{
+    type:'bar',
+    data:{labels:['🦡 오소리','🦉 부엉이'],datasets:[{data:[p1e,p2e],backgroundColor:['#7C3AED','#0891B2'],borderRadius:8,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}},
+      },
+      scales:{
+        y:{beginAtZero:true,ticks:{callback:function(v){return fmt(v);},font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},
+        x:{grid:{display:false},ticks:{font:{size:12}}}
+      }
+    }
+  });
 
+  // 수입 vs 지출 막대 + 금액 표시
   var incT=records.filter(function(r){return r.type==='income';}).reduce(function(a,r){return a+r.amount;},0);
-  var expT=expenses.reduce(function(a,r){return a+r.amount;},0);
+  var expT=nonInvestExp.reduce(function(a,r){return a+r.amount;},0);
   if(sumChart) sumChart.destroy();
-  sumChart=new Chart(document.getElementById('summaryChart').getContext('2d'),{type:'bar',data:{labels:['수입','지출'],datasets:[{data:[incT,expT],backgroundColor:['#1D9E75','#D85A30'],borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return fmt(v);},font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false},ticks:{font:{size:12}}}}}});
+  sumChart=new Chart(document.getElementById('summaryChart').getContext('2d'),{
+    type:'bar',
+    data:{labels:['수입','지출(투자제외)'],datasets:[{data:[incT,expT],backgroundColor:['#1D9E75','#D85A30'],borderRadius:8,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}},
+      scales:{
+        y:{beginAtZero:true,ticks:{callback:function(v){return fmt(v);},font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},
+        x:{grid:{display:false},ticks:{font:{size:12}}}
+      }
+    }
+  });
+}
+
+// ── 투자 레포트 ───────────────────────────────────
+function renderInvest() {
+  var investCats = ['주식 매수','코인 매수','적금/예금'];
+  var returnCats = ['주식 매도','코인 매도','배당/이자'];
+  var investRecs = records.filter(function(r){return r.type==='expense' && investCats.indexOf(r.category)>=0;});
+  var returnRecs = records.filter(function(r){return r.type==='income' && returnCats.indexOf(r.category)>=0;});
+
+  var totalIn = investRecs.reduce(function(a,r){return a+r.amount;},0);
+  var totalOut = returnRecs.reduce(function(a,r){return a+r.amount;},0);
+  var net = totalOut - totalIn;
+
+  document.getElementById('investTotal').textContent = fmt(totalIn)+'원';
+  document.getElementById('investReturn').textContent = fmt(totalOut)+'원';
+  var netEl = document.getElementById('investNet');
+  netEl.textContent = (net>=0?'+':'')+fmt(net)+'원';
+  netEl.style.color = net>=0?'#0F766E':'#DC2626';
+
+  // 항목별 차트
+  var iMap = {};
+  investRecs.forEach(function(r){iMap[r.category]=(iMap[r.category]||0)+r.amount;});
+  var iL = Object.keys(iMap), iD = iL.map(function(k){return iMap[k];});
+  if(investChart) investChart.destroy();
+  if(iL.length){
+    investChart = new Chart(document.getElementById('investChart').getContext('2d'),{
+      type:'bar',
+      data:{labels:iL, datasets:[{data:iD, backgroundColor:['#0369A1','#0891B2','#0F766E'], borderRadius:6, borderSkipped:false}]},
+      options:{responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:function(c){return ' '+fmt(c.raw)+'원';}}}},
+        scales:{
+          y:{beginAtZero:true, ticks:{callback:function(v){return fmt(v);}, font:{size:10}}, grid:{color:'rgba(0,0,0,0.05)'}},
+          x:{grid:{display:false}, ticks:{font:{size:11}}}
+        }
+      }
+    });
+  }
+
+  // 내역 리스트
+  var allInvest = investRecs.concat(returnRecs).sort(function(a,b){return b.createdAt-a.createdAt;});
+  var list = document.getElementById('investList');
+  if(!allInvest.length){list.innerHTML='<div class="empty">투자 내역이 없어요</div>';return;}
+  list.innerHTML = allInvest.map(function(r){
+    var isOut = returnCats.indexOf(r.category)>=0;
+    var sign = isOut?'+':'-';
+    var color = isOut?'#0F766E':'#0369A1';
+    var date = r.date?r.date.slice(5).replace('-','/'):'';
+    return '<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #BAE6FD;gap:10px;">'+
+      '<div style="flex:1;font-size:12px;font-weight:600;">'+esc(r.memo||r.category)+
+        '<div style="font-size:10px;color:#64748B;margin-top:2px;"><span style="background:#DBEAFE;color:#1D4ED8;border-radius:20px;padding:1px 7px;font-size:9px;">'+esc(r.category)+'</span> '+date+'</div>'+
+      '</div>'+
+      '<div style="font-size:13px;font-weight:700;color:'+color+';">'+sign+fmt(r.amount)+'원</div>'+
+    '</div>';
+  }).join('');
+}
+
+// 전월 데이터 구독
+var prevRecords = [];
+window.prevRecords = prevRecords;
+var prevUnsub = null;
+
+function subscribePrevRecords() {
+  if(prevUnsub) prevUnsub();
+  var parts = currentKey.split('-');
+  var py = parseInt(parts[0]), pm = parseInt(parts[1])-1;
+  if(pm<1){pm=12;py-=1;}
+  var prevKey = py+'-'+String(pm).padStart(2,'0');
+  var q = query(collection(db,'records'), where('period','==',prevKey));
+  prevUnsub = onSnapshot(q, function(snap){
+    window.prevRecords = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+  });
 }
 
 window.switchTab=function(tab){
