@@ -613,7 +613,7 @@
   <!-- 3-1. 투자 전용 섹션 -->
   <div class="section-block" style="border-color:#A5F3FC;margin-bottom:12px;">
     <div class="section-block-header" onclick="toggleSection('investBlock')" style="background:linear-gradient(135deg,#0369A1,#0EA5E9);color:#fff;">
-      <span>📈 투자 레포트</span>
+      <span>📈 투자 레포트 <span style="font-size:10px;opacity:.8;">(전체 누적)</span></span>
       <span class="section-toggle" id="investBlockArrow">▲</span>
     </div>
     <div id="investBlock" style="padding:14px;background:#EFF6FF;">
@@ -901,7 +901,7 @@ function showMain() {
   document.getElementById('incomeWho').className='who-badge '+currentUser.class;
   document.getElementById('todoWho').textContent=currentUser.emoji+' '+currentUser.name;
   document.getElementById('todoWho').className='who-badge '+currentUser.class;
-  renderPeriod(); subscribe(); subscribePrevRecords(); subscribeTodos(); subscribeDdays(); subscribeSchedules(); initScheduleDate(); bindKeys();
+  renderPeriod(); subscribe(); subscribePrevRecords(); subscribeAllInvest(); subscribeTodos(); subscribeDdays(); subscribeSchedules(); initScheduleDate(); bindKeys();
   checkNotifStatus();
   // PWA 설치 배너
   if(deferredPrompt) document.getElementById('pwaBanner').style.display = 'flex';
@@ -1320,12 +1320,12 @@ function renderCharts() {
   });
 }
 
-// ── 투자 레포트 ───────────────────────────────────
+// ── 투자 레포트 (전체 기간 누적) ─────────────────
 function renderInvest() {
   var investCats = ['주식 매수','코인 매수','적금/예금'];
   var returnCats = ['주식 매도','코인 매도','배당/이자'];
-  var investRecs = records.filter(function(r){return r.type==='expense' && investCats.indexOf(r.category)>=0;});
-  var returnRecs = records.filter(function(r){return r.type==='income' && returnCats.indexOf(r.category)>=0;});
+  var investRecs = allInvestRecords.filter(function(r){return r.type==='expense' && investCats.indexOf(r.category)>=0;});
+  var returnRecs = allInvestRecords.filter(function(r){return r.type==='income' && returnCats.indexOf(r.category)>=0;});
 
   var totalIn = investRecs.reduce(function(a,r){return a+r.amount;},0);
   var totalOut = returnRecs.reduce(function(a,r){return a+r.amount;},0);
@@ -1388,6 +1388,22 @@ function subscribePrevRecords() {
   var q = query(collection(db,'records'), where('period','==',prevKey));
   prevUnsub = onSnapshot(q, function(snap){
     window.prevRecords = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+  });
+}
+
+// ── 투자 전체 기간 구독 ───────────────────────────
+var allInvestRecords = [];
+var investUnsub = null;
+
+function subscribeAllInvest() {
+  if(investUnsub) return;
+  var investCats = ['주식 매수','코인 매수','적금/예금','주식 매도','코인 매도','배당/이자'];
+  // 카테고리로 필터링 (전체 기간)
+  var q = query(collection(db,'records'), orderBy('createdAt','desc'));
+  investUnsub = onSnapshot(q, function(snap){
+    var all = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    allInvestRecords = all.filter(function(r){return investCats.indexOf(r.category)>=0;});
+    renderInvest();
   });
 }
 
