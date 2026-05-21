@@ -750,8 +750,13 @@ function syncStatus(s) {
 // ── 초기화 ────────────────────────────────────────
 async function init() {
   var saved = localStorage.getItem('currentUser');
-  if (saved) { currentUser=JSON.parse(saved); showMain(); }
-  else { document.getElementById('loading').style.display='none'; document.getElementById('loginScreen').style.display='flex'; }
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    showMain();
+  } else {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
 }
 
 // ── 로그인 ────────────────────────────────────────
@@ -1354,6 +1359,8 @@ function subscribePrevRecords() {
   var q = query(collection(db,'records'), where('period','==',prevKey));
   prevUnsub = onSnapshot(q, function(snap){
     window.prevRecords = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+  }, function(err){
+    console.error('전월 구독 오류:', err);
   });
 }
 
@@ -1364,12 +1371,15 @@ var investUnsub = null;
 function subscribeAllInvest() {
   if(investUnsub) return;
   var investCats = ['주식 매수','코인 매수','적금/예금','주식 매도','코인 매도','배당/이자'];
-  // 카테고리로 필터링 (전체 기간)
-  var q = query(collection(db,'records'), orderBy('createdAt','desc'));
+  // createdAt 정렬 없이 단순 쿼리로 변경
+  var q = query(collection(db,'records'));
   investUnsub = onSnapshot(q, function(snap){
     var all = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
     allInvestRecords = all.filter(function(r){return investCats.indexOf(r.category)>=0;});
     renderInvest();
+  }, function(err){
+    console.error('투자 구독 오류:', err);
+    // 오류나도 앱은 계속 동작
   });
 }
 
