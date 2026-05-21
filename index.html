@@ -336,6 +336,9 @@
     <button onclick="document.getElementById('debugBox').style.display='none'" style="margin-top:8px;background:#D85A30;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">닫기</button>
   </div>
 
+  <!-- 가계부 예산 현황 -->
+  <div id="budgetStatusHome" style="margin-bottom:12px;"></div>
+
   <!-- 가계부 입력 탭 -->
   <div class="tabs">
     <button class="tab active" id="tabExpense" onclick="switchTab('expense')">지출</button>
@@ -807,6 +810,36 @@
 </nav>
 
 </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:360px;text-align:center;">
+    <div style="font-size:32px;margin-bottom:12px;">🗑️</div>
+    <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px;">내역을 삭제할까요?</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">PIN 번호를 입력하면 삭제돼요</div>
+    <div class="pin-dots" id="deletePinDots" style="justify-content:center;margin-bottom:20px;">
+      <div class="pin-dot" id="dpd0"></div>
+      <div class="pin-dot" id="dpd1"></div>
+      <div class="pin-dot" id="dpd2"></div>
+      <div class="pin-dot" id="dpd3"></div>
+    </div>
+    <div class="pin-pad" style="max-width:240px;margin:0 auto 16px;">
+      <button class="pin-key" onclick="deletePinInput('1')">1</button>
+      <button class="pin-key" onclick="deletePinInput('2')">2</button>
+      <button class="pin-key" onclick="deletePinInput('3')">3</button>
+      <button class="pin-key" onclick="deletePinInput('4')">4</button>
+      <button class="pin-key" onclick="deletePinInput('5')">5</button>
+      <button class="pin-key" onclick="deletePinInput('6')">6</button>
+      <button class="pin-key" onclick="deletePinInput('7')">7</button>
+      <button class="pin-key" onclick="deletePinInput('8')">8</button>
+      <button class="pin-key" onclick="deletePinInput('9')">9</button>
+      <button class="pin-key" onclick="closeDeleteModal()">취소</button>
+      <button class="pin-key" onclick="deletePinInput('0')">0</button>
+      <button class="pin-key del" onclick="deletePinBackspace()">⌫</button>
+    </div>
+    <div id="deleteError" style="font-size:13px;color:#F04452;min-height:18px;"></div>
+  </div>
 </div>
 
 <!-- 수정 모달 -->
@@ -1566,6 +1599,109 @@ function renderDiaryList() {
   }).join('');
 }
 
+// ── 삭제 PIN 확인 ─────────────────────────────────
+var deleteTargetId = null;
+var deletePinBuffer = [];
+
+window.openDeleteModal = function(id) {
+  deleteTargetId = id;
+  deletePinBuffer = [];
+  updateDeletePinDots();
+  document.getElementById('deleteError').textContent = '';
+  document.getElementById('deleteModal').style.display = 'flex';
+};
+
+window.closeDeleteModal = function() {
+  document.getElementById('deleteModal').style.display = 'none';
+  deleteTargetId = null;
+  deletePinBuffer = [];
+};
+
+window.deletePinInput = async function(num) {
+  if(deletePinBuffer.length >= 4) return;
+  deletePinBuffer.push(num);
+  updateDeletePinDots();
+  if(deletePinBuffer.length === 4) {
+    await confirmDelete();
+  }
+};
+
+window.deletePinBackspace = function() {
+  deletePinBuffer = deletePinBuffer.slice(0,-1);
+  updateDeletePinDots();
+  document.getElementById('deleteError').textContent = '';
+};
+
+function updateDeletePinDots() {
+  for(var i=0;i<4;i++){
+    var dot = document.getElementById('dpd'+i);
+    dot.className = 'pin-dot' + (i<deletePinBuffer.length?' filled':'');
+    if(i<deletePinBuffer.length && currentUser) dot.classList.add(currentUser.class);
+  }
+}
+
+async function confirmDelete() {
+  var enteredPin = deletePinBuffer.join('');
+  try {
+    var pinDoc = await getDoc(doc(db,'settings','pins'));
+    var pins = pinDoc.exists() ? pinDoc.data() : {};
+    var correctPin = pins[currentUser.id];
+    if(enteredPin === correctPin) {
+      await deleteDoc(doc(db,'records',deleteTargetId));
+      closeDeleteModal();
+      toast('삭제됐어요 🗑');
+    } else {
+      document.getElementById('deleteError').textContent = '❌ PIN이 틀렸어요';
+      deletePinBuffer = [];
+      updateDeletePinDots();
+    }
+  } catch(e) {
+    document.getElementById('deleteError').textContent = '오류가 발생했어요';
+    deletePinBuffer = [];
+    updateDeletePinDots();
+  }
+}
+
+// ── 가계부 예산 현황 (홈 전용) ────────────────────
+function renderBudgetStatusHome() {
+  var el = document.getElementById('budgetStatusHome');
+  if(!el) return;
+  var keys = Object.keys(budgets);
+  if(!keys.length){ el.innerHTML=''; return; }
+  var investCats = ['주식 매수','코인 매수','적금/예금'];
+  var catMap = {};
+  records.forEach(function(r){
+    if(r.type==='expense' && investCats.indexOf(r.category)<0)
+      catMap[r.category]=(catMap[r.category]||0)+r.amount;
+  });
+  // 예산 설정된 카테고리만 표시
+  var overItems = keys.filter(function(cat){ return catMap[cat] > 0; });
+  if(!overItems.length){ el.innerHTML=''; return; }
+
+  var html = '<div style="background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:12px;">'+
+    '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">💸 이번달 예산 현황</div>'+
+    overItems.map(function(cat){
+      var spent = catMap[cat]||0;
+      var budget = budgets[cat];
+      var ratio = Math.min(Math.round(spent/budget*100),100);
+      var over = spent > budget;
+      var barColor = over?'#F04452':ratio>80?'#F5A623':'#00B488';
+      return '<div style="margin-bottom:10px;">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'+
+          '<span style="font-size:13px;font-weight:600;">'+esc(cat)+'</span>'+
+          '<span style="font-size:12px;font-weight:700;color:'+(over?'#F04452':'var(--sub)')+';">'+
+            (over?'⚠️ ':'')+fmt(spent)+' / '+fmt(budget)+'원'+
+          '</span>'+
+        '</div>'+
+        '<div style="background:var(--bg);border-radius:99px;height:8px;overflow:hidden;">'+
+          '<div style="background:'+barColor+';height:100%;width:'+ratio+'%;border-radius:99px;"></div>'+
+        '</div>'+
+      '</div>';
+    }).join('')+
+  '</div>';
+  el.innerHTML = html;
+}
+
 window.showDebug = async function() {
   var box = document.getElementById('debugBox');
   var txt = document.getElementById('debugText');
@@ -1785,6 +1921,7 @@ function renderAll() {
   renderRecords();
   renderInvest();
   renderBudgetStatus();
+  renderBudgetStatusHome();
   renderSavingsRate();
   if(currentPage==='chart') { renderCharts(); renderTrendChart(); }
 }
@@ -1863,6 +2000,7 @@ function renderRecords() {
         '</div></div>'+
         '<div class="rec-amt '+r.type+'">'+sign+fmt(r.amount)+'원</div>'+
         '<button class="rec-del" style="color:var(--p1);" onclick="openEditModal(\''+r.id+'\')">✏️</button>'+
+        '<button class="rec-del" style="color:#F04452;" onclick="openDeleteModal(\''+r.id+'\')">🗑</button>'+
       '</div>';
     }
 
