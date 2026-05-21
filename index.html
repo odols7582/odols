@@ -1098,7 +1098,6 @@ function renderRecords() {
         '</div></div>'+
         '<div class="rec-amt '+r.type+'">'+sign+fmt(r.amount)+'원</div>'+
         '<button class="rec-del" style="color:var(--p1);" onclick="openEditModal(\''+r.id+'\')">✏️</button>'+
-        '<button class="rec-del" onclick="delRecord(\''+r.id+'\')">×</button>'+
       '</div>';
     }
 
@@ -1669,7 +1668,6 @@ function renderSchedules() {
           (s.repeat!=='none'?'<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;background:#FFF0F0;color:var(--p2);">🔁 '+esc(repeatLabel)+'</span>':'')+
         '</div>'+
       '</div>'+
-      '<button onclick="delSchedule(\''+s.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;padding:4px;flex-shrink:0;">×</button>'+
     '</div>';
   }).join('');
 }
