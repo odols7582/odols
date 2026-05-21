@@ -22,7 +22,7 @@
     --radius:16px;--shadow:0 2px 12px rgba(0,0,0,0.06);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+  body{font-family:'맑은 고딕','Malgun Gothic','Apple SD Gothic Neo',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;font-size:16px;}
 
   .loading{position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:600;}
   .spinner{width:32px;height:32px;border:3px solid #E8EAED;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
@@ -156,9 +156,28 @@
   .rec-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:6px;flex-shrink:0;}
   .empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;}
 
-  .records-header{background:var(--text);border-radius:14px 14px 0 0;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
-  .records-header .sec-title{color:rgba(255,255,255,.8);margin-bottom:0;}
+  .header-name{font-size:18px;font-weight:700;color:var(--text);}
+  .period-main{font-size:20px;font-weight:700;letter-spacing:-.5px;color:var(--text);}
+  .period-range{font-size:13px;color:var(--muted);margin-top:3px;}
+  .sum-balance{font-size:34px;font-weight:700;letter-spacing:-.8px;margin-bottom:18px;color:#fff;}
+  .rec-place{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+  .rec-amt{font-size:16px;font-weight:700;flex-shrink:0;}
+  .todo-content{font-size:15px;font-weight:700;color:var(--text);}
+  .schedule-content{font-size:15px;font-weight:700;color:var(--text);}
+  .dday-name{font-size:15px;font-weight:700;color:var(--text);}
+  .dday-count{font-size:19px;font-weight:700;color:var(--p1);flex-shrink:0;}
+  .chart-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;}
+  .section-block-header{font-size:16px;font-weight:700;}
+  .tab{font-size:15px;font-weight:700;}
+  .submit-btn{font-size:16px;font-weight:700;}
+  .fbtn{font-size:13px;font-weight:700;}
+  .flabel{font-size:13px;font-weight:700;}
 
+  .records-header{background:var(--text);border-radius:14px;padding:14px 16px;margin-bottom:14px;}
+  .records-header .sec-title{color:#fff;margin-bottom:0;font-size:15px;font-weight:700;}
+  .filter-row{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;}
+  .fbtn{padding:8px 16px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;color:var(--sub);}
+  .fbtn.active{background:var(--text);border-color:var(--text);color:#fff;}
   .manual-notif-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
   .manual-notif-title{font-size:13px;font-weight:700;color:var(--sub);margin-bottom:10px;}
   .manual-notif-row{display:flex;gap:8px;}
@@ -212,6 +231,11 @@
   .todo-status.pending{background:var(--p1-bg);color:var(--p1);}
   .todo-status.done{background:#D1FAE5;color:#065F46;}
   .todo-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:6px;flex-shrink:0;}
+
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;justify-content:space-around;max-width:480px;margin:0 auto;z-index:200;padding:8px 8px max(8px,env(safe-area-inset-bottom));}
+  .bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:pointer;border:none;background:none;font-family:inherit;color:var(--muted);font-size:11px;font-weight:600;transition:all .2s;border-radius:12px;margin:0 2px;}
+  .bottom-nav-item.active{color:var(--p1);background:var(--p1-bg);}
+  .bottom-nav-icon{font-size:22px;line-height:1;}
 
   .toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--text);color:#fff;padding:12px 20px;border-radius:24px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.15);}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -294,94 +318,31 @@
   <button onclick="changePeriod(1)">›</button>
 </div>
 
-<div class="container">
+<div class="container" id="pageHome">
 
   <!-- 알림 배너 -->
   <div class="notif-banner" id="notifBanner">
     <span class="notif-banner-text">🔔 알림 허용하면 상대방 입력시 바로 알려드려요!</span>
     <button class="notif-banner-btn" onclick="setupNotification()">허용하기</button>
   </div>
-
-  <!-- PWA 설치 배너 -->
   <div class="pwa-banner" id="pwaBanner" style="display:none;">
     <span class="pwa-banner-text">📲 앱으로 설치하면 푸시 알림이 더 잘 와요!</span>
     <button class="pwa-banner-btn" onclick="installPWA()">설치하기</button>
     <button class="pwa-banner-close" onclick="document.getElementById('pwaBanner').style.display='none'">✕</button>
   </div>
-
-  <!-- 토큰 디버그 -->
   <div id="debugBox" style="display:none;background:#1a1917;color:#86EFAC;border-radius:10px;padding:12px;margin-bottom:10px;font-size:10px;word-break:break-all;line-height:1.6;">
     <div style="font-weight:700;margin-bottom:6px;color:#FCA5A5;">🔧 디버그 정보</div>
     <div id="debugText"></div>
     <button onclick="document.getElementById('debugBox').style.display='none'" style="margin-top:8px;background:#D85A30;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">닫기</button>
   </div>
 
-  <!-- 수정 모달 -->
-  <div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:flex-end;justify-content:center;">
-    <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px 40px;max-height:85vh;overflow-y:auto;">
-      <div style="font-size:15px;font-weight:700;margin-bottom:16px;">✏️ 내역 수정</div>
-      <div class="fgroup">
-        <label class="flabel">금액</label>
-        <input class="finput" id="editAmount" type="number" placeholder="0">
-      </div>
-      <div class="fgroup">
-        <label class="flabel">카테고리</label>
-        <select class="finput" id="editCategory">
-          <option value="식비">🍽 식비</option>
-          <option value="카페">☕ 카페</option>
-          <option value="교통">🚌 교통</option>
-          <option value="쇼핑">🛍 쇼핑</option>
-          <option value="마트">🛒 마트</option>
-          <option value="의료">🏥 의료</option>
-          <option value="문화">🎬 문화</option>
-          <option value="여행">✈ 여행</option>
-          <option value="통신">📱 통신</option>
-          <option value="주거">🏠 주거</option>
-          <option value="대출">🏦 대출</option>
-          <option value="보험">🛡 보험</option>
-          <option value="애견용품">🐾 애견용품</option>
-          <option value="주식 매수">📈 주식 매수</option>
-          <option value="코인 매수">🪙 코인 매수</option>
-          <option value="적금/예금">💰 적금/예금</option>
-          <option value="급여">💼 급여</option>
-          <option value="부업">💡 부업</option>
-          <option value="용돈">💝 용돈</option>
-          <option value="환급">💰 환급</option>
-          <option value="주식 매도">📈 주식 매도</option>
-          <option value="코인 매도">🪙 코인 매도</option>
-          <option value="배당/이자">💵 배당/이자</option>
-          <option value="기타">📦 기타</option>
-        </select>
-      </div>
-      <div class="fgroup" id="editPaymentGroup">
-        <label class="flabel">지출처</label>
-        <select class="finput" id="editPayment">
-          <option value="신한 신용카드(오소리)">💳 신한 신용카드(오소리)</option>
-          <option value="국민 신용카드(오소리)">💳 국민 신용카드(오소리)</option>
-          <option value="삼성 신용카드(오소리)">💳 삼성 신용카드(오소리)</option>
-          <option value="현금(오소리)">💵 현금(오소리)</option>
-          <option value="현금(우리통장)">💵 현금(우리통장)</option>
-          <option value="현금(부엉이)">💵 현금(부엉이)</option>
-          <option value="휴대폰결제(부엉이)">📱 휴대폰결제(부엉이)</option>
-        </select>
-      </div>
-      <div class="fgroup">
-        <label class="flabel">메모</label>
-        <input class="finput" id="editMemo" type="text" placeholder="메모">
-      </div>
-      <input type="hidden" id="editRecordId">
-      <button class="submit-btn" onclick="saveEdit()" style="background:var(--p1);">저장</button>
-      <button class="submit-btn" onclick="closeEditModal()" style="background:var(--muted);margin-top:8px;">취소</button>
-    </div>
-  </div>
-
-  <!-- 1. 가계부 입력 (맨 위) -->
+  <!-- 가계부 입력 탭 -->
   <div class="tabs">
     <button class="tab active" id="tabExpense" onclick="switchTab('expense')">지출</button>
     <button class="tab" id="tabIncome" onclick="switchTab('income')">수입</button>
-    <button class="tab" id="tabChart" onclick="switchTab('chart')">차트</button>
   </div>
 
+  <!-- 지출 폼 -->
   <div class="form-card show" id="expenseForm">
     <div class="who-label">입력자: <span class="who-badge" id="expenseWho"></span></div>
     <div class="form-row">
@@ -431,6 +392,7 @@
     <button class="submit-btn" id="expenseSubmitBtn" onclick="addExpense()">지출 추가</button>
   </div>
 
+  <!-- 수입 폼 -->
   <div class="form-card" id="incomeForm">
     <div class="who-label">입력자: <span class="who-badge" id="incomeWho"></span></div>
     <div class="form-row">
@@ -459,39 +421,10 @@
     <button class="submit-btn" id="incomeSubmitBtn" style="background:var(--income);" onclick="addIncome()">수입 추가</button>
   </div>
 
-  <div id="chartSection" style="display:none;">
-    <!-- 카테고리별 지출 + 전월 비교 -->
-    <div class="chart-box">
-      <div class="chart-title">카테고리별 지출 (전월 비교)</div>
-      <div class="chart-wrap" style="height:260px;"><canvas id="catChart"></canvas></div>
-      <div class="legend" id="catLegend"></div>
-    </div>
-    <!-- 지출처별 -->
-    <div class="chart-box">
-      <div class="chart-title">지출처별 지출</div>
-      <div class="chart-wrap" style="height:260px;"><canvas id="paymentChart"></canvas></div>
-      <div class="legend" id="paymentLegend"></div>
-    </div>
-    <!-- 인물별 -->
-    <div class="chart-box">
-      <div class="chart-title">인물별 지출</div>
-      <div class="chart-wrap" style="height:180px;"><canvas id="personChart"></canvas></div>
-    </div>
-    <!-- 수입 vs 지출 -->
-    <div class="chart-box">
-      <div class="chart-title">수입 vs 지출</div>
-      <div class="chart-wrap" style="height:180px;"><canvas id="summaryChart"></canvas></div>
-    </div>
-  </div>
-
-  <!-- 2. 내역 -->
+  <!-- 내역 -->
   <div id="recordsSection">
-    <div class="records-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <div class="records-header">
       <div class="sec-title">📋 내역</div>
-      <div style="display:flex;gap:4px;">
-        <button id="viewListBtn" onclick="setViewMode('list')" style="background:rgba(255,255,255,.95);color:#1D4ED8;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">목록</button>
-        <button id="viewDateBtn" onclick="setViewMode('date')" style="background:rgba(255,255,255,.3);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">일자별</button>
-      </div>
     </div>
     <div class="filter-row">
       <button class="fbtn active" onclick="setFilter('all',this)">전체</button>
@@ -502,8 +435,11 @@
     </div>
     <div id="recordList"></div>
   </div>
+</div>
 
-  <!-- 3. 잔액 요약 -->
+<!-- 잔액/차트 페이지 -->
+<div class="container" id="pageChart" style="display:none;">
+  <!-- 잔액 요약 -->
   <div class="summary-card">
     <div class="sum-label" id="sumLabel">이번 달 잔액</div>
     <div class="sum-balance pos" id="totalBalance">0 원</div>
@@ -512,7 +448,6 @@
       <div class="sum-item"><div class="sum-label">총 지출</div><div class="sum-val exp" id="totalExpense">0 원</div></div>
     </div>
   </div>
-
   <div class="person-row">
     <div class="pcard p1">
       <div class="pname">🦡 오소리</div>
@@ -526,152 +461,186 @@
     </div>
   </div>
 
-  <!-- 3-1. 투자 전용 섹션 -->
-  <div class="section-block" style="border-color:#A5F3FC;margin-bottom:12px;">
+  <!-- 투자 레포트 -->
+  <div class="section-block" style="box-shadow:var(--shadow);">
     <div class="section-block-header" onclick="toggleSection('investBlock')" style="background:linear-gradient(135deg,#0369A1,#0EA5E9);color:#fff;">
-      <span>📈 투자 레포트 <span style="font-size:10px;opacity:.8;">(전체 누적)</span></span>
+      <span>📈 투자 레포트 <span style="font-size:11px;opacity:.8;">(전체 누적)</span></span>
       <span class="section-toggle" id="investBlockArrow">▲</span>
     </div>
     <div id="investBlock" style="padding:14px;background:#EFF6FF;">
-      <!-- 투자 요약 -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
         <div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #BAE6FD;">
-          <div style="font-size:10px;color:#0369A1;font-weight:600;margin-bottom:4px;">💰 총 납입</div>
-          <div style="font-size:14px;font-weight:700;color:#0369A1;" id="investTotal">0원</div>
+          <div style="font-size:11px;color:#0369A1;font-weight:700;margin-bottom:4px;">💰 총 납입</div>
+          <div style="font-size:15px;font-weight:700;color:#0369A1;" id="investTotal">0원</div>
         </div>
         <div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #BAE6FD;">
-          <div style="font-size:10px;color:#0891B2;font-weight:600;margin-bottom:4px;">📤 총 회수</div>
-          <div style="font-size:14px;font-weight:700;color:#0891B2;" id="investReturn">0원</div>
+          <div style="font-size:11px;color:#0891B2;font-weight:700;margin-bottom:4px;">📤 총 회수</div>
+          <div style="font-size:15px;font-weight:700;color:#0891B2;" id="investReturn">0원</div>
         </div>
         <div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #BAE6FD;">
-          <div style="font-size:10px;color:#0F766E;font-weight:600;margin-bottom:4px;">💹 순손익 (회수-납입)</div>
-          <div style="font-size:14px;font-weight:700;" id="investNet">0원</div>
+          <div style="font-size:11px;color:#0F766E;font-weight:700;margin-bottom:4px;">💹 순손익</div>
+          <div style="font-size:15px;font-weight:700;" id="investNet">0원</div>
         </div>
       </div>
-      <!-- 투자 항목별 차트 -->
       <div style="background:#fff;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid #BAE6FD;">
-        <div style="font-size:11px;font-weight:700;color:#0369A1;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">항목별 납입 현황</div>
+        <div style="font-size:13px;font-weight:700;color:#0369A1;margin-bottom:10px;">항목별 납입 현황</div>
         <div class="chart-wrap" style="height:180px;"><canvas id="investChart"></canvas></div>
       </div>
-      <!-- 투자 내역 리스트 -->
-      <div style="font-size:11px;font-weight:700;color:#0369A1;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">투자 내역</div>
+      <div style="font-size:13px;font-weight:700;color:#0369A1;margin-bottom:8px;">투자 내역</div>
       <div id="investList"></div>
     </div>
   </div>
 
-  <!-- 4. 메시지 푸시 -->
-  <div class="manual-notif-card" id="manualNotifCard" style="display:none;">
+  <!-- 차트 -->
+  <div class="chart-box">
+    <div class="chart-title">이번 달 수입/지출 달력</div>
+    <div id="calendarChart"></div>
+  </div>
+  <div class="chart-box">
+    <div class="chart-title">카테고리별 지출 (전월 비교)</div>
+    <div class="chart-wrap" style="height:260px;"><canvas id="catChart"></canvas></div>
+    <div class="legend" id="catLegend"></div>
+  </div>
+  <div class="chart-box">
+    <div class="chart-title">지출처별 지출</div>
+    <div class="chart-wrap" style="height:260px;"><canvas id="paymentChart"></canvas></div>
+    <div class="legend" id="paymentLegend"></div>
+  </div>
+  <div class="chart-box">
+    <div class="chart-title">인물별 지출</div>
+    <div class="chart-wrap" style="height:180px;"><canvas id="personChart"></canvas></div>
+  </div>
+  <div class="chart-box">
+    <div class="chart-title">수입 vs 지출</div>
+    <div class="chart-wrap" style="height:180px;"><canvas id="summaryChart"></canvas></div>
+  </div>
+</div>
+
+<!-- 할일 페이지 -->
+<div class="container" id="pageTodo" style="display:none;">
+  <div class="form-card show">
+    <div class="who-label">입력자: <span class="who-badge" id="todoWho"></span></div>
+    <div class="fgroup">
+      <label class="flabel">할일 내용</label>
+      <input class="finput" id="todoContent" type="text" placeholder="할일을 입력해주세요">
+    </div>
+    <button class="submit-btn" style="background:#0891B2;" onclick="addTodo()">할일 추가</button>
+  </div>
+  <div class="filter-row">
+    <button class="fbtn active" onclick="setTodoFilter('all',this)">전체</button>
+    <button class="fbtn" onclick="setTodoFilter('pending',this)">처리중</button>
+    <button class="fbtn" onclick="setTodoFilter('done',this)">완료</button>
+    <button class="fbtn" onclick="setTodoFilter('p1',this)">🦡 오소리</button>
+    <button class="fbtn" onclick="setTodoFilter('p2',this)">🦉 부엉이</button>
+  </div>
+  <div id="todoList"></div>
+</div>
+
+<!-- 일정 페이지 -->
+<div class="container" id="pageSchedule" style="display:none;">
+  <div class="form-card show">
+    <div class="form-row">
+      <div class="fgroup" style="margin-bottom:0;">
+        <label class="flabel">날짜</label>
+        <input class="finput" id="scheduleDate" type="date">
+      </div>
+      <div class="fgroup" style="margin-bottom:0;">
+        <label class="flabel">시간</label>
+        <input class="finput" id="scheduleTime" type="time">
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">내용</label>
+      <input class="finput" id="scheduleContent" type="text" placeholder="일정 내용을 입력해주세요">
+    </div>
+    <div class="form-row">
+      <div class="fgroup" style="margin-bottom:0;">
+        <label class="flabel">알림</label>
+        <select class="finput" id="scheduleAlarm">
+          <option value="none">알림 없음</option>
+          <option value="1day">1일 전</option>
+          <option value="1hour">1시간 전</option>
+          <option value="10min">10분 전</option>
+        </select>
+      </div>
+      <div class="fgroup" style="margin-bottom:0;">
+        <label class="flabel">반복</label>
+        <select class="finput" id="scheduleRepeat">
+          <option value="none">반복 없음</option>
+          <option value="daily">매일</option>
+          <option value="weekly">매주</option>
+          <option value="monthly">매월</option>
+          <option value="yearly">매년</option>
+        </select>
+      </div>
+    </div>
+    <button class="submit-btn" style="background:#0369A1;margin-top:8px;" onclick="addSchedule()">일정 추가</button>
+  </div>
+  <div class="filter-row">
+    <button class="fbtn active" onclick="setScheduleFilter('upcoming',this)">다가오는</button>
+    <button class="fbtn" onclick="setScheduleFilter('all',this)">전체</button>
+    <button class="fbtn" onclick="setScheduleFilter('past',this)">지난</button>
+  </div>
+  <div id="scheduleList"></div>
+</div>
+
+<!-- 더보기 페이지 -->
+<div class="container" id="pageMore" style="display:none;">
+  <!-- 메시지 -->
+  <div class="manual-notif-card" id="manualNotifCard" style="display:block;">
     <div class="manual-notif-title">📣 상대방에게 알림 보내기</div>
     <div class="manual-notif-row">
-      <input class="finput" id="manualNotifMsg" type="text" placeholder="메시지 입력 (예: 밥값 입력했어!)" maxlength="50">
+      <input class="finput" id="manualNotifMsg" type="text" placeholder="메시지 입력" maxlength="50">
       <button class="manual-notif-btn" onclick="sendManualNotif()">전송</button>
     </div>
   </div>
-
-  <!-- 5. 기념일 & D-day -->
+  <!-- 기념일 -->
   <div class="section-block dday">
     <div class="section-block-header" onclick="toggleSection('ddayBlock')">
       <span>💑 기념일 & D-day</span>
       <span class="section-toggle" id="ddayBlockArrow">▲</span>
     </div>
-    <div id="ddayBlock" style="padding:0 14px 14px;">
+    <div id="ddayBlock" style="padding:16px;">
       <div id="ddayList"></div>
       <div class="dday-add-row">
-        <input class="finput" id="ddayName" placeholder="기념일 이름 (예: 처음 만난 날)" style="flex:1;">
+        <input class="finput" id="ddayName" placeholder="기념일 이름" style="flex:1;">
         <input class="finput" id="ddayDate" type="date" style="width:140px;">
         <button class="manual-notif-btn" onclick="addDday()">추가</button>
       </div>
     </div>
   </div>
-
-  <!-- 6. 일정 관리 -->
-  <div class="section-block schedule">
-    <div class="section-block-header" onclick="toggleSection('scheduleBlock')">
-      <span>📅 일정 관리</span>
-      <span class="section-toggle" id="scheduleBlockArrow">▲</span>
-    </div>
-    <div id="scheduleBlock">
-      <div class="form-card show" style="border-radius:0;border-left:none;border-right:none;border-top:none;margin-bottom:0;">
-        <div class="form-row">
-          <div class="fgroup" style="margin-bottom:0;">
-            <label class="flabel">날짜</label>
-            <input class="finput" id="scheduleDate" type="date">
-          </div>
-          <div class="fgroup" style="margin-bottom:0;">
-            <label class="flabel">시간</label>
-            <input class="finput" id="scheduleTime" type="time">
-          </div>
-        </div>
-        <div class="fgroup">
-          <label class="flabel">내용</label>
-          <input class="finput" id="scheduleContent" type="text" placeholder="일정 내용을 입력해주세요">
-        </div>
-        <div class="form-row">
-          <div class="fgroup" style="margin-bottom:0;">
-            <label class="flabel">알림</label>
-            <select class="finput" id="scheduleAlarm">
-              <option value="none">알림 없음</option>
-              <option value="1day">1일 전</option>
-              <option value="1hour">1시간 전</option>
-              <option value="10min">10분 전</option>
-            </select>
-          </div>
-          <div class="fgroup" style="margin-bottom:0;">
-            <label class="flabel">반복</label>
-            <select class="finput" id="scheduleRepeat">
-              <option value="none">반복 없음</option>
-              <option value="daily">매일</option>
-              <option value="weekly">매주</option>
-              <option value="monthly">매월</option>
-              <option value="yearly">매년</option>
-            </select>
-          </div>
-        </div>
-        <button class="submit-btn" style="background:var(--p1);margin-top:8px;" onclick="addSchedule()">일정 추가</button>
-      </div>
-      <div style="padding:8px 14px 14px;">
-        <div class="filter-row" style="margin-bottom:8px;">
-          <button class="fbtn active" onclick="setScheduleFilter('upcoming',this)">다가오는</button>
-          <button class="fbtn" onclick="setScheduleFilter('all',this)">전체</button>
-          <button class="fbtn" onclick="setScheduleFilter('past',this)">지난</button>
-        </div>
-        <div id="scheduleList"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 7. 할일 -->
-  <div class="section-block todo">
-    <div class="section-block-header" onclick="toggleSection('todoBlock')">
-      <span>📋 할일 관리</span>
-      <span class="section-toggle" id="todoBlockArrow">▲</span>
-    </div>
-    <div id="todoBlock">
-      <div class="form-card show" style="border-radius:0 0 var(--radius) var(--radius);border-top:none;margin-bottom:0;">
-        <div class="who-label">입력자: <span class="who-badge" id="todoWho"></span></div>
-        <div class="fgroup">
-          <label class="flabel">할일 내용</label>
-          <input class="finput" id="todoContent" type="text" placeholder="할일을 입력해주세요">
-        </div>
-        <button class="submit-btn" style="background:var(--p1);" onclick="addTodo()">할일 추가</button>
-      </div>
-      <div class="filter-row" style="margin-top:8px;">
-        <button class="fbtn active" onclick="setTodoFilter('all',this)">전체</button>
-        <button class="fbtn" onclick="setTodoFilter('pending',this)">처리중</button>
-        <button class="fbtn" onclick="setTodoFilter('done',this)">완료</button>
-        <button class="fbtn" onclick="setTodoFilter('p1',this)">🦡 오소리</button>
-        <button class="fbtn" onclick="setTodoFilter('p2',this)">🦉 부엉이</button>
-      </div>
-      <div id="todoList"></div>
-    </div>
-  </div>
-
 </div>
-</div>
+
+<!-- 바텀 네비게이션 -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="bottom-nav-item active" id="nav-home" onclick="switchPage('home')">
+    <span class="bottom-nav-icon">💰</span>
+    <span>가계부</span>
+  </button>
+  <button class="bottom-nav-item" id="nav-chart" onclick="switchPage('chart')">
+    <span class="bottom-nav-icon">📊</span>
+    <span>잔액</span>
+  </button>
+  <button class="bottom-nav-item" id="nav-todo" onclick="switchPage('todo')">
+    <span class="bottom-nav-icon">📋</span>
+    <span>할일</span>
+  </button>
+  <button class="bottom-nav-item" id="nav-schedule" onclick="switchPage('schedule')">
+    <span class="bottom-nav-icon">📅</span>
+    <span>일정</span>
+  </button>
+  <button class="bottom-nav-item" id="nav-more" onclick="switchPage('more')">
+    <span class="bottom-nav-icon">⋯</span>
+    <span>더보기</span>
+  </button>
+</nav>
+
 </div>
 </div>
 
 <div class="toast" id="toast"></div>
+
+
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -712,7 +681,7 @@ const USERS = {
 };
 
 var records = [];
-var recordViewMode = 'list'; // 'list' or 'date'
+var recordViewMode = 'date'; // 기본값 일자별
 var todos = [];
 var todoFilter = 'all';
 var todoUnsub = null;
@@ -1053,7 +1022,7 @@ window.changePeriod = function(dir) {
 };
 
 // ── 렌더 ──────────────────────────────────────────
-function renderAll() { renderSummary(); renderRecords(); renderInvest(); if(document.getElementById('chartSection').style.display!=='none') renderCharts(); }
+function renderAll() { renderSummary(); renderRecords(); renderInvest(); if(currentPage==='chart') renderCharts(); }
 
 function renderSummary() {
   var inc=0,exp=0,p1i=0,p1e=0,p2i=0,p2e=0;
@@ -1088,56 +1057,106 @@ function renderRecords() {
   var fr = filteredRecords(), list = document.getElementById('recordList');
   if(!fr.length){list.innerHTML='<div class="empty">이번 기간 내역이 없어요</div>';return;}
 
-  if(recordViewMode === 'date') {
-    // 일자별 그룹핑
-    var groups = {};
-    fr.forEach(function(r){
-      var d = r.date || '날짜없음';
-      if(!groups[d]) groups[d] = [];
-      groups[d].push(r);
-    });
-    var dates = Object.keys(groups).sort(function(a,b){return b>a?1:-1;});
-    list.innerHTML = dates.map(function(d){
-      var recs = groups[d];
-      var dayTotal = recs.reduce(function(a,r){return r.type==='expense'?a-r.amount:a+r.amount;},0);
-      var dayStr = d !== '날짜없음' ? d.slice(5).replace('-','/') : '날짜없음';
-      var dow = ['일','월','화','수','목','금','토'];
-      var dowStr = d !== '날짜없음' ? '('+dow[new Date(d).getDay()]+')' : '';
-      return '<div style="margin-bottom:12px;">'+
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:2px solid #E0E7FF;margin-bottom:6px;">'+
-          '<span style="font-size:12px;font-weight:700;color:#4338CA;">'+dayStr+' '+dowStr+'</span>'+
-          '<span style="font-size:11px;font-weight:600;color:'+(dayTotal>=0?'#1D9E75':'#D85A30')+';">'+(dayTotal>=0?'+':'')+fmt(Math.abs(dayTotal))+'원</span>'+
-        '</div>'+
-        recs.map(function(r){
-          var sign=r.type==='income'?'+':'-', pClass='p'+r.person;
-          var pEmoji=r.person===1?'🦡':'🦉', pName=r.person===1?'오소리':'부엉이';
-          return '<div class="rec-item" style="margin-bottom:6px;"><div class="rec-dot '+r.type+'"></div>'+
-            '<div class="rec-info"><div class="rec-place">'+esc(r.memo||r.category)+'</div>'+
-            '<div class="rec-meta"><span class="badge '+pClass+'">'+pEmoji+' '+esc(pName)+'</span>'+
-            '<span class="tag">'+esc(r.category)+'</span>'+(r.payment?'<span class="tag">'+esc(r.payment)+'</span>':'')+
-            '</div></div><div class="rec-amt '+r.type+'">'+sign+fmt(r.amount)+'원</div>'+
-            '<button class="rec-del" style="color:#4338CA;" onclick="openEditModal(\''+r.id+'\')">✏️</button>'+
-            '<button class="rec-del" onclick="delRecord(\''+r.id+'\')">×</button></div>';
-        }).join('')+
-      '</div>';
-    }).join('');
-  } else {
-    // 기본 리스트
-    list.innerHTML=fr.map(function(r){
+  // 이틀 전 날짜 계산
+  var today = new Date();
+  var twoDaysAgo = new Date(today);
+  twoDaysAgo.setDate(today.getDate() - 2);
+  var twoDaysAgoStr = twoDaysAgo.getFullYear()+'-'+String(twoDaysAgo.getMonth()+1).padStart(2,'0')+'-'+String(twoDaysAgo.getDate()).padStart(2,'0');
+
+  // 일자별 그룹핑
+  var groups = {};
+  fr.forEach(function(r){
+    var d = r.date || '날짜없음';
+    if(!groups[d]) groups[d] = [];
+    groups[d].push(r);
+  });
+  var dates = Object.keys(groups).sort(function(a,b){return b>a?1:-1;});
+
+  // 최근 이틀 vs 이전 날짜 분리
+  var recentDates = dates.filter(function(d){return d >= twoDaysAgoStr;});
+  var oldDates = dates.filter(function(d){return d < twoDaysAgoStr;});
+
+  function renderDateGroup(d) {
+    var recs = groups[d];
+    var dayTotal = recs.reduce(function(a,r){return r.type==='expense'?a-r.amount:a+r.amount;},0);
+    var dayStr = d !== '날짜없음' ? d.slice(5).replace('-','/') : '날짜없음';
+    var dow = ['일','월','화','수','목','금','토'];
+    var dowStr = d !== '날짜없음' ? '('+dow[new Date(d).getDay()]+')' : '';
+    var groupId = 'dayGroup_'+d.replace(/-/g,'');
+    var showMore = recs.length > 5;
+    var visibleRecs = showMore ? recs.slice(0,5) : recs;
+    var hiddenRecs = showMore ? recs.slice(5) : [];
+
+    function recHtml(r) {
       var sign=r.type==='income'?'+':'-', pClass='p'+r.person;
       var pEmoji=r.person===1?'🦡':'🦉', pName=r.person===1?'오소리':'부엉이';
-      var date=r.date?r.date.slice(5).replace('-','/'):'';
-      return '<div class="rec-item"><div class="rec-dot '+r.type+'"></div>'+
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid #F2F4F6;">'+
+        '<div class="rec-dot '+r.type+'"></div>'+
         '<div class="rec-info"><div class="rec-place">'+esc(r.memo||r.category)+'</div>'+
         '<div class="rec-meta"><span class="badge '+pClass+'">'+pEmoji+' '+esc(pName)+'</span>'+
         '<span class="tag">'+esc(r.category)+'</span>'+(r.payment?'<span class="tag">'+esc(r.payment)+'</span>':'')+
-        (date?'<span>'+date+'</span>':'')+
-        '</div></div><div class="rec-amt '+r.type+'">'+sign+fmt(r.amount)+'원</div>'+
-        '<button class="rec-del" style="color:#4338CA;" onclick="openEditModal(\''+r.id+'\')">✏️</button>'+
-        '<button class="rec-del" onclick="delRecord(\''+r.id+'\')">×</button></div>';
-    }).join('');
+        '</div></div>'+
+        '<div class="rec-amt '+r.type+'">'+sign+fmt(r.amount)+'원</div>'+
+        '<button class="rec-del" style="color:var(--p1);" onclick="openEditModal(\''+r.id+'\')">✏️</button>'+
+        '<button class="rec-del" onclick="delRecord(\''+r.id+'\')">×</button>'+
+      '</div>';
+    }
+
+    return '<div style="margin-bottom:16px;background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px;">'+
+        '<span style="font-size:14px;font-weight:700;color:#4E5968;">'+dayStr+' '+dowStr+'</span>'+
+        '<span style="font-size:13px;font-weight:700;color:'+(dayTotal>0?'#00B488':dayTotal<0?'#F04452':'#8B95A1')+';">'+(dayTotal>0?'+':dayTotal<0?'-':'')+fmt(Math.abs(dayTotal))+'원</span>'+
+      '</div>'+
+      '<div style="padding:0 10px 10px;">'+
+      visibleRecs.map(recHtml).join('')+
+      (showMore ?
+        '<div id="'+groupId+'_more" style="display:none;">'+hiddenRecs.map(recHtml).join('')+'</div>'+
+        '<button onclick="toggleDayMore(\''+groupId+'\')" id="'+groupId+'_btn" style="width:100%;padding:10px;background:var(--bg);border:none;border-radius:10px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;margin-top:4px;">'+
+          '+ '+(recs.length-5)+'건 더보기 ▼'+
+        '</button>'
+      : '')+
+      '</div>'+
+    '</div>';
   }
+
+  var html = recentDates.map(renderDateGroup).join('');
+
+  if(oldDates.length > 0) {
+    var oldCount = oldDates.reduce(function(a,d){return a+groups[d].length;},0);
+    html += '<div id="oldRecordsWrap" style="display:none;">'+
+      oldDates.map(renderDateGroup).join('')+
+    '</div>'+
+    '<button onclick="toggleOldRecords(this)" style="width:100%;padding:12px;background:#fff;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;color:var(--sub);cursor:pointer;margin-top:4px;">'+
+      '이전 내역 '+oldCount+'건 더보기 ▼'+
+    '</button>';
+  }
+
+  list.innerHTML = html;
 }
+
+window.toggleDayMore = function(groupId) {
+  var more = document.getElementById(groupId+'_more');
+  var btn = document.getElementById(groupId+'_btn');
+  if(more.style.display === 'none') {
+    more.style.display = 'block';
+    btn.textContent = '▲ 접기';
+  } else {
+    more.style.display = 'none';
+    var cnt = more.querySelectorAll('.rec-item').length;
+    btn.textContent = '+ '+cnt+'건 더보기 ▼';
+  }
+};
+
+window.toggleOldRecords = function(btn) {
+  var wrap = document.getElementById('oldRecordsWrap');
+  if(wrap.style.display === 'none') {
+    wrap.style.display = 'block';
+    btn.textContent = '이전 내역 접기 ▲';
+  } else {
+    wrap.style.display = 'none';
+    btn.textContent = btn.textContent.replace('접기 ▲', '더보기 ▼');
+  }
+};
 
 // ── 수정 모달 ─────────────────────────────────────
 window.openEditModal = function(id) {
@@ -1181,6 +1200,8 @@ window.saveEdit = async function() {
 var investChart = null;
 
 function renderCharts() {
+  // 달력 먼저 렌더링
+  renderCalendarChart();
   var expenses = records.filter(function(r){return r.type==='expense';});
   var investCats = ['주식 매수','코인 매수','적금/예금'];
   // 투자 제외한 지출만
@@ -1300,7 +1321,84 @@ function renderCharts() {
   });
 }
 
-// ── 투자 레포트 (전체 기간 누적) ─────────────────
+// ── 달력 차트 렌더링 ──────────────────────────────
+function renderCalendarChart() {
+  var range = getPeriodRange(currentKey);
+  var startDate = new Date(range.start);
+  var endDate = new Date(range.end);
+
+  // 날짜별 수입/지출 집계
+  var dayMap = {};
+  records.forEach(function(r) {
+    if(!r.date) return;
+    if(!dayMap[r.date]) dayMap[r.date] = {inc:0, exp:0};
+    if(r.type==='income') dayMap[r.date].inc += r.amount;
+    else dayMap[r.date].exp += r.amount;
+  });
+
+  // 달력 시작/끝 (표시 범위: 시작달 1일 ~ 끝달 말일)
+  var calStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+  var calEnd = new Date(endDate.getFullYear(), endDate.getMonth()+1, 0);
+
+  var today = new Date();
+  var todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+
+  var dow = ['일','월','화','수','목','금','토'];
+  var html = '<div style="overflow-x:auto;">';
+
+  // 월별로 달력 생성
+  var curMonth = new Date(calStart.getFullYear(), calStart.getMonth(), 1);
+  while(curMonth <= calEnd) {
+    var y = curMonth.getFullYear(), m = curMonth.getMonth();
+    html += '<div style="margin-bottom:16px;">';
+    html += '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px;">'+y+'년 '+(m+1)+'월</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">';
+
+    // 요일 헤더
+    dow.forEach(function(d, i) {
+      html += '<div style="text-align:center;font-size:11px;font-weight:700;padding:4px 0;color:'+(i===0?'#F04452':i===6?'#3182F6':'#8B95A1')+';">'+d+'</div>';
+    });
+
+    // 첫 날 요일 맞추기
+    var firstDay = new Date(y, m, 1).getDay();
+    for(var i=0;i<firstDay;i++) {
+      html += '<div></div>';
+    }
+
+    // 날짜 채우기
+    var daysInMonth = new Date(y, m+1, 0).getDate();
+    for(var d=1; d<=daysInMonth; d++) {
+      var dateStr = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      var isInPeriod = dateStr >= range.start && dateStr <= range.end;
+      var isToday = dateStr === todayStr;
+      var data = dayMap[dateStr];
+      var dow_idx = new Date(y, m, d).getDay();
+
+      var bg = isToday ? '#3182F6' : isInPeriod ? '#fff' : '#F2F4F6';
+      var textColor = isToday ? '#fff' : !isInPeriod ? '#C0C6CE' : dow_idx===0 ? '#F04452' : dow_idx===6 ? '#3182F6' : '#191F28';
+      var border = isToday ? 'none' : isInPeriod ? '1px solid #E8EAED' : 'none';
+
+      html += '<div style="background:'+bg+';border:'+border+';border-radius:8px;padding:4px 2px;text-align:center;min-height:52px;">'+
+        '<div style="font-size:12px;font-weight:'+(isToday?'800':'600')+';color:'+textColor+';margin-bottom:2px;">'+d+'</div>';
+
+      if(data && isInPeriod) {
+        if(data.inc > 0) html += '<div style="font-size:9px;font-weight:700;color:#00B488;line-height:1.3;">+'+fmtShort(data.inc)+'</div>';
+        if(data.exp > 0) html += '<div style="font-size:9px;font-weight:700;color:#F04452;line-height:1.3;">-'+fmtShort(data.exp)+'</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div></div>';
+    curMonth = new Date(y, m+1, 1);
+  }
+  html += '</div>';
+  document.getElementById('calendarChart').innerHTML = html;
+}
+
+function fmtShort(n) {
+  if(n >= 10000) return (n/10000).toFixed(0)+'만';
+  if(n >= 1000) return (n/1000).toFixed(0)+'천';
+  return n.toString();
+}
 function renderInvest() {
   var investCats = ['주식 매수','코인 매수','적금/예금'];
   var returnCats = ['주식 매도','코인 매도','배당/이자'];
@@ -1397,21 +1495,45 @@ window.setViewMode = function(mode) {
   var listBtn = document.getElementById('viewListBtn');
   var dateBtn = document.getElementById('viewDateBtn');
   if(mode==='list'){
-    listBtn.style.background='rgba(255,255,255,.95)'; listBtn.style.color='#1D4ED8';
+    listBtn.style.background='rgba(255,255,255,.95)'; listBtn.style.color='#191F28';
     dateBtn.style.background='rgba(255,255,255,.3)'; dateBtn.style.color='#fff';
   } else {
-    dateBtn.style.background='rgba(255,255,255,.95)'; dateBtn.style.color='#1D4ED8';
+    dateBtn.style.background='rgba(255,255,255,.95)'; dateBtn.style.color='#191F28';
     listBtn.style.background='rgba(255,255,255,.3)'; listBtn.style.color='#fff';
   }
   renderRecords();
 };
+
+// ── 페이지 전환 (바텀 네비) ───────────────────────
+var currentPage = 'home';
+var chartRendered = false;
+
+window.switchPage = function(page) {
+  currentPage = page;
+  var pages = ['home','chart','todo','schedule','more'];
+  pages.forEach(function(p) {
+    var el = document.getElementById('page'+p.charAt(0).toUpperCase()+p.slice(1));
+    if(el) el.style.display = p===page ? '' : 'none';
+    var nav = document.getElementById('nav-'+p);
+    if(nav) nav.classList.toggle('active', p===page);
+  });
+
+  // 기간 네비 - 가계부/차트만 표시
+  var periodNav = document.querySelector('.period-nav');
+  if(periodNav) periodNav.style.display = (page==='home'||page==='chart') ? '' : 'none';
+
+  // 차트 페이지 첫 진입시 렌더링
+  if(page === 'chart') {
+    renderCharts();
+    renderInvest();
+  }
+};
+
+window.switchTab = function(tab) {
   ['expenseForm','incomeForm'].forEach(function(id){document.getElementById(id).classList.remove('show');});
-  document.getElementById('chartSection').style.display='none';
-  document.getElementById('recordsSection').style.display='none';
-  ['tabExpense','tabIncome','tabChart'].forEach(function(id){document.getElementById(id).classList.remove('active');});
-  if(tab==='expense'){document.getElementById('expenseForm').classList.add('show');document.getElementById('recordsSection').style.display='';document.getElementById('tabExpense').classList.add('active');}
-  else if(tab==='income'){document.getElementById('incomeForm').classList.add('show');document.getElementById('recordsSection').style.display='';document.getElementById('tabIncome').classList.add('active');}
-  else if(tab==='chart'){document.getElementById('chartSection').style.display='';document.getElementById('tabChart').classList.add('active');renderCharts();}
+  ['tabExpense','tabIncome'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  if(tab==='expense'){document.getElementById('expenseForm').classList.add('show');document.getElementById('tabExpense').classList.add('active');}
+  else if(tab==='income'){document.getElementById('incomeForm').classList.add('show');document.getElementById('tabIncome').classList.add('active');}
 };
 
 window.toggleSection = function(id) {
@@ -1524,7 +1646,7 @@ function filteredSchedules() {
 function renderSchedules() {
   var fs = filteredSchedules();
   var list = document.getElementById('scheduleList');
-  if(!fs.length){ list.innerHTML='<div class="empty">일정이 없어요</div>'; return; }
+  if(!fs.length){ list.innerHTML='<div class="empty">일정이 없어요 📅</div>'; return; }
   var now = new Date().getTime();
   list.innerHTML = fs.map(function(s){
     var dt = new Date(s.datetime);
@@ -1534,20 +1656,20 @@ function renderSchedules() {
     var timeStr = String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
     var alarmLabel = ALARM_LABELS[s.alarm]||'';
     var repeatLabel = REPEAT_LABELS[s.repeat]||'';
-    return '<div class="schedule-item'+(isPast?' past-schedule':'')+'">'+
-      '<div class="schedule-date-col">'+
-        '<div class="schedule-month">'+month+'</div>'+
-        '<div class="schedule-day">'+day+'</div>'+
-        '<div class="schedule-time">'+timeStr+'</div>'+
+    return '<div style="background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;opacity:'+(isPast?.5:1)+';">'+
+      '<div style="text-align:center;min-width:48px;background:var(--p1-bg);border-radius:12px;padding:10px 6px;flex-shrink:0;">'+
+        '<div style="font-size:10px;color:var(--p1);font-weight:700;">'+month+'</div>'+
+        '<div style="font-size:24px;font-weight:800;line-height:1.1;color:var(--p1);">'+day+'</div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+timeStr+'</div>'+
       '</div>'+
-      '<div class="schedule-info">'+
-        '<div class="schedule-content">'+esc(s.content)+'</div>'+
-        '<div class="schedule-tags">'+
-          (s.alarm!=='none'?'<span class="schedule-tag alarm">🔔 '+esc(alarmLabel)+'</span>':'')+
-          (s.repeat!=='none'?'<span class="schedule-tag repeat">🔁 '+esc(repeatLabel)+'</span>':'')+
+      '<div style="flex:1;min-width:0;padding-top:4px;">'+
+        '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">'+esc(s.content)+'</div>'+
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+
+          (s.alarm!=='none'?'<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;background:var(--p1-bg);color:var(--p1);">🔔 '+esc(alarmLabel)+'</span>':'')+
+          (s.repeat!=='none'?'<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;background:#FFF0F0;color:var(--p2);">🔁 '+esc(repeatLabel)+'</span>':'')+
         '</div>'+
       '</div>'+
-      '<button class="schedule-del" onclick="delSchedule(\''+s.id+'\')">×</button>'+
+      '<button onclick="delSchedule(\''+s.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;padding:4px;flex-shrink:0;">×</button>'+
     '</div>';
   }).join('');
 }
@@ -1581,7 +1703,7 @@ window.delSchedule = async function(id) {
 
 window.setScheduleFilter = function(f, btn) {
   scheduleFilter = f;
-  document.querySelectorAll('#scheduleBlock .fbtn').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('#pageSchedule .fbtn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   renderSchedules();
 };
