@@ -823,9 +823,18 @@ function showMain() {
   document.getElementById('incomeWho').className='who-badge '+currentUser.class;
   document.getElementById('todoWho').textContent=currentUser.emoji+' '+currentUser.name;
   document.getElementById('todoWho').className='who-badge '+currentUser.class;
-  renderPeriod(); subscribe(); subscribePrevRecords(); subscribeAllInvest(); subscribeTodos(); subscribeDdays(); subscribeSchedules(); initScheduleDate(); bindKeys();
+  renderPeriod();
+
+  // 각 구독을 try-catch로 감싸서 하나가 실패해도 다음으로 진행
+  try { subscribe(); } catch(e){ console.error('subscribe 오류:', e); }
+  try { subscribePrevRecords(); } catch(e){ console.error('prev 오류:', e); }
+  try { subscribeAllInvest(); } catch(e){ console.error('invest 오류:', e); }
+  try { subscribeTodos(); } catch(e){ console.error('todos 오류:', e); }
+  try { subscribeDdays(); } catch(e){ console.error('ddays 오류:', e); }
+  try { subscribeSchedules(); } catch(e){ console.error('schedules 오류:', e); }
+  try { initScheduleDate(); } catch(e){ console.error('scheduleDate 오류:', e); }
+  bindKeys();
   checkNotifStatus();
-  // PWA 설치 배너
   if(deferredPrompt) document.getElementById('pwaBanner').style.display = 'flex';
 }
 
