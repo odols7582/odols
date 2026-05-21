@@ -358,6 +358,7 @@
           <option value="교통">🚌 교통</option>
           <option value="쇼핑">🛍 쇼핑</option>
           <option value="마트">🛒 마트</option>
+          <option value="생활용품">🧴 생활용품</option>
           <option value="의료">🏥 의료</option>
           <option value="문화">🎬 문화</option>
           <option value="여행">✈ 여행</option>
@@ -636,6 +637,66 @@
 </nav>
 
 </div>
+</div>
+
+<!-- 수정 모달 -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:flex-end;justify-content:center;">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:85vh;overflow-y:auto;">
+    <div style="font-size:17px;font-weight:700;margin-bottom:20px;">✏️ 내역 수정</div>
+    <div class="fgroup">
+      <label class="flabel">금액</label>
+      <input class="finput" id="editAmount" type="number" placeholder="0">
+    </div>
+    <div class="fgroup">
+      <label class="flabel">카테고리</label>
+      <select class="finput" id="editCategory">
+        <option value="식비">🍽 식비</option>
+        <option value="카페">☕ 카페</option>
+        <option value="교통">🚌 교통</option>
+        <option value="쇼핑">🛍 쇼핑</option>
+        <option value="마트">🛒 마트</option>
+        <option value="생활용품">🧴 생활용품</option>
+        <option value="의료">🏥 의료</option>
+        <option value="문화">🎬 문화</option>
+        <option value="여행">✈ 여행</option>
+        <option value="통신">📱 통신</option>
+        <option value="주거">🏠 주거</option>
+        <option value="대출">🏦 대출</option>
+        <option value="보험">🛡 보험</option>
+        <option value="애견용품">🐾 애견용품</option>
+        <option value="주식 매수">📈 주식 매수</option>
+        <option value="코인 매수">🪙 코인 매수</option>
+        <option value="적금/예금">💰 적금/예금</option>
+        <option value="급여">💼 급여</option>
+        <option value="부업">💡 부업</option>
+        <option value="용돈">💝 용돈</option>
+        <option value="환급">💰 환급</option>
+        <option value="주식 매도">📈 주식 매도</option>
+        <option value="코인 매도">🪙 코인 매도</option>
+        <option value="배당/이자">💵 배당/이자</option>
+        <option value="기타">📦 기타</option>
+      </select>
+    </div>
+    <div class="fgroup" id="editPaymentGroup">
+      <label class="flabel">지출처</label>
+      <select class="finput" id="editPayment">
+        <option value="신한 신용카드(오소리)">💳 신한 신용카드(오소리)</option>
+        <option value="국민 신용카드(오소리)">💳 국민 신용카드(오소리)</option>
+        <option value="삼성 신용카드(오소리)">💳 삼성 신용카드(오소리)</option>
+        <option value="현금(오소리)">💵 현금(오소리)</option>
+        <option value="현금(우리통장)">💵 현금(우리통장)</option>
+        <option value="현금(부엉이)">💵 현금(부엉이)</option>
+        <option value="휴대폰결제(부엉이)">📱 휴대폰결제(부엉이)</option>
+      </select>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">메모</label>
+      <input class="finput" id="editMemo" type="text" placeholder="메모">
+    </div>
+    <input type="hidden" id="editRecordId">
+    <button class="submit-btn" onclick="saveEdit()" style="background:var(--p1);margin-bottom:10px;">저장</button>
+    <button class="submit-btn" onclick="closeEditModal()" style="background:var(--muted);">취소</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
