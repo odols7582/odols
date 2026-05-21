@@ -890,9 +890,8 @@ window.runAiAnalysis = async function() {
 
   btn.disabled = true;
   btn.textContent = '분석 중...';
-  result.innerHTML = '<div style="color:var(--muted);display:flex;align-items:center;gap:8px;"><div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> AI가 지출을 분석하고 있어요...</div>';
+  result.innerHTML = '<div style="color:var(--muted);display:flex;align-items:center;gap:8px;"><div class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;"></div> AI가 지출을 분석하고 있어요...</div>';
 
-  // 이번달 카테고리별 지출
   var investCats = ['주식 매수','코인 매수','적금/예금'];
   var expenses = records.filter(function(r){return r.type==='expense' && investCats.indexOf(r.category)<0;});
   var prevExpenses = (window.prevRecords||[]).filter(function(r){return r.type==='expense' && investCats.indexOf(r.category)<0;});
@@ -904,58 +903,98 @@ window.runAiAnalysis = async function() {
   var totalThis = expenses.reduce(function(a,r){return a+r.amount;},0);
   var totalPrev = prevExpenses.reduce(function(a,r){return a+r.amount;},0);
 
-  // 카테고리별 비교 데이터 구성
   var allCats = Object.keys(Object.assign({}, catMap, prevCatMap));
   var catData = allCats.map(function(c){
-    return {
-      category: c,
-      thisMonth: catMap[c]||0,
-      prevMonth: prevCatMap[c]||0,
-      diff: (catMap[c]||0) - (prevCatMap[c]||0)
-    };
+    return { category:c, thisMonth:catMap[c]||0, prevMonth:prevCatMap[c]||0, diff:(catMap[c]||0)-(prevCatMap[c]||0) };
   }).sort(function(a,b){return b.thisMonth-a.thisMonth;});
 
   var period = document.getElementById('periodMain').textContent;
+  var hasPrevData = totalPrev > 0;
 
-  var prompt = '커플 가계부 데이터를 분석해줘. 오소리🦡와 부엉이🦉의 지출 내역이야.\n\n'+
+  var prompt = '커플 가계부 지출 분석을 해줘. 오소리🦡와 부엉이🦉의 가계부야.\n\n'+
     '분석 기간: '+period+'\n'+
     '이번달 총 지출: '+fmt(totalThis)+'원\n'+
-    '전월 총 지출: '+fmt(totalPrev)+'원\n'+
-    '전월 대비: '+(totalThis-totalPrev>=0?'+':'')+fmt(totalThis-totalPrev)+'원\n\n'+
+    (hasPrevData ? '전월 총 지출: '+fmt(totalPrev)+'원\n전월 대비: '+(totalThis-totalPrev>=0?'+':'')+fmt(totalThis-totalPrev)+'원\n\n' : '(전월 데이터 없음)\n\n')+
     '카테고리별 지출:\n'+
     catData.map(function(d){
-      var diffStr = d.diff===0?'전월동일':d.diff>0?'▲'+fmt(d.diff)+'원 증가':'▼'+fmt(Math.abs(d.diff))+'원 감소';
-      return '- '+d.category+': 이번달 '+fmt(d.thisMonth)+'원 / 전월 '+fmt(d.prevMonth)+'원 ('+diffStr+')';
+      return '- '+d.category+': 이번달 '+fmt(d.thisMonth)+'원'+(hasPrevData?' / 전월 '+fmt(d.prevMonth)+'원 ('+( d.diff>0?'▲+'+fmt(d.diff):d.diff<0?'▼'+fmt(Math.abs(d.diff)):'동일')+')':'');
     }).join('\n')+
-    '\n\n위 데이터를 바탕으로:\n'+
-    '1. 가장 줄여야 할 카테고리 2~3개와 이유\n'+
-    '2. 잘 관리되고 있는 카테고리\n'+
-    '3. 전체적인 지출 패턴 한마디 코멘트\n'+
-    '를 친근하고 따뜻한 말투로 분석해줘. 이모지도 적절히 써줘. 200자 이내로 간결하게.';
+    '\n\n위 데이터 분석:\n1. 지출이 높거나 줄일 수 있는 카테고리 2~3개\n2. 잘 관리되는 부분\n3. 전체 한마디\n\n친근하고 따뜻하게, 이모지 포함, 250자 이내로.';
 
   try {
     var response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': '',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        max_tokens: 600,
         messages: [{ role: 'user', content: prompt }]
       })
     });
-    var data = await response.json();
-    var text = data.content && data.content[0] ? data.content[0].text : '분석 결과를 가져올 수 없어요.';
 
-    result.innerHTML = '<div style="white-space:pre-wrap;line-height:1.8;font-size:14px;color:var(--text);">'+esc(text)+'</div>'+
+    if(!response.ok) {
+      // API 직접 호출 실패시 로컬 분석으로 대체
+      throw new Error('API 호출 실패');
+    }
+
+    var data = await response.json();
+    var text = data.content && data.content[0] ? data.content[0].text : '';
+    result.innerHTML = '<div style="white-space:pre-wrap;line-height:1.9;font-size:14px;color:var(--text);">'+esc(text)+'</div>'+
       '<div style="font-size:11px;color:var(--muted);margin-top:12px;text-align:right;">🤖 Claude AI 분석</div>';
+
   } catch(e) {
-    result.innerHTML = '<div style="color:var(--expense);">분석 중 오류가 발생했어요. 다시 시도해주세요.</div>';
-    console.error('AI 분석 오류:', e);
+    // 로컬 분석으로 대체
+    var analysis = localAnalysis(catData, totalThis, totalPrev, hasPrevData);
+    result.innerHTML = '<div style="white-space:pre-wrap;line-height:1.9;font-size:14px;color:var(--text);">'+esc(analysis)+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:12px;text-align:right;">📊 자동 분석</div>';
   }
 
   btn.disabled = false;
   btn.textContent = '다시 분석';
 };
+
+function localAnalysis(catData, totalThis, totalPrev, hasPrevData) {
+  if(!catData.length) return '이번달 지출 내역이 없어요 😊';
+
+  var lines = [];
+  var top = catData.slice(0, 3);
+
+  lines.push('💰 이번달 총 지출: '+fmt(totalThis)+'원');
+  if(hasPrevData) {
+    var diff = totalThis - totalPrev;
+    lines.push('📊 전월 대비: '+(diff>0?'▲ +'+fmt(diff)+'원 증가 😮':'▼ '+fmt(Math.abs(diff))+'원 감소 👍'));
+  }
+  lines.push('');
+  lines.push('🔍 지출 TOP 항목:');
+  top.forEach(function(d, i) {
+    lines.push((i+1)+'. '+d.category+' - '+fmt(d.thisMonth)+'원');
+  });
+  lines.push('');
+
+  var highDiff = catData.filter(function(d){return d.diff > 50000;});
+  if(highDiff.length) {
+    lines.push('⚠️ 전월 대비 많이 늘어난 항목:');
+    highDiff.slice(0,2).forEach(function(d){
+      lines.push('- '+d.category+': ▲'+fmt(d.diff)+'원 증가');
+    });
+    lines.push('');
+  }
+
+  var total = catData.reduce(function(a,d){return a+d.thisMonth;},0);
+  var topRatio = top[0] ? Math.round(top[0].thisMonth/total*100) : 0;
+  if(topRatio > 30) {
+    lines.push('💡 '+top[0].category+'이(가) 전체의 '+topRatio+'%를 차지해요. 조금 줄여보는 건 어떨까요?');
+  } else {
+    lines.push('✨ 지출이 여러 항목에 골고루 분산되어 있어요!');
+  }
+
+  return lines.join('\n');
+}
 window.showDebug = async function() {
   var box = document.getElementById('debugBox');
   var txt = document.getElementById('debugText');
