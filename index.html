@@ -469,7 +469,8 @@
 
 <!-- 잔액/차트 페이지 -->
 <div class="container" id="pageChart" style="display:none;">
-  <!-- 잔액 요약 -->
+
+  <!-- 1. 잔액 요약 + 인물별 -->
   <div class="summary-card">
     <div class="sum-label" id="sumLabel">이번 달 잔액</div>
     <div class="sum-balance pos" id="totalBalance">0 원</div>
@@ -491,27 +492,61 @@
     </div>
   </div>
 
-  <!-- 예산 현황 -->
-  <div id="budgetStatus" style="margin-bottom:12px;"></div>
-
-  <!-- 월별 추이 그래프 -->
-  <div class="chart-box">
-    <div class="chart-title">📈 월별 지출 추이 (6개월)</div>
-    <div class="chart-wrap" style="height:200px;"><canvas id="trendChart"></canvas></div>
-  </div>
-
-  <!-- 저축률 -->
+  <!-- 2. 저축률 + 예산현황 -->
   <div style="background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:18px;margin-bottom:12px;">
     <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;">💹 저축률</div>
     <div id="savingsRate"></div>
   </div>
+  <div id="budgetStatus" style="margin-bottom:12px;"></div>
 
-  <!-- 대분류별 지출 현황 -->
+  <!-- 3. 이번달 달력 -->
+  <div class="chart-box">
+    <div class="chart-title">📅 이번 달 수입/지출 달력</div>
+    <div id="calendarChart"></div>
+  </div>
+
+  <!-- 4. 대분류별 지출 + AI 분석 -->
   <div class="chart-box" style="margin-bottom:12px;">
     <div class="chart-title">📂 대분류별 지출 (전월 비교)</div>
     <div id="groupExpenseChart"></div>
   </div>
+  <div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);padding:18px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:15px;font-weight:700;color:var(--text);">🤖 AI 지출 분석</div>
+      <button id="aiAnalyzeBtn" onclick="runAiAnalysis()" style="background:var(--p1);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">분석하기</button>
+    </div>
+    <div id="aiResult" style="font-size:14px;color:var(--sub);line-height:1.7;">
+      <span style="color:var(--muted);">분석하기 버튼을 누르면 이번달 지출을 AI가 분석해드려요 😊</span>
+    </div>
+  </div>
 
+  <!-- 5. 카테고리/지출처/인물별/수입vs지출 차트 -->
+  <div class="chart-box">
+    <div class="chart-title">카테고리별 지출 (전월 비교)</div>
+    <div class="chart-wrap" style="height:260px;"><canvas id="catChart"></canvas></div>
+    <div class="legend" id="catLegend"></div>
+  </div>
+  <div class="chart-box">
+    <div class="chart-title">지출처별 지출</div>
+    <div class="chart-wrap" style="height:260px;"><canvas id="paymentChart"></canvas></div>
+    <div class="legend" id="paymentLegend"></div>
+  </div>
+  <div class="chart-box">
+    <div class="chart-title">인물별 지출</div>
+    <div class="chart-wrap" style="height:180px;"><canvas id="personChart"></canvas></div>
+  </div>
+  <div class="chart-box">
+    <div class="chart-title">수입 vs 지출</div>
+    <div class="chart-wrap" style="height:180px;"><canvas id="summaryChart"></canvas></div>
+  </div>
+
+  <!-- 6. 월별 추이 -->
+  <div class="chart-box">
+    <div class="chart-title">📈 월별 추이 (6개월)</div>
+    <div class="chart-wrap" style="height:200px;"><canvas id="trendChart"></canvas></div>
+  </div>
+
+  <!-- 7. 투자 레포트 -->
   <div class="section-block" style="box-shadow:var(--shadow);">
     <div class="section-block-header" onclick="toggleSection('investBlock')" style="background:linear-gradient(135deg,#0369A1,#0EA5E9);color:#fff;">
       <span>📈 투자 레포트 <span style="font-size:11px;opacity:.8;">(전체 누적)</span></span>
@@ -541,40 +576,6 @@
     </div>
   </div>
 
-  <!-- 차트 -->
-  <div class="chart-box">
-    <div class="chart-title">이번 달 수입/지출 달력</div>
-    <div id="calendarChart"></div>
-  </div>
-  <div class="chart-box">
-    <div class="chart-title">카테고리별 지출 (전월 비교)</div>
-    <div class="chart-wrap" style="height:260px;"><canvas id="catChart"></canvas></div>
-    <div class="legend" id="catLegend"></div>
-  </div>
-
-  <!-- AI 지출 분석 카드 -->
-  <div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);padding:18px;margin-bottom:12px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div style="font-size:15px;font-weight:700;color:var(--text);">🤖 AI 지출 분석</div>
-      <button id="aiAnalyzeBtn" onclick="runAiAnalysis()" style="background:var(--p1);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">분석하기</button>
-    </div>
-    <div id="aiResult" style="font-size:14px;color:var(--sub);line-height:1.7;">
-      <span style="color:var(--muted);">분석하기 버튼을 누르면 이번달 지출을 AI가 분석해드려요 😊</span>
-    </div>
-  </div>
-  <div class="chart-box">
-    <div class="chart-title">지출처별 지출</div>
-    <div class="chart-wrap" style="height:260px;"><canvas id="paymentChart"></canvas></div>
-    <div class="legend" id="paymentLegend"></div>
-  </div>
-  <div class="chart-box">
-    <div class="chart-title">인물별 지출</div>
-    <div class="chart-wrap" style="height:180px;"><canvas id="personChart"></canvas></div>
-  </div>
-  <div class="chart-box">
-    <div class="chart-title">수입 vs 지출</div>
-    <div class="chart-wrap" style="height:180px;"><canvas id="summaryChart"></canvas></div>
-  </div>
 </div>
 
 <!-- 할일 페이지 -->
