@@ -356,32 +356,50 @@
       <div class="fgroup" style="margin-bottom:0;">
         <label class="flabel">카테고리</label>
         <select class="finput" id="expenseCategory">
-          <option value="식비">🍽 식비</option>
-          <option value="배달식비">🛵 배달식비</option>
-          <option value="조리식비">🍳 조리식비</option>
-          <option value="카페">☕ 카페</option>
-          <option value="담배">🚬 담배</option>
-          <option value="교통">🚌 교통</option>
-          <option value="쇼핑">🛍 쇼핑</option>
-          <option value="마트">🛒 마트</option>
-          <option value="생활용품">🧴 생활용품</option>
-          <option value="의료">🏥 의료</option>
-          <option value="영양제">💊 영양제</option>
-          <option value="문화">🎬 문화</option>
-          <option value="여행">✈ 여행</option>
-          <option value="통신">📱 통신</option>
-          <option value="주거">🏠 주거</option>
-          <option value="대출">🏦 대출</option>
-          <option value="보험">🛡 보험</option>
-          <option value="애견용품">🐾 애견용품</option>
-          <option value="애견 미용비">✂️ 애견 미용비</option>
-          <option value="애견 사료비">🦴 애견 사료비</option>
-          <option value="애견 영양제">💊 애견 영양제</option>
-          <option value="애견 병원비">🏥 애견 병원비</option>
-          <option value="주식 매수">📈 주식 매수</option>
-          <option value="코인 매수">🪙 코인 매수</option>
-          <option value="적금/예금">💰 적금/예금</option>
-          <option value="기타">📦 기타</option>
+<optgroup label="🍽 식생활">
+            <option value="식비">🍽 식비</option>
+            <option value="배달식비">🛵 배달식비</option>
+            <option value="조리식비">🍳 조리식비</option>
+            <option value="카페">☕ 카페</option>
+            <option value="담배">🚬 담배</option>
+          </optgroup>
+          <optgroup label="🚗 교통/이동">
+            <option value="교통">🚌 교통</option>
+          </optgroup>
+          <optgroup label="🛍 쇼핑/생활">
+            <option value="쇼핑">🛍 쇼핑</option>
+            <option value="마트">🛒 마트</option>
+            <option value="생활용품">🧴 생활용품</option>
+          </optgroup>
+          <optgroup label="🏥 건강/의료">
+            <option value="의료">🏥 의료</option>
+            <option value="영양제">💊 영양제</option>
+          </optgroup>
+          <optgroup label="🐾 애견">
+            <option value="애견용품">🐾 애견용품</option>
+            <option value="애견 미용비">✂️ 애견 미용비</option>
+            <option value="애견 사료비">🦴 애견 사료비</option>
+            <option value="애견 영양제">💊 애견 영양제</option>
+            <option value="애견 병원비">🏥 애견 병원비</option>
+          </optgroup>
+          <optgroup label="🏠 주거/고정">
+            <option value="주거">🏠 주거</option>
+            <option value="대출">🏦 대출</option>
+            <option value="보험">🛡 보험</option>
+            <option value="통신">📱 통신</option>
+          </optgroup>
+          <optgroup label="🎬 여가/문화">
+            <option value="문화">🎬 문화</option>
+            <option value="여행">✈ 여행</option>
+          </optgroup>
+          <optgroup label="📈 투자/저축">
+            <option value="주식 매수">📈 주식 매수</option>
+            <option value="코인 매수">🪙 코인 매수</option>
+            <option value="적금/예금">💰 적금/예금</option>
+          </optgroup>
+          <optgroup label="📦 기타">
+            <option value="기타">📦 기타</option>
+          </optgroup>
         </select>
       </div>
     </div>
@@ -487,6 +505,13 @@
     <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;">💹 저축률</div>
     <div id="savingsRate"></div>
   </div>
+
+  <!-- 대분류별 지출 현황 -->
+  <div class="chart-box" style="margin-bottom:12px;">
+    <div class="chart-title">📂 대분류별 지출 (전월 비교)</div>
+    <div id="groupExpenseChart"></div>
+  </div>
+
   <div class="section-block" style="box-shadow:var(--shadow);">
     <div class="section-block-header" onclick="toggleSection('investBlock')" style="background:linear-gradient(135deg,#0369A1,#0EA5E9);color:#fff;">
       <span>📈 투자 레포트 <span style="font-size:11px;opacity:.8;">(전체 누적)</span></span>
@@ -865,39 +890,59 @@
     <div class="fgroup">
       <label class="flabel">카테고리</label>
       <select class="finput" id="editCategory">
-        <option value="식비">🍽 식비</option>
-        <option value="배달식비">🛵 배달식비</option>
-        <option value="조리식비">🍳 조리식비</option>
-        <option value="카페">☕ 카페</option>
-          <option value="담배">🚬 담배</option>
-        <option value="교통">🚌 교통</option>
-        <option value="쇼핑">🛍 쇼핑</option>
-        <option value="마트">🛒 마트</option>
-        <option value="생활용품">🧴 생활용품</option>
-        <option value="의료">🏥 의료</option>
-          <option value="영양제">💊 영양제</option>
-        <option value="문화">🎬 문화</option>
-        <option value="여행">✈ 여행</option>
-        <option value="통신">📱 통신</option>
-        <option value="주거">🏠 주거</option>
-        <option value="대출">🏦 대출</option>
-        <option value="보험">🛡 보험</option>
-        <option value="애견용품">🐾 애견용품</option>
-          <option value="애견 미용비">✂️ 애견 미용비</option>
-          <option value="애견 사료비">🦴 애견 사료비</option>
-          <option value="애견 영양제">💊 애견 영양제</option>
-          <option value="애견 병원비">🏥 애견 병원비</option>
-        <option value="주식 매수">📈 주식 매수</option>
-        <option value="코인 매수">🪙 코인 매수</option>
-        <option value="적금/예금">💰 적금/예금</option>
-        <option value="급여">💼 급여</option>
-        <option value="부업">💡 부업</option>
-        <option value="용돈">💝 용돈</option>
-        <option value="환급">💰 환급</option>
-        <option value="주식 매도">📈 주식 매도</option>
-        <option value="코인 매도">🪙 코인 매도</option>
-        <option value="배당/이자">💵 배당/이자</option>
-        <option value="기타">📦 기타</option>
+<optgroup label="🍽 식생활">
+            <option value="식비">🍽 식비</option>
+            <option value="배달식비">🛵 배달식비</option>
+            <option value="조리식비">🍳 조리식비</option>
+            <option value="카페">☕ 카페</option>
+            <option value="담배">🚬 담배</option>
+          </optgroup>
+          <optgroup label="🚗 교통/이동">
+            <option value="교통">🚌 교통</option>
+          </optgroup>
+          <optgroup label="🛍 쇼핑/생활">
+            <option value="쇼핑">🛍 쇼핑</option>
+            <option value="마트">🛒 마트</option>
+            <option value="생활용품">🧴 생활용품</option>
+          </optgroup>
+          <optgroup label="🏥 건강/의료">
+            <option value="의료">🏥 의료</option>
+            <option value="영양제">💊 영양제</option>
+          </optgroup>
+          <optgroup label="🐾 애견">
+            <option value="애견용품">🐾 애견용품</option>
+            <option value="애견 미용비">✂️ 애견 미용비</option>
+            <option value="애견 사료비">🦴 애견 사료비</option>
+            <option value="애견 영양제">💊 애견 영양제</option>
+            <option value="애견 병원비">🏥 애견 병원비</option>
+          </optgroup>
+          <optgroup label="🏠 주거/고정">
+            <option value="주거">🏠 주거</option>
+            <option value="대출">🏦 대출</option>
+            <option value="보험">🛡 보험</option>
+            <option value="통신">📱 통신</option>
+          </optgroup>
+          <optgroup label="🎬 여가/문화">
+            <option value="문화">🎬 문화</option>
+            <option value="여행">✈ 여행</option>
+          </optgroup>
+          <optgroup label="📈 투자/저축">
+            <option value="주식 매수">📈 주식 매수</option>
+            <option value="코인 매수">🪙 코인 매수</option>
+            <option value="적금/예금">💰 적금/예금</option>
+          </optgroup>
+          <optgroup label="📦 기타">
+            <option value="기타">📦 기타</option>
+          </optgroup>
+        <optgroup label="💼 수입">
+          <option value="급여">💼 급여</option>
+          <option value="부업">💡 부업</option>
+          <option value="용돈">💝 용돈</option>
+          <option value="환급">💰 환급</option>
+          <option value="주식 매도">📈 주식 매도</option>
+          <option value="코인 매도">🪙 코인 매도</option>
+          <option value="배당/이자">💵 배당/이자</option>
+        </optgroup>
       </select>
     </div>
     <div class="fgroup" id="editPaymentGroup">
@@ -1720,6 +1765,116 @@ function renderBudgetStatusHome() {
   el.innerHTML = html;
 }
 
+// ── 카테고리 대분류 정의 ─────────────────────────
+var CAT_GROUPS = {
+  '🍽 식생활': ['식비','배달식비','조리식비','카페','담배'],
+  '🚗 교통/이동': ['교통'],
+  '🛍 쇼핑/생활': ['쇼핑','마트','생활용품'],
+  '🏥 건강/의료': ['의료','영양제'],
+  '🐾 애견': ['애견용품','애견 미용비','애견 사료비','애견 영양제','애견 병원비'],
+  '🏠 주거/고정': ['주거','대출','보험','통신'],
+  '🎬 여가/문화': ['문화','여행'],
+  '📈 투자/저축': ['주식 매수','코인 매수','적금/예금'],
+  '📦 기타': ['기타']
+};
+
+function getCatGroup(cat) {
+  for(var g in CAT_GROUPS) {
+    if(CAT_GROUPS[g].indexOf(cat) >= 0) return g;
+  }
+  return '📦 기타';
+}
+
+// ── 대분류별 지출 렌더링 ──────────────────────────
+function renderGroupExpense() {
+  var el = document.getElementById('groupExpenseChart');
+  if(!el) return;
+
+  var investCats = ['주식 매수','코인 매수','적금/예금'];
+  var thisMap = {}, prevMap = {};
+
+  records.forEach(function(r){
+    if(r.type!=='expense') return;
+    var g = getCatGroup(r.category);
+    thisMap[g] = (thisMap[g]||0) + r.amount;
+  });
+  (window.prevRecords||[]).forEach(function(r){
+    if(r.type!=='expense') return;
+    var g = getCatGroup(r.category);
+    prevMap[g] = (prevMap[g]||0) + r.amount;
+  });
+
+  var groups = Object.keys(CAT_GROUPS).filter(function(g){
+    return (thisMap[g]||0) > 0 || (prevMap[g]||0) > 0;
+  });
+
+  if(!groups.length){ el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">지출 내역이 없어요</div>'; return; }
+
+  var bgColors = ['#EBF3FE','#F0FDF4','#FFF7ED','#F5F0FF','#FFF0F0','#ECFEFF','#FFFBEB','#EFF6FF','#F0F9FF'];
+
+  var html = '<div style="overflow-x:auto;">'+
+    '<table style="width:100%;border-collapse:collapse;font-size:13px;">'+
+    '<thead>'+
+      '<tr style="background:#191F28;">'+
+        '<th style="padding:10px 12px;text-align:left;color:#fff;font-weight:700;border:1px solid #374151;">대분류</th>'+
+        '<th style="padding:10px 12px;text-align:right;color:#fff;font-weight:700;border:1px solid #374151;">당월</th>'+
+        '<th style="padding:10px 12px;text-align:right;color:#fff;font-weight:700;border:1px solid #374151;">전월</th>'+
+        '<th style="padding:10px 12px;text-align:right;color:#fff;font-weight:700;border:1px solid #374151;">증감</th>'+
+      '</tr>'+
+    '</thead><tbody>'+
+    groups.map(function(g, i){
+      var cur = thisMap[g]||0, prev = prevMap[g]||0;
+      var diff = cur - prev;
+      var diffColor = diff > 0 ? '#F04452' : diff < 0 ? '#00B488' : '#8B95A1';
+      var diffStr = diff===0 ? '-' : (diff>0?'▲ +':'▼ ')+fmt(Math.abs(diff));
+      return '<tr style="background:'+bgColors[i%bgColors.length]+';" onclick="toggleGroupDetail(\'gd_'+i+'\')" style="cursor:pointer;background:'+bgColors[i%bgColors.length]+';">'+
+        '<td style="padding:10px 12px;font-weight:700;border:1px solid #D1D5DB;cursor:pointer;">'+esc(g)+' <span style="font-size:10px;color:var(--muted);">▼</span></td>'+
+        '<td style="padding:10px 12px;text-align:right;font-weight:700;border:1px solid #D1D5DB;">'+fmt(cur)+'원</td>'+
+        '<td style="padding:10px 12px;text-align:right;color:#4E5968;border:1px solid #D1D5DB;">'+fmt(prev)+'원</td>'+
+        '<td style="padding:10px 12px;text-align:right;font-weight:700;color:'+diffColor+';border:1px solid #D1D5DB;">'+diffStr+'</td>'+
+      '</tr>'+
+      // 세부 카테고리 행
+      '<tr id="gd_'+i+'" style="display:none;">'+
+        '<td colspan="4" style="padding:0;border:1px solid #D1D5DB;">'+
+          CAT_GROUPS[g].filter(function(c){
+            var catThis = records.filter(function(r){return r.type==='expense'&&r.category===c;}).reduce(function(a,r){return a+r.amount;},0);
+            var catPrev = (window.prevRecords||[]).filter(function(r){return r.type==='expense'&&r.category===c;}).reduce(function(a,r){return a+r.amount;},0);
+            return catThis>0||catPrev>0;
+          }).map(function(c){
+            var catThis = records.filter(function(r){return r.type==='expense'&&r.category===c;}).reduce(function(a,r){return a+r.amount;},0);
+            var catPrev = (window.prevRecords||[]).filter(function(r){return r.type==='expense'&&r.category===c;}).reduce(function(a,r){return a+r.amount;},0);
+            var d = catThis-catPrev;
+            var dc = d>0?'#F04452':d<0?'#00B488':'#8B95A1';
+            var ds = d===0?'-':(d>0?'▲ +':'▼ ')+fmt(Math.abs(d));
+            return '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:8px 14px;background:#F8FAFC;border-bottom:1px solid #E8EAED;font-size:12px;">'+
+              '<span style="color:var(--sub);font-weight:600;">　'+esc(c)+'</span>'+
+              '<span style="text-align:right;font-weight:600;">'+fmt(catThis)+'원</span>'+
+              '<span style="text-align:right;color:#4E5968;">'+fmt(catPrev)+'원</span>'+
+              '<span style="text-align:right;font-weight:700;color:'+dc+';">'+ds+'</span>'+
+            '</div>';
+          }).join('')+
+        '</td>'+
+      '</tr>';
+    }).join('')+
+    // 합계행
+    '<tr style="background:#191F28;">'+
+      '<td style="padding:10px 12px;font-weight:700;color:#fff;border:1px solid #374151;">합계</td>'+
+      '<td style="padding:10px 12px;text-align:right;font-weight:700;color:#fff;border:1px solid #374151;">'+fmt(Object.values(thisMap).reduce(function(a,b){return a+b;},0))+'원</td>'+
+      '<td style="padding:10px 12px;text-align:right;font-weight:700;color:#fff;border:1px solid #374151;">'+fmt(Object.values(prevMap).reduce(function(a,b){return a+b;},0))+'원</td>'+
+      '<td style="padding:10px 12px;text-align:right;font-weight:700;border:1px solid #374151;color:'+(function(){var t=Object.values(thisMap).reduce(function(a,b){return a+b;},0)-Object.values(prevMap).reduce(function(a,b){return a+b;},0);return t>0?'#FCA5A5':t<0?'#86EFAC':'#fff';})()+';">'+
+        (function(){var t=Object.values(thisMap).reduce(function(a,b){return a+b;},0)-Object.values(prevMap).reduce(function(a,b){return a+b;},0);return t===0?'-':(t>0?'▲ +':'▼ ')+fmt(Math.abs(t));})()+'</td>'+
+    '</tr>'+
+    '</tbody></table></div>';
+
+  el.innerHTML = html;
+}
+
+window.toggleGroupDetail = function(id) {
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.style.display = el.style.display==='none' ? '' : 'none';
+};
+
 window.showDebug = async function() {
   var box = document.getElementById('debugBox');
   var txt = document.getElementById('debugText');
@@ -1941,6 +2096,7 @@ function renderAll() {
   renderBudgetStatus();
   renderBudgetStatusHome();
   renderSavingsRate();
+  renderGroupExpense();
   if(currentPage==='chart') { renderCharts(); renderTrendChart(); }
 }
 
@@ -2477,6 +2633,7 @@ window.switchPage = function(page) {
     renderTrendChart();
     renderSavingsRate();
     renderBudgetStatus();
+    renderGroupExpense();
   }
 };
 
