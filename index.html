@@ -431,6 +431,20 @@
       <label class="flabel">메모 (선택)</label>
       <input class="finput" id="expenseMemo" type="text" placeholder="어디서 썼나요?">
     </div>
+
+    <!-- 할부 -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:#F5F5F5;border-radius:10px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:15px;font-weight:600;color:var(--sub);">
+        <input type="checkbox" id="installmentCheck" onchange="toggleInstallment(this)" style="width:18px;height:18px;accent-color:var(--p1);cursor:pointer;">
+        💳 할부
+      </label>
+      <div id="installmentOptions" style="display:none;flex:1;display:none;align-items:center;gap:8px;">
+        <input class="finput" id="installmentMonths" type="number" placeholder="개월" min="2" max="60" style="width:80px;padding:8px 10px;font-size:15px;">
+        <span style="font-size:14px;color:var(--muted);white-space:nowrap;">개월 할부</span>
+        <span id="installmentPerMonth" style="font-size:13px;color:var(--p1);font-weight:700;white-space:nowrap;"></span>
+      </div>
+    </div>
+
     <button class="submit-btn" id="expenseSubmitBtn" onclick="addExpense()">지출 추가</button>
   </div>
 
@@ -2929,36 +2943,110 @@ window.setTodoFilter = function(f, btn) {
 };
 window.setFilter=function(f,btn){currentFilter=f;document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderRecords();};
 
-window.addExpense=async function(){
-  var amt=parseNum(document.getElementById('expenseAmount').value);
-  if(!amt){toast('금액을 입력해주세요');return;}
-  var cat=document.getElementById('expenseCategory').value;
-  var btn=document.getElementById('expenseSubmitBtn');
-  btn.disabled=true; syncStatus('ing');
-  try{
-    var now=new Date();
-    await addDoc(collection(db,'records'),{type:'expense',amount:amt,category:cat,payment:document.getElementById('expensePayment').value,memo:document.getElementById('expenseMemo').value.trim(),person:currentUser.person,addedBy:currentUser.id,date:now.toISOString().slice(0,10),period:currentKey,createdAt:now.getTime()});
-    document.getElementById('expenseAmount').value='';document.getElementById('expenseMemo').value='';
+// ── 할부 기능 ──────────────────────────────────────
+window.toggleInstallment = function(checkbox) {
+  var opts = document.getElementById('installmentOptions');
+  if(checkbox.checked) {
+    opts.style.display = 'flex';
+    document.getElementById('installmentMonths').addEventListener('input', updateInstallmentPreview);
+  } else {
+    opts.style.display = 'none';
+    document.getElementById('installmentPerMonth').textContent = '';
+    document.getElementById('installmentMonths').value = '';
+  }
+};
 
-    // 예산 초과 경고
-    if(budgets[cat]) {
-      var investCats=['주식 매수','코인 매수','적금/예금'];
-      var spent=records.filter(function(r){return r.type==='expense'&&r.category===cat&&investCats.indexOf(r.category)<0;}).reduce(function(a,r){return a+r.amount;},0)+amt;
-      var budget=budgets[cat];
-      if(spent>budget){
-        setTimeout(function(){
-          showBudgetAlert(cat, spent, budget);
-        }, 500);
-      } else if(spent/budget>=0.8){
-        toast('⚠️ '+cat+' 예산의 '+Math.round(spent/budget*100)+'% 사용했어요!');
+function updateInstallmentPreview() {
+  var total = parseNum(document.getElementById('expenseAmount').value);
+  var months = parseInt(document.getElementById('installmentMonths').value);
+  var el = document.getElementById('installmentPerMonth');
+  if(total > 0 && months >= 2) {
+    var per = Math.ceil(total / months);
+    el.textContent = '월 '+fmt(per)+'원';
+  } else {
+    el.textContent = '';
+  }
+}
+
+// 금액 입력시 할부 미리보기 업데이트
+document.addEventListener('DOMContentLoaded', function(){
+  var amtEl = document.getElementById('expenseAmount');
+  if(amtEl) amtEl.addEventListener('input', function(){
+    if(document.getElementById('installmentCheck').checked) updateInstallmentPreview();
+  });
+});
+
+window.addExpense = async function(){
+  var amt = parseNum(document.getElementById('expenseAmount').value);
+  if(!amt){toast('금액을 입력해주세요');return;}
+  var cat = document.getElementById('expenseCategory').value;
+  var payment = document.getElementById('expensePayment').value;
+  var memo = document.getElementById('expenseMemo').value.trim();
+  var isInstallment = document.getElementById('installmentCheck').checked;
+  var months = isInstallment ? parseInt(document.getElementById('installmentMonths').value) : 1;
+
+  if(isInstallment && (!months || months < 2)) {
+    toast('할부 개월수를 2개월 이상 입력해주세요');
+    return;
+  }
+
+  var btn = document.getElementById('expenseSubmitBtn');
+  btn.disabled = true; syncStatus('ing');
+
+  try {
+    if(isInstallment) {
+      // 할부: N개월에 걸쳐 분할 입력
+      var perMonth = Math.ceil(amt / months);
+      var last = amt - perMonth * (months - 1); // 마지막달 나머지
+      var now = new Date();
+      var promises = [];
+      for(var i = 0; i < months; i++) {
+        var d = new Date(now.getFullYear(), now.getMonth() + i, now.getDate());
+        var dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        var period = getPeriodKey(d);
+        var monthAmt = (i === months-1) ? last : perMonth;
+        promises.push(addDoc(collection(db,'records'),{
+          type:'expense', amount:monthAmt, category:cat, payment:payment,
+          memo:(memo||cat)+' ('+months+'개월 할부 '+(i+1)+'/'+months+')',
+          person:currentUser.person, addedBy:currentUser.id,
+          date:dateStr, period:period,
+          installment:true, installmentTotal:amt, installmentMonths:months, installmentIndex:i+1,
+          createdAt:now.getTime()+i
+        }));
+      }
+      await Promise.all(promises);
+      document.getElementById('installmentCheck').checked = false;
+      document.getElementById('installmentOptions').style.display = 'none';
+      document.getElementById('installmentMonths').value = '';
+      document.getElementById('installmentPerMonth').textContent = '';
+      toast(months+'개월 할부 입력됐어요 💳');
+    } else {
+      // 일반 지출
+      var now2 = new Date();
+      await addDoc(collection(db,'records'),{
+        type:'expense', amount:amt, category:cat, payment:payment,
+        memo:memo, person:currentUser.person, addedBy:currentUser.id,
+        date:now2.toISOString().slice(0,10), period:currentKey, createdAt:now2.getTime()
+      });
+      // 예산 초과 경고
+      if(budgets[cat]) {
+        var spent = records.filter(function(r){return r.type==='expense'&&r.category===cat;}).reduce(function(a,r){return a+r.amount;},0)+amt;
+        var budget = budgets[cat];
+        if(spent > budget) {
+          setTimeout(function(){ showBudgetAlert(cat, spent, budget); }, 500);
+        } else if(spent/budget >= 0.8) {
+          toast('⚠️ '+cat+' 예산의 '+Math.round(spent/budget*100)+'% 사용했어요!');
+        } else {
+          toast('지출 추가됨 💸');
+        }
       } else {
         toast('지출 추가됨 💸');
       }
-    } else {
-      toast('지출 추가됨 💸');
     }
-  }catch(e){toast('저장 실패');}
-  btn.disabled=false;
+    document.getElementById('expenseAmount').value='';
+    document.getElementById('expenseMemo').value='';
+  } catch(e){ toast('저장 실패'); console.error(e); }
+  btn.disabled = false;
 };
 
 function showBudgetAlert(cat, spent, budget) {
