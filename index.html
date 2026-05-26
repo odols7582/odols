@@ -348,6 +348,9 @@
     <button onclick="document.getElementById('debugBox').style.display='none'" style="margin-top:8px;background:#D85A30;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">닫기</button>
   </div>
 
+  <!-- 카드 결제 예상금액 -->
+  <div id="cardSummaryWrap" style="margin-bottom:10px;"></div>
+
   <!-- 가계부 예산 현황 -->
   <div id="budgetStatusHome" style="margin-bottom:12px;"></div>
 
@@ -2124,6 +2127,7 @@ function renderAll() {
   renderBudgetStatusHome();
   renderSavingsRate();
   renderGroupExpense();
+  renderCardSummary();
   if(currentPage==='chart') { renderCharts(); renderTrendChart(); }
 }
 
@@ -2943,7 +2947,75 @@ window.setTodoFilter = function(f, btn) {
 };
 window.setFilter=function(f,btn){currentFilter=f;document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderRecords();};
 
-// ── 할부 기능 ──────────────────────────────────────
+// ── 카드 결제 예상금액 ────────────────────────────
+var CARD_PAYMENTS = [
+  { key: 'shinhan', name: '신한 신용카드', emoji: '💳', payment: '신한 신용카드(오소리)', color: '#0066CC' },
+  { key: 'kukmin',  name: '국민 신용카드', emoji: '💳', payment: '국민 신용카드(오소리)', color: '#FF6600' },
+  { key: 'samsung', name: '삼성 신용카드', emoji: '💳', payment: '삼성 신용카드(오소리)', color: '#1428A0' }
+];
+
+function getCardPaidKey(cardKey) {
+  return 'cardPaid_'+cardKey+'_'+currentKey;
+}
+
+function renderCardSummary() {
+  var el = document.getElementById('cardSummaryWrap');
+  if(!el) return;
+
+  // 카드별 이번달 지출 집계
+  var cardMap = {};
+  CARD_PAYMENTS.forEach(function(c){ cardMap[c.key] = 0; });
+  records.forEach(function(r){
+    if(r.type !== 'expense') return;
+    CARD_PAYMENTS.forEach(function(c){
+      if(r.payment === c.payment) cardMap[c.key] += r.amount;
+    });
+  });
+
+  // 납부 완료된 카드 목록 (localStorage)
+  var hasAny = CARD_PAYMENTS.some(function(c){ return cardMap[c.key] > 0; });
+  if(!hasAny){ el.innerHTML=''; return; }
+
+  var html = '<div style="background:#fff;border-radius:14px;box-shadow:var(--shadow2);padding:14px;margin-bottom:10px;">'+
+    '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px;">💳 카드 결제 예상금액</div>'+
+    CARD_PAYMENTS.map(function(c){
+      if(cardMap[c.key] === 0) return '';
+      var paidKey = getCardPaidKey(c.key);
+      var isPaid = localStorage.getItem(paidKey) === 'true';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F0F0F0;">'+
+        '<div style="display:flex;align-items:center;gap:10px;">'+
+          '<div style="width:36px;height:36px;border-radius:10px;background:'+c.color+'15;display:flex;align-items:center;justify-content:center;font-size:18px;">💳</div>'+
+          '<div>'+
+            '<div style="font-size:14px;font-weight:700;color:var(--text);">'+esc(c.name)+'</div>'+
+            '<div style="font-size:12px;color:var(--muted);margin-top:1px;">'+(isPaid?'✅ 납부완료':'이번달 누적')+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:8px;">'+
+          '<span style="font-size:16px;font-weight:800;color:'+(isPaid?'var(--muted)':c.color)+';'+(isPaid?'text-decoration:line-through;':'')+'">'+fmt(cardMap[c.key])+'원</span>'+
+          '<button onclick="toggleCardPaid(\''+c.key+'\')" style="background:'+(isPaid?'#F0F0F0':'var(--p1)')+';color:'+(isPaid?'var(--muted)':'#fff')+';border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">'+
+            (isPaid?'취소':'납부완료')+
+          '</button>'+
+        '</div>'+
+      '</div>';
+    }).join('')+
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;">'+
+      '<span style="font-size:14px;font-weight:600;color:var(--muted);">총 예상 결제금액</span>'+
+      '<span style="font-size:17px;font-weight:800;color:var(--expense);">'+
+        fmt(CARD_PAYMENTS.reduce(function(a,c){ return a+cardMap[c.key]; }, 0))+'원'+
+      '</span>'+
+    '</div>'+
+  '</div>';
+
+  el.innerHTML = html;
+}
+
+window.toggleCardPaid = function(cardKey) {
+  var paidKey = getCardPaidKey(cardKey);
+  var isPaid = localStorage.getItem(paidKey) === 'true';
+  localStorage.setItem(paidKey, (!isPaid).toString());
+  renderCardSummary();
+  toast(isPaid ? '납부 취소됐어요' : '납부완료 처리됐어요 ✅');
+};
 window.toggleInstallment = function(checkbox) {
   var opts = document.getElementById('installmentOptions');
   if(checkbox.checked) {
