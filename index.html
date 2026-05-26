@@ -1171,6 +1171,7 @@ function showMain() {
       setCardBase('shinhan', 2603229);
       setCardBase('kukmin',  387740);
       setCardBase('samsung', 111469);
+      localStorage.setItem('cardBaseInitDate_2026-05', '2026-05-26'); // 5/26 이후만 가계부 집계
       localStorage.setItem('cardBaseInit_2026-05', 'true');
     }
   } catch(e){}
@@ -2974,10 +2975,15 @@ function setCardBase(cardKey, amt) {
   localStorage.setItem(getBaseKey(cardKey), amt.toString());
 }
 
-// 가계부에서 자동 집계
+// 가계부에서 자동 집계 - 기초금액 세팅일 이후만
 function getCardAuto(paymentStr) {
+  // 기초금액 초기 세팅일(5/26) 이후 날짜만 집계
+  var baseInitDate = localStorage.getItem('cardBaseInitDate_'+currentKey) || '';
   return records.filter(function(r){
-    return r.type==='expense' && r.payment===paymentStr;
+    if(r.type !== 'expense') return false;
+    if(r.payment !== paymentStr) return false;
+    if(baseInitDate && r.date < baseInitDate) return false; // 기초금액 날짜 이전 제외
+    return true;
   }).reduce(function(a,r){return a+r.amount;},0);
 }
 
@@ -3018,8 +3024,8 @@ function renderCardSummary() {
           '</div>'+
         '</div>'+
         '<div style="display:flex;gap:12px;font-size:12px;color:var(--muted);">'+
-          (row.base>0?'<span>📌 기초: '+fmt(row.base)+'원</span>':'')+
-          (row.auto>0?'<span>➕ 가계부: '+fmt(row.auto)+'원</span>':'')+
+          (row.base>0?'<span>📌 기초(~'+((localStorage.getItem('cardBaseInitDate_'+currentKey)||'').slice(5).replace('-','/')+'전')+'):'+fmt(row.base)+'원</span>':'')+
+          (row.auto>0?'<span>➕ 가계부('+((localStorage.getItem('cardBaseInitDate_'+currentKey)||'').slice(5).replace('-','/')+'~')+'):'+fmt(row.auto)+'원</span>':'')+
         '</div>'+
       '</div>';
     }).join('')+
@@ -3034,7 +3040,11 @@ function renderCardSummary() {
   html += '<div id="cardBaseModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:flex-end;justify-content:center;">'+
     '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;">'+
       '<div style="font-size:17px;font-weight:700;margin-bottom:6px;">📌 기초금액 설정</div>'+
-      '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">할부 등 미입력 금액을 카드별로 입력해주세요</div>'+
+      '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">할부 등 미입력 금액을 카드별로 입력해주세요<br><span style="color:var(--expense);font-weight:600;">기준일 이후 가계부 입력분만 자동 합산돼요</span></div>'+
+      '<div class="fgroup">'+
+        '<label class="flabel">가계부 집계 시작일 (기준일)</label>'+
+        '<input class="finput" id="base_startdate" type="date" value="'+(localStorage.getItem('cardBaseInitDate_'+currentKey)||'')+'">'+
+      '</div>'+
       CARD_PAYMENTS.map(function(c){
         return '<div class="fgroup">'+
           '<label class="flabel">'+esc(c.name)+'</label>'+
@@ -3062,13 +3072,15 @@ window.showCardBaseEdit = function() {
 };
 
 window.saveCardBase = function() {
+  var startDate = document.getElementById('base_startdate').value;
+  if(startDate) localStorage.setItem('cardBaseInitDate_'+currentKey, startDate);
   CARD_PAYMENTS.forEach(function(c){
     var inp = document.getElementById('base_'+c.key);
     if(inp) setCardBase(c.key, parseNum(inp.value));
   });
   document.getElementById('cardBaseModal').style.display = 'none';
   renderCardSummary();
-  toast('기초금액 저장됐어요 ✅');
+  toast('저장됐어요 ✅');
 };
 
 window.toggleCardPaid = function(cardKey) {
