@@ -431,6 +431,10 @@
       </select>
     </div>
     <div class="fgroup">
+      <label class="flabel">날짜</label>
+      <input class="finput" id="expenseDate" type="date">
+    </div>
+    <div class="fgroup">
       <label class="flabel">메모 (선택)</label>
       <input class="finput" id="expenseMemo" type="text" placeholder="어디서 썼나요?">
     </div>
@@ -476,6 +480,10 @@
     <div class="fgroup">
       <label class="flabel">메모 (선택)</label>
       <input class="finput" id="incomeMemo" type="text" placeholder="수입 출처">
+    </div>
+    <div class="fgroup">
+      <label class="flabel">날짜</label>
+      <input class="finput" id="incomeDate" type="date">
     </div>
     <button class="submit-btn" id="incomeSubmitBtn" style="background:var(--income);" onclick="addIncome()">수입 추가</button>
   </div>
@@ -1168,11 +1176,16 @@ function showMain() {
   // 5월 기초금액 최초 세팅 (한번만)
   try {
     if(!localStorage.getItem('cardBaseInit_2026-05')) {
-      setCardBase('shinhan', 2603229);
-      setCardBase('kukmin',  387740);
+      setCardBase('shinhan', 0);
+      setCardBase('kukmin',  0);
       setCardBase('samsung', 111469);
-      localStorage.setItem('cardBaseInitDate_2026-05', '2026-05-26'); // 5/26 이후만 가계부 집계
+      localStorage.setItem('cardBaseInitDate_2026-05', '2026-05-26');
       localStorage.setItem('cardBaseInit_2026-05', 'true');
+    }
+    // 이미 세팅됐으면 신한/국민만 0으로 초기화
+    if(localStorage.getItem('cardBaseInit_2026-05') === 'true') {
+      setCardBase('shinhan', 0);
+      setCardBase('kukmin', 0);
     }
   } catch(e){}
   try { subscribeWishes(); } catch(e){ console.error('wish 오류:', e); }
@@ -2781,8 +2794,11 @@ function subscribeSchedules() {
 
 function initScheduleDate() {
   var now = new Date();
-  document.getElementById('scheduleDate').value = now.toISOString().slice(0,10);
+  var today = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  document.getElementById('scheduleDate').value = today;
   document.getElementById('scheduleTime').value = String(now.getHours()).padStart(2,'0')+':00';
+  document.getElementById('expenseDate').value = today;
+  document.getElementById('incomeDate').value = today;
 }
 
 function filteredSchedules() {
@@ -3169,10 +3185,13 @@ window.addExpense = async function(){
     } else {
       // 일반 지출
       var now2 = new Date();
+      var dateStr = document.getElementById('expenseDate').value || now2.toISOString().slice(0,10);
+      var dateObj = new Date(dateStr);
+      var period = getPeriodKey(dateObj);
       await addDoc(collection(db,'records'),{
         type:'expense', amount:amt, category:cat, payment:payment,
         memo:memo, person:currentUser.person, addedBy:currentUser.id,
-        date:now2.toISOString().slice(0,10), period:currentKey, createdAt:now2.getTime()
+        date:dateStr, period:period, createdAt:now2.getTime()
       });
       // 예산 초과 경고
       if(budgets[cat]) {
@@ -3216,7 +3235,10 @@ window.addIncome=async function(){
   btn.disabled=true; syncStatus('ing');
   try{
     var now=new Date();
-    await addDoc(collection(db,'records'),{type:'income',amount:amt,category:document.getElementById('incomeCategory').value,memo:document.getElementById('incomeMemo').value.trim(),person:currentUser.person,addedBy:currentUser.id,date:now.toISOString().slice(0,10),period:currentKey,createdAt:now.getTime()});
+    var dateStr=document.getElementById('incomeDate').value||now.toISOString().slice(0,10);
+    var dateObj=new Date(dateStr);
+    var period=getPeriodKey(dateObj);
+    await addDoc(collection(db,'records'),{type:'income',amount:amt,category:document.getElementById('incomeCategory').value,memo:document.getElementById('incomeMemo').value.trim(),person:currentUser.person,addedBy:currentUser.id,date:dateStr,period:period,createdAt:now.getTime()});
     document.getElementById('incomeAmount').value='';document.getElementById('incomeMemo').value='';
     toast('수입 추가됨 💰');
   }catch(e){toast('저장 실패');}
