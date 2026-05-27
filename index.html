@@ -567,6 +567,7 @@
     <div class="chart-title">지출처별 지출</div>
     <div class="chart-wrap" style="height:260px;"><canvas id="paymentChart"></canvas></div>
     <div class="legend" id="paymentLegend"></div>
+    <div id="paymentText" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;"></div>
   </div>
   <div class="chart-box">
     <div class="chart-title">인물별 지출</div>
@@ -2435,7 +2436,28 @@ function renderCharts() {
       }
     });
     document.getElementById('paymentLegend').innerHTML=pL.map(function(l,i){return '<div class="leg-item"><div class="leg-dot" style="background:'+COLORS2[i]+'"></div>'+esc(l)+' '+fmt(pDat[i])+'원</div>';}).join('');
-  } else { document.getElementById('paymentLegend').innerHTML=''; }
+
+    // 지출처별 텍스트 표기
+    var textEl = document.getElementById('paymentText');
+    if(textEl) {
+      var totalPay = pDat.reduce(function(a,b){return a+b;},0);
+      textEl.innerHTML = pL.map(function(l,i){
+        var ratio = Math.round(pDat[i]/totalPay*100);
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #F5F5F5;font-size:14px;">'+
+          '<span style="font-weight:600;color:var(--sub);">'+esc(l)+'</span>'+
+          '<span style="font-weight:700;color:var(--text);">'+fmt(pDat[i])+'원 <span style="font-size:12px;color:var(--muted);">('+ratio+'%)</span></span>'+
+        '</div>';
+      }).join('')+
+      '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:15px;">'+
+        '<span style="font-weight:700;color:var(--text);">합계</span>'+
+        '<span style="font-weight:800;color:var(--expense);">'+fmt(totalPay)+'원</span>'+
+      '</div>';
+    }
+  } else {
+    document.getElementById('paymentLegend').innerHTML='';
+    var textEl2 = document.getElementById('paymentText');
+    if(textEl2) textEl2.innerHTML='';
+  }
 
   // 인물별 막대 + 금액 표시
   var p1e=0,p2e=0;
@@ -2966,134 +2988,152 @@ window.setTodoFilter = function(f, btn) {
 };
 window.setFilter=function(f,btn){currentFilter=f;document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderRecords();};
 
-// ── 카드 결제 예상금액 ────────────────────────────
+// ── 카드 결제 예상금액 (수기 입력) ───────────────
 var CARD_PAYMENTS = [
-  { key: 'shinhan', name: '신한 신용카드', payment: '신한 신용카드(오소리)', color: '#0066CC' },
-  { key: 'kukmin',  name: '국민 신용카드', payment: '국민 신용카드(오소리)', color: '#FF6600' },
-  { key: 'samsung', name: '삼성 신용카드', payment: '삼성 신용카드(오소리)', color: '#1428A0' }
+  { key: 'shinhan', name: '신한 신용카드', color: '#0066CC' },
+  { key: 'kukmin',  name: '국민 신용카드', color: '#FF6600' },
+  { key: 'samsung', name: '삼성 신용카드', color: '#1428A0' }
 ];
 
-// 기초금액 (미입력 할부 등) - localStorage에 저장
-function getBaseKey(cardKey) { return 'cardBase_'+cardKey+'_'+currentKey; }
-function getPaidKey(cardKey)  { return 'cardPaid_'+cardKey+'_'+currentKey; }
-
-function getCardBase(cardKey) {
-  return parseInt(localStorage.getItem(getBaseKey(cardKey))||'0') || 0;
-}
-function setCardBase(cardKey, amt) {
-  localStorage.setItem(getBaseKey(cardKey), amt.toString());
-}
-
-// 가계부에서 자동 집계 - 현재 period 전체 (5/20~6/19)
-function getCardAuto(paymentStr) {
-  return records.filter(function(r){
-    return r.type === 'expense' && r.payment === paymentStr;
-  }).reduce(function(a,r){return a+r.amount;},0);
-}
+function getCardAmtKey(cardKey) { return 'cardAmt_'+cardKey+'_'+currentKey; }
+function getPaidKey(cardKey)    { return 'cardPaid_'+cardKey+'_'+currentKey; }
+function getCardBase(cardKey)   { return parseInt(localStorage.getItem(getCardAmtKey(cardKey))||'0')||0; }
+function setCardBase(cardKey, amt) { localStorage.setItem(getCardAmtKey(cardKey), amt.toString()); }
 
 function renderCardSummary() {
   var el = document.getElementById('cardSummaryWrap');
   if(!el) return;
 
   var rows = CARD_PAYMENTS.map(function(c){
-    var base = getCardBase(c.key);
-    var auto = getCardAuto(c.payment);
-    var total = base + auto;
-    var isPaid = localStorage.getItem(getPaidKey(c.key)) === 'true';
-    return { c:c, base:base, auto:auto, total:total, isPaid:isPaid };
+    var lump = parseInt(localStorage.getItem('card_lump_'+c.key+'_'+currentKey)||'0')||0;
+    var inst = parseInt(localStorage.getItem('card_inst_'+c.key+'_'+currentKey)||'0')||0;
+    var total = lump + inst;
+    var isPaid = localStorage.getItem('cardPaid_'+c.key+'_'+currentKey) === 'true';
+    return {c:c, lump:lump, inst:inst, total:total, isPaid:isPaid};
   });
 
   var grandTotal = rows.reduce(function(a,r){return a+r.total;},0);
-  if(grandTotal === 0){ el.innerHTML=''; return; }
 
   var html = '<div style="background:#fff;border-radius:14px;box-shadow:var(--shadow2);overflow:hidden;margin-bottom:10px;">'+
     '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 14px 10px;">'+
       '<div style="font-size:15px;font-weight:700;color:var(--text);">💳 카드 결제 예상금액</div>'+
-      '<button onclick="showCardBaseEdit()" style="font-size:12px;font-weight:600;color:var(--p1);background:var(--p1-bg);border:none;border-radius:8px;padding:5px 10px;cursor:pointer;">기초금액 설정</button>'+
+      '<button onclick="openCardEditModal()" style="font-size:12px;font-weight:600;color:var(--p1);background:var(--p1-bg);border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-family:inherit;">✏️ 수정</button>'+
     '</div>'+
-
+    (grandTotal===0?'<div style="padding:12px 14px;font-size:14px;color:var(--muted);">✏️ 수정 버튼을 눌러 금액을 입력해주세요</div>':'')+
     rows.map(function(row){
-      if(row.total === 0) return '';
+      if(row.total===0&&!row.isPaid) return '';
       return '<div style="padding:10px 14px;border-top:1px solid #F0F0F0;">'+
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'+
-          '<div>'+
-            '<span style="font-size:14px;font-weight:700;color:var(--text);">'+esc(row.c.name)+'</span>'+
-            (row.isPaid?'<span style="font-size:11px;color:var(--p1);font-weight:700;margin-left:6px;">✅ 납부완료</span>':'')+
-          '</div>'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'+
+          '<div style="font-size:14px;font-weight:700;color:var(--text);">'+esc(row.c.name)+'</div>'+
           '<div style="display:flex;align-items:center;gap:8px;">'+
             '<span style="font-size:16px;font-weight:800;color:'+(row.isPaid?'var(--muted)':row.c.color)+';'+(row.isPaid?'text-decoration:line-through;':'')+'">'+fmt(row.total)+'원</span>'+
-            '<button onclick="toggleCardPaid(\''+row.c.key+'\')" style="background:'+(row.isPaid?'#F0F0F0':'var(--p1)')+';color:'+(row.isPaid?'var(--muted)':'#fff')+';border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">'+
-              (row.isPaid?'취소':'납부완료')+
-            '</button>'+
+            '<button onclick="toggleCardPaid(\''+row.c.key+'\')" style="background:'+(row.isPaid?'#F0F0F0':'var(--p1)')+';color:'+(row.isPaid?'var(--muted)':'#fff')+';border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">'+(row.isPaid?'취소':'납부완료')+'</button>'+
           '</div>'+
         '</div>'+
         '<div style="display:flex;gap:12px;font-size:12px;color:var(--muted);">'+
-          (row.base>0?'<span>📌 기초: '+fmt(row.base)+'원</span>':'')+
-          (row.auto>0?'<span>➕ 가계부: '+fmt(row.auto)+'원</span>':'')+
+          (row.lump>0?'<span>일시불: '+fmt(row.lump)+'원</span>':'')+
+          (row.inst>0?'<span>할부: '+fmt(row.inst)+'원</span>':'')+
+          (row.isPaid?'<span style="color:var(--p1);">✅ 납부완료</span>':'')+
         '</div>'+
       '</div>';
     }).join('')+
-
-    '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#F9F9F9;border-top:1px solid #F0F0F0;">'+
-      '<span style="font-size:14px;font-weight:700;color:var(--sub);">이번달 총 예상</span>'+
-      '<span style="font-size:18px;font-weight:800;color:var(--expense);">'+fmt(grandTotal)+'원</span>'+
-    '</div>'+
+    (grandTotal>0?
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#F9F9F9;border-top:1px solid #F0F0F0;">'+
+        '<span style="font-size:14px;font-weight:700;color:var(--sub);">이번달 총 예상</span>'+
+        '<span style="font-size:18px;font-weight:800;color:var(--expense);">'+fmt(grandTotal)+'원</span>'+
+      '</div>':'')+
   '</div>';
 
-  // 기초금액 설정 모달
-  html += '<div id="cardBaseModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:flex-end;justify-content:center;">'+
-    '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;">'+
-      '<div style="font-size:17px;font-weight:700;margin-bottom:6px;">📌 기초금액 설정</div>'+
-      '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">할부 등 미입력 금액을 카드별로 입력해주세요<br><span style="color:var(--expense);font-weight:600;">기준일 이후 가계부 입력분만 자동 합산돼요</span></div>'+
-      '<div class="fgroup">'+
-        '<label class="flabel">가계부 집계 시작일 (기준일)</label>'+
-        '<input class="finput" id="base_startdate" type="date" value="'+(localStorage.getItem('cardBaseInitDate_'+currentKey)||'')+'">'+
-      '</div>'+
-      CARD_PAYMENTS.map(function(c){
-        return '<div class="fgroup">'+
-          '<label class="flabel">'+esc(c.name)+'</label>'+
-          '<input class="finput" id="base_'+c.key+'" type="number" placeholder="0" value="'+getCardBase(c.key)+'">'+
+
+  // 가계부 지출처별 지출 합계 텍스트
+  var payMap2 = {};
+  records.forEach(function(r){
+    if(r.type!=='expense') return;
+    var k = r.payment||'기타';
+    payMap2[k] = (payMap2[k]||0) + r.amount;
+  });
+  var payKeys = Object.keys(payMap2).sort(function(a,b){return payMap2[b]-payMap2[a];});
+  if(payKeys.length) {
+    var payTotal = payKeys.reduce(function(a,k){return a+payMap2[k];},0);
+    html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--shadow2);padding:14px;margin-bottom:10px;">'+
+      '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;">📋 가계부 지출처별 지출</div>'+
+      payKeys.map(function(k){
+        var ratio = Math.round(payMap2[k]/payTotal*100);
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #F5F5F5;">'+
+          '<span style="font-size:13px;color:var(--sub);">'+esc(k)+'</span>'+
+          '<span style="font-size:13px;font-weight:700;color:var(--text);">'+fmt(payMap2[k])+'원 <span style="font-size:11px;font-weight:400;color:var(--muted);">('+ratio+'%)</span></span>'+
         '</div>';
       }).join('')+
-      '<button class="submit-btn" onclick="saveCardBase()" style="margin-top:8px;">저장</button>'+
-      '<button class="submit-btn" onclick="document.getElementById(\'cardBaseModal\').style.display=\'none\'" style="background:var(--muted);margin-top:8px;">취소</button>'+
+      '<div style="display:flex;justify-content:space-between;padding:8px 0 2px;font-size:14px;">'+
+        '<span style="font-weight:700;color:var(--sub);">합계</span>'+
+        '<span style="font-weight:800;color:var(--expense);">'+fmt(payTotal)+'원</span>'+
+      '</div>'+
+    '</div>';
+  }
+
+
+  // 수정 모달
+  html += '<div id="cardEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:flex-end;justify-content:center;">'+
+    '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:85vh;overflow-y:auto;">'+
+      '<div style="font-size:17px;font-weight:700;margin-bottom:6px;">💳 카드 결제 예상금액 입력</div>'+
+      '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">카드사 앱에서 확인한 금액을 일시불/할부 구분해서 입력해주세요</div>'+
+      CARD_PAYMENTS.map(function(c){
+        var lump = parseInt(localStorage.getItem('card_lump_'+c.key+'_'+currentKey)||'0')||0;
+        var inst = parseInt(localStorage.getItem('card_inst_'+c.key+'_'+currentKey)||'0')||0;
+        return '<div style="background:#F9F9F9;border-radius:10px;padding:12px;margin-bottom:10px;">'+
+          '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;">'+esc(c.name)+'</div>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
+            '<div class="fgroup" style="margin-bottom:0;">'+
+              '<label class="flabel">일시불</label>'+
+              '<input class="finput" id="card_lump_'+c.key+'" type="number" placeholder="0" value="'+(lump||'')+'">'+
+            '</div>'+
+            '<div class="fgroup" style="margin-bottom:0;">'+
+              '<label class="flabel">할부</label>'+
+              '<input class="finput" id="card_inst_'+c.key+'" type="number" placeholder="0" value="'+(inst||'')+'">'+
+            '</div>'+
+          '</div>'+
+        '</div>';
+      }).join('')+
+      '<button class="submit-btn" onclick="saveCardAmts()" style="margin-top:8px;">저장</button>'+
+      '<button class="submit-btn" onclick="document.getElementById(\'cardEditModal\').style.display=\'none\'" style="background:var(--muted);margin-top:8px;">취소</button>'+
     '</div>'+
   '</div>';
 
   el.innerHTML = html;
 }
 
-window.showCardBaseEdit = function() {
-  var modal = document.getElementById('cardBaseModal');
-  if(modal) {
-    // 현재 값으로 초기화
-    CARD_PAYMENTS.forEach(function(c){
-      var inp = document.getElementById('base_'+c.key);
-      if(inp) inp.value = getCardBase(c.key) || '';
-    });
-    modal.style.display = 'flex';
-  }
+window.openCardEditModal = function() {
+  renderCardSummary();
+  setTimeout(function(){
+    var modal = document.getElementById('cardEditModal');
+    if(modal) modal.style.display = 'flex';
+  }, 50);
 };
 
-window.saveCardBase = function() {
-  var startDate = document.getElementById('base_startdate').value;
-  if(startDate) localStorage.setItem('cardBaseInitDate_'+currentKey, startDate);
+window.saveCardAmts = function() {
   CARD_PAYMENTS.forEach(function(c){
-    var inp = document.getElementById('base_'+c.key);
-    if(inp) setCardBase(c.key, parseNum(inp.value));
+    var lump = document.getElementById('card_lump_'+c.key);
+    var inst = document.getElementById('card_inst_'+c.key);
+    if(lump) localStorage.setItem('card_lump_'+c.key+'_'+currentKey, parseNum(lump.value).toString());
+    if(inst) localStorage.setItem('card_inst_'+c.key+'_'+currentKey, parseNum(inst.value).toString());
+    // 하위호환
+    var total = (parseNum(lump?lump.value:'0'))+(parseNum(inst?inst.value:'0'));
+    localStorage.setItem(getCardAmtKey(c.key), total.toString());
   });
-  document.getElementById('cardBaseModal').style.display = 'none';
+  document.getElementById('cardEditModal').style.display = 'none';
   renderCardSummary();
   toast('저장됐어요 ✅');
 };
 
 window.toggleCardPaid = function(cardKey) {
-  var paidKey = getPaidKey(cardKey);
+  var paidKey = 'cardPaid_'+cardKey+'_'+currentKey;
   var isPaid = localStorage.getItem(paidKey) === 'true';
   localStorage.setItem(paidKey, (!isPaid).toString());
   renderCardSummary();
-  toast(isPaid ? '납부 취소됐어요' : '납부완료! 다음달 자동 초기화돼요 ✅');
+  toast(isPaid ? '납부 취소됐어요' : '납부완료! ✅');
 };
+
+
 window.toggleInstallment = function(checkbox) {
   var opts = document.getElementById('installmentOptions');
   if(checkbox.checked) {
