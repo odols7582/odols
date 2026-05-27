@@ -1178,6 +1178,7 @@ function showMain() {
   try { initScheduleDate(); } catch(e){ console.error('scheduleDate 오류:', e); }
   try { loadBudgets(); } catch(e){ console.error('budget 오류:', e); }
   try { loadFixed(); } catch(e){ console.error('fixed 오류:', e); }
+  try { loadCardData(); } catch(e){ console.error('card 오류:', e); }
   try { loadFoods(); } catch(e){ console.error('foods 오류:', e); }
   // 5월 기초금액 최초 세팅 (한번만)
   try {
@@ -1314,14 +1315,16 @@ function localAnalysis(catData, totalThis, totalPrev, hasPrevData) {
 var budgets = {};
 
 function loadBudgets() {
-  var saved = localStorage.getItem('budgets');
-  budgets = saved ? JSON.parse(saved) : {};
-  renderBudgetList();
-  renderBudgetStatus();
+  getDoc(doc(db,'settings','budgets')).then(function(d){
+    budgets = d.exists() ? (d.data().data||{}) : {};
+    renderBudgetList();
+    renderBudgetStatus();
+    renderBudgetStatusHome();
+  }).catch(function(){ budgets={}; });
 }
 
 function saveBudgets() {
-  localStorage.setItem('budgets', JSON.stringify(budgets));
+  setDoc(doc(db,'settings','budgets'), {data: budgets});
 }
 
 window.addBudget = function() {
@@ -1399,13 +1402,14 @@ function renderBudgetStatus() {
 var fixedExpenses = [];
 
 function loadFixed() {
-  var saved = localStorage.getItem('fixedExpenses');
-  fixedExpenses = saved ? JSON.parse(saved) : [];
-  renderFixedList();
+  getDoc(doc(db,'settings','fixedExpenses')).then(function(d){
+    fixedExpenses = d.exists() ? (d.data().list||[]) : [];
+    renderFixedList();
+  }).catch(function(){ fixedExpenses=[]; renderFixedList(); });
 }
 
 function saveFixed() {
-  localStorage.setItem('fixedExpenses', JSON.stringify(fixedExpenses));
+  setDoc(doc(db,'settings','fixedExpenses'), {list: fixedExpenses});
 }
 
 window.addFixed = function() {
@@ -1567,9 +1571,10 @@ var defaultFoods = ['삼겹살🥓','치킨🍗','짜장면🍜','순대국밥�
 var customFoods = [];
 
 function loadFoods() {
-  var saved = localStorage.getItem('customFoods');
-  customFoods = saved ? JSON.parse(saved) : [];
-  renderFoodList();
+  getDoc(doc(db,'settings','customFoods')).then(function(d){
+    customFoods = d.exists() ? (d.data().list||[]) : [];
+    renderFoodList();
+  }).catch(function(){ customFoods=[]; renderFoodList(); });
 }
 
 window.pickFood = function() {
@@ -1588,7 +1593,7 @@ window.addFood = function() {
   var val = document.getElementById('foodInput').value.trim();
   if(!val){ toast('메뉴를 입력해주세요'); return; }
   customFoods.push(val);
-  localStorage.setItem('customFoods', JSON.stringify(customFoods));
+  setDoc(doc(db,'settings','customFoods'), {list: customFoods});
   renderFoodList();
   document.getElementById('foodInput').value='';
   toast(val+' 추가됐어요 🍽');
@@ -1608,7 +1613,7 @@ function renderFoodList() {
 
 window.delFood = function(idx) {
   customFoods.splice(idx - defaultFoods.length, 1);
-  localStorage.setItem('customFoods', JSON.stringify(customFoods));
+  setDoc(doc(db,'settings','customFoods'), {list: customFoods});
   renderFoodList();
 };
 
@@ -2163,6 +2168,7 @@ window.changePeriod = function(dir) {
   var d=new Date(parseInt(parts[0]),parseInt(parts[1])-1+dir,1);
   currentKey=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
   renderPeriod(); subscribe(); subscribePrevRecords();
+  loadCardData();
 };
 
 // ── 렌더 ──────────────────────────────────────────
@@ -3027,28 +3033,47 @@ var CARD_PAYMENTS = [
   { key: 'samsung', name: '삼성 신용카드', color: '#1428A0' }
 ];
 
-function getCardAmtKey(cardKey) { return 'cardAmt_'+cardKey+'_'+currentKey; }
+function getCardAmtKey(cardKey) { return 'card_'+cardKey+'_'+currentKey; }
 function getPaidKey(cardKey)    { return 'cardPaid_'+cardKey+'_'+currentKey; }
-function getCardBase(cardKey)   { return parseInt(localStorage.getItem(getCardAmtKey(cardKey))||'0')||0; }
-function setCardBase(cardKey, amt) { localStorage.setItem(getCardAmtKey(cardKey), amt.toString()); }
+
+// 카드 데이터 캐시 (Firestore에서 로드)
+var cardDataCache = {};
+
+function getCardBase(cardKey) {
+  return cardDataCache['lump_'+cardKey] || 0;
+}
+function getCardInst(cardKey) {
+  return cardDataCache['inst_'+cardKey] || 0;
+}
+
+function loadCardData() {
+  getDoc(doc(db,'settings','cardAmounts_'+currentKey)).then(function(d){
+    cardDataCache = d.exists() ? (d.data()||{}) : {};
+    renderCardSummary();
+  }).catch(function(){ cardDataCache={}; renderCardSummary(); });
+}
+
+function saveCardData(key, val) {
+  cardDataCache[key] = val;
+  setDoc(doc(db,'settings','cardAmounts_'+currentKey), cardDataCache, {merge:true});
+}
 
 function renderCardSummary() {
   var el = document.getElementById('cardSummaryWrap');
   if(!el) return;
 
   var rows = CARD_PAYMENTS.map(function(c){
-    var lump = parseInt(localStorage.getItem('card_lump_'+c.key+'_'+currentKey)||'0')||0;
-    var inst = parseInt(localStorage.getItem('card_inst_'+c.key+'_'+currentKey)||'0')||0;
+    var lump = cardDataCache['lump_'+c.key] || 0;
+    var inst = cardDataCache['inst_'+c.key] || 0;
     var total = lump + inst;
-    var isPaid = localStorage.getItem('cardPaid_'+c.key+'_'+currentKey) === 'true';
+    var isPaid = cardDataCache['paid_'+c.key] === true;
     return {c:c, lump:lump, inst:inst, total:total, isPaid:isPaid};
   });
 
   var grandTotal = rows.reduce(function(a,r){return a+r.total;},0);
 
-  var inputDate = localStorage.getItem('card_input_date_'+currentKey)||'';
-  var baseDate = localStorage.getItem('card_base_date_'+currentKey)||'';
-
+  var inputDate = cardDataCache['input_date'] || '';
+  var baseDate  = cardDataCache['base_date']  || '';
   var html = '<div style="background:#fff;border-radius:14px;box-shadow:var(--shadow2);overflow:hidden;margin-bottom:10px;">'+
     '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 14px 8px;">'+
       '<div style="font-size:15px;font-weight:700;color:var(--text);">💳 카드 결제 예상금액</div>'+
@@ -3092,16 +3117,16 @@ function renderCardSummary() {
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">'+
         '<div class="fgroup" style="margin-bottom:0;">'+
           '<label class="flabel">📅 입력일</label>'+
-          '<input class="finput" id="card_input_date" type="date" value="'+(localStorage.getItem('card_input_date_'+currentKey)||new Date().toISOString().slice(0,10))+'">'+
+          '<input class="finput" id="card_input_date" type="date" value="'+(cardDataCache['input_date']||new Date().toISOString().slice(0,10))+'">'+
         '</div>'+
         '<div class="fgroup" style="margin-bottom:0;">'+
           '<label class="flabel">📊 집계 기준일</label>'+
-          '<input class="finput" id="card_base_date" type="date" value="'+(localStorage.getItem('card_base_date_'+currentKey)||'')+'">'+
+          '<input class="finput" id="card_base_date" type="date" value="'+(cardDataCache['base_date']||'')+'">'+
         '</div>'+
       '</div>'+
       CARD_PAYMENTS.map(function(c){
-        var lump = parseInt(localStorage.getItem('card_lump_'+c.key+'_'+currentKey)||'0')||0;
-        var inst = parseInt(localStorage.getItem('card_inst_'+c.key+'_'+currentKey)||'0')||0;
+        var lump = cardDataCache['lump_'+c.key] || 0;
+        var inst = cardDataCache['inst_'+c.key] || 0;
         return '<div style="background:#F9F9F9;border-radius:10px;padding:12px;margin-bottom:10px;">'+
           '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;">'+esc(c.name)+'</div>'+
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
@@ -3133,18 +3158,15 @@ window.openCardEditModal = function() {
 };
 
 window.saveCardAmts = function() {
-  var inputDate = document.getElementById('card_input_date');
-  var baseDate = document.getElementById('card_base_date');
-  if(inputDate && inputDate.value) localStorage.setItem('card_input_date_'+currentKey, inputDate.value);
-  if(baseDate && baseDate.value) localStorage.setItem('card_base_date_'+currentKey, baseDate.value);
+  var inputDateEl = document.getElementById('card_input_date');
+  var baseDateEl = document.getElementById('card_base_date');
+  if(inputDateEl && inputDateEl.value) saveCardData('input_date', inputDateEl.value);
+  if(baseDateEl && baseDateEl.value) saveCardData('base_date', baseDateEl.value);
   CARD_PAYMENTS.forEach(function(c){
     var lump = document.getElementById('card_lump_'+c.key);
     var inst = document.getElementById('card_inst_'+c.key);
-    if(lump) localStorage.setItem('card_lump_'+c.key+'_'+currentKey, parseNum(lump.value).toString());
-    if(inst) localStorage.setItem('card_inst_'+c.key+'_'+currentKey, parseNum(inst.value).toString());
-    // 하위호환
-    var total = (parseNum(lump?lump.value:'0'))+(parseNum(inst?inst.value:'0'));
-    localStorage.setItem(getCardAmtKey(c.key), total.toString());
+    if(lump) saveCardData('lump_'+c.key, parseNum(lump.value));
+    if(inst) saveCardData('inst_'+c.key, parseNum(inst.value));
   });
   document.getElementById('cardEditModal').style.display = 'none';
   renderCardSummary();
@@ -3152,9 +3174,9 @@ window.saveCardAmts = function() {
 };
 
 window.toggleCardPaid = function(cardKey) {
-  var paidKey = 'cardPaid_'+cardKey+'_'+currentKey;
-  var isPaid = localStorage.getItem(paidKey) === 'true';
-  localStorage.setItem(paidKey, (!isPaid).toString());
+  var isPaid = cardDataCache['paid_'+cardKey] === true;
+  saveCardData('paid_'+cardKey, !isPaid);
+  cardDataCache['paid_'+cardKey] = !isPaid;
   renderCardSummary();
   toast(isPaid ? '납부 취소됐어요' : '납부완료! ✅');
 };
