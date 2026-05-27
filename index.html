@@ -1175,18 +1175,11 @@ function showMain() {
   try { loadFoods(); } catch(e){ console.error('foods 오류:', e); }
   // 5월 기초금액 최초 세팅 (한번만)
   try {
-    if(!localStorage.getItem('cardBaseInit_2026-05')) {
-      setCardBase('shinhan', 0);
-      setCardBase('kukmin',  0);
-      setCardBase('samsung', 111469);
-      localStorage.setItem('cardBaseInitDate_2026-05', '2026-05-26');
-      localStorage.setItem('cardBaseInit_2026-05', 'true');
-    }
-    // 이미 세팅됐으면 신한/국민만 0으로 초기화
-    if(localStorage.getItem('cardBaseInit_2026-05') === 'true') {
-      setCardBase('shinhan', 0);
-      setCardBase('kukmin', 0);
-    }
+    setCardBase('shinhan', 0);
+    setCardBase('kukmin', 0);
+    setCardBase('samsung', 0);
+    localStorage.removeItem('cardBaseInitDate_2026-05');
+    localStorage.setItem('cardBaseInit_2026-05', 'true');
   } catch(e){}
   try { subscribeWishes(); } catch(e){ console.error('wish 오류:', e); }
   try { subscribeDiaries(); } catch(e){ console.error('diary 오류:', e); }
@@ -2991,15 +2984,10 @@ function setCardBase(cardKey, amt) {
   localStorage.setItem(getBaseKey(cardKey), amt.toString());
 }
 
-// 가계부에서 자동 집계 - 기초금액 세팅일 이후만
+// 가계부에서 자동 집계 - 현재 period 전체 (5/20~6/19)
 function getCardAuto(paymentStr) {
-  // 기초금액 초기 세팅일(5/26) 이후 날짜만 집계
-  var baseInitDate = localStorage.getItem('cardBaseInitDate_'+currentKey) || '';
   return records.filter(function(r){
-    if(r.type !== 'expense') return false;
-    if(r.payment !== paymentStr) return false;
-    if(baseInitDate && r.date < baseInitDate) return false; // 기초금액 날짜 이전 제외
-    return true;
+    return r.type === 'expense' && r.payment === paymentStr;
   }).reduce(function(a,r){return a+r.amount;},0);
 }
 
@@ -3040,8 +3028,8 @@ function renderCardSummary() {
           '</div>'+
         '</div>'+
         '<div style="display:flex;gap:12px;font-size:12px;color:var(--muted);">'+
-          (row.base>0?'<span>📌 기초(~'+((localStorage.getItem('cardBaseInitDate_'+currentKey)||'').slice(5).replace('-','/')+'전')+'):'+fmt(row.base)+'원</span>':'')+
-          (row.auto>0?'<span>➕ 가계부('+((localStorage.getItem('cardBaseInitDate_'+currentKey)||'').slice(5).replace('-','/')+'~')+'):'+fmt(row.auto)+'원</span>':'')+
+          (row.base>0?'<span>📌 기초: '+fmt(row.base)+'원</span>':'')+
+          (row.auto>0?'<span>➕ 가계부: '+fmt(row.auto)+'원</span>':'')+
         '</div>'+
       '</div>';
     }).join('')+
