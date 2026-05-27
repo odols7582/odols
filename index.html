@@ -66,28 +66,28 @@
   .login-error{font-size:14px;color:var(--expense);margin-top:14px;min-height:20px;font-weight:600;}
 
   /* 헤더 */
-  .header{background:#FFFAF5;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:2px solid var(--p1-bg);}
+  .header{background:linear-gradient(135deg,#FF6F0F,#FF9F1C);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
   .header-left{display:flex;align-items:center;gap:10px;}
-  .header-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:var(--shadow2);}
-  .header-avatar.p1{background:var(--p1-bg);}
-  .header-avatar.p2{background:var(--p2-bg);}
-  .header-name{font-size:17px;font-weight:700;color:var(--text);}
+  .header-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.25);}
+  .header-avatar.p1{background:rgba(255,255,255,.25);}
+  .header-avatar.p2{background:rgba(255,255,255,.25);}
+  .header-name{font-size:17px;font-weight:700;color:#fff;}
   .header-right{display:flex;gap:6px;align-items:center;}
-  .sync-wrap{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);}
-  .sync-dot{width:7px;height:7px;border-radius:50%;background:#ddd;}
-  .sync-dot.ok{background:var(--income);}
-  .sync-dot.ing{background:var(--p2);animation:blink 1s infinite;}
+  .sync-wrap{display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,.8);}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);}
+  .sync-dot.ok{background:#fff;}
+  .sync-dot.ing{background:#FFE0A0;animation:blink 1s infinite;}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-  .btn-sm{background:var(--p1-bg);border:none;border-radius:20px;padding:6px 12px;font-size:12px;font-family:inherit;color:var(--p1);cursor:pointer;font-weight:700;}
+  .btn-sm{background:rgba(255,255,255,.25);border:none;border-radius:20px;padding:6px 12px;font-size:12px;font-family:inherit;color:#fff;cursor:pointer;font-weight:700;}
   .btn-notif{background:none;border:none;font-size:22px;cursor:pointer;padding:4px;line-height:1;}
 
   /* 기간 네비 */
-  .period-nav{display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px 6px;background:#FFFAF5;}
-  .period-nav button{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
-  .period-nav button:hover{background:var(--p1-bg);}
+  .period-nav{display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px 8px;background:linear-gradient(135deg,#FF6F0F,#FF9F1C);}
+  .period-nav button{background:rgba(255,255,255,.2);border:none;font-size:22px;cursor:pointer;color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .period-nav button:hover{background:rgba(255,255,255,.3);}
   .period-center{text-align:center;}
-  .period-main{font-size:19px;font-weight:800;letter-spacing:-.5px;color:var(--text);}
-  .period-range{font-size:12px;color:var(--muted);margin-top:2px;}
+  .period-main{font-size:19px;font-weight:800;letter-spacing:-.5px;color:#fff;}
+  .period-range{font-size:12px;color:rgba(255,255,255,.75);margin-top:2px;}
 
   .container{max-width:480px;margin:0 auto;padding:12px 14px 90px;}
 
@@ -247,10 +247,11 @@
 
   /* 바텀 네비 - 당근 스타일 */
   .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;justify-content:space-around;max-width:480px;margin:0 auto;z-index:200;padding:7px 6px max(7px,env(safe-area-inset-bottom));}
-  .bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;cursor:pointer;border:none;background:none;font-family:inherit;color:var(--muted);font-size:11px;font-weight:600;transition:all .2s;border-radius:14px;}
+  .bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;cursor:pointer;border:none;background:none;font-family:inherit;color:var(--muted);font-size:11px;font-weight:600;transition:all .2s;border-radius:14px;position:relative;}
   .bottom-nav-item.active{color:var(--p1);}
   .bottom-nav-item.active .bottom-nav-icon{filter:drop-shadow(0 2px 4px rgba(255,111,15,.3));}
   .bottom-nav-icon{font-size:24px;line-height:1;}
+  .nav-badge{position:absolute;top:4px;right:calc(50% - 18px);background:#F15746;color:#fff;font-size:10px;font-weight:800;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #fff;line-height:1;}
 
   /* 모달 */
   #editModal{align-items:flex-end!important;}
@@ -876,10 +877,12 @@
   <button class="bottom-nav-item" id="nav-todo" onclick="switchPage('todo')">
     <span class="bottom-nav-icon">📋</span>
     <span>할일</span>
+    <span class="nav-badge" id="todoBadge" style="display:none;"></span>
   </button>
   <button class="bottom-nav-item" id="nav-schedule" onclick="switchPage('schedule')">
     <span class="bottom-nav-icon">📅</span>
     <span>일정</span>
+    <span class="nav-badge" id="scheduleBadge" style="display:none;"></span>
   </button>
   <button class="bottom-nav-item" id="nav-more" onclick="switchPage('more')">
     <span class="bottom-nav-icon">⋯</span>
@@ -1924,6 +1927,31 @@ window.toggleGroupDetail = function(id) {
   el.style.display = el.style.display==='none' ? '' : 'none';
 };
 
+// ── 네비 뱃지 업데이트 ───────────────────────────
+function updateNavBadges() {
+  var pendingTodos = todos.filter(function(t){ return t.status !== 'done'; }).length;
+  var todoBadge = document.getElementById('todoBadge');
+  if(todoBadge) {
+    if(pendingTodos > 0) {
+      todoBadge.style.display = 'flex';
+      todoBadge.textContent = pendingTodos > 99 ? '99+' : pendingTodos;
+    } else {
+      todoBadge.style.display = 'none';
+    }
+  }
+  var now = new Date().getTime();
+  var upcoming = schedules.filter(function(s){ return s.datetime >= now; }).length;
+  var scheduleBadge = document.getElementById('scheduleBadge');
+  if(scheduleBadge) {
+    if(upcoming > 0) {
+      scheduleBadge.style.display = 'flex';
+      scheduleBadge.textContent = upcoming > 99 ? '99+' : upcoming;
+    } else {
+      scheduleBadge.style.display = 'none';
+    }
+  }
+}
+
 window.showDebug = async function() {
   var box = document.getElementById('debugBox');
   var txt = document.getElementById('debugText');
@@ -2806,6 +2834,7 @@ function subscribeSchedules() {
   scheduleUnsub = onSnapshot(q, function(snap){
     schedules = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
     renderSchedules();
+    updateNavBadges();
   }, function(err){ console.error('schedules error:', err); });
 }
 
@@ -2908,11 +2937,12 @@ function scheduleAlarmCheck() {
   });
 }
 function subscribeTodos() {
-  if(todoUnsub) return; // 이미 구독중
+  if(todoUnsub) return;
   var q = query(collection(db,'todos'), orderBy('createdAt','desc'));
   todoUnsub = onSnapshot(q, function(snap){
     todos = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
     renderTodos();
+    updateNavBadges();
   }, function(err){ console.error('todos error:', err); });
 }
 
