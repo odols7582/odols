@@ -893,6 +893,51 @@
 </div>
 </div>
 
+<!-- 일정 수정 모달 -->
+<div id="scheduleEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:flex-end;justify-content:center;">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:85vh;overflow-y:auto;">
+    <div style="font-size:17px;font-weight:700;margin-bottom:18px;">📅 일정 수정</div>
+    <div class="form-row">
+      <div class="fgroup" style="margin-bottom:0;">
+        <label class="flabel">날짜</label>
+        <input class="finput" id="editScheduleDate" type="date">
+      </div>
+      <div class="fgroup" style="margin-bottom:0;">
+        <label class="flabel">시간</label>
+        <input class="finput" id="editScheduleTime" type="time">
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">내용</label>
+      <input class="finput" id="editScheduleContent" type="text" placeholder="일정 내용">
+    </div>
+    <div class="form-row">
+      <div class="fgroup" style="margin-bottom:0;">
+        <label class="flabel">알림</label>
+        <select class="finput" id="editScheduleAlarm">
+          <option value="none">알림 없음</option>
+          <option value="1day">1일 전</option>
+          <option value="1hour">1시간 전</option>
+          <option value="10min">10분 전</option>
+        </select>
+      </div>
+      <div class="fgroup" style="margin-bottom:0;">
+        <label class="flabel">반복</label>
+        <select class="finput" id="editScheduleRepeat">
+          <option value="none">반복 없음</option>
+          <option value="daily">매일</option>
+          <option value="weekly">매주</option>
+          <option value="monthly">매월</option>
+          <option value="yearly">매년</option>
+        </select>
+      </div>
+    </div>
+    <input type="hidden" id="editScheduleId">
+    <button class="submit-btn" onclick="saveScheduleEdit()" style="margin-top:12px;">저장</button>
+    <button class="submit-btn" onclick="document.getElementById('scheduleEditModal').style.display='none'" style="background:var(--muted);margin-top:8px;">취소</button>
+  </div>
+</div>
+
 <!-- 삭제 확인 모달 -->
 <div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:20px;">
   <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:360px;text-align:center;">
@@ -2873,18 +2918,22 @@ function renderSchedules() {
     var timeStr = String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
     var alarmLabel = ALARM_LABELS[s.alarm]||'';
     var repeatLabel = REPEAT_LABELS[s.repeat]||'';
-    return '<div style="background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;opacity:'+(isPast?.5:1)+';">'+
-      '<div style="text-align:center;min-width:48px;background:var(--p1-bg);border-radius:12px;padding:10px 6px;flex-shrink:0;">'+
+    return '<div style="background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;opacity:'+(isPast?.5:1)+';">'+
+      '<div style="text-align:center;min-width:46px;background:var(--p1-bg);border-radius:12px;padding:8px 4px;flex-shrink:0;">'+
         '<div style="font-size:10px;color:var(--p1);font-weight:700;">'+month+'</div>'+
-        '<div style="font-size:24px;font-weight:800;line-height:1.1;color:var(--p1);">'+day+'</div>'+
+        '<div style="font-size:22px;font-weight:800;line-height:1.1;color:var(--p1);">'+day+'</div>'+
         '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+timeStr+'</div>'+
       '</div>'+
-      '<div style="flex:1;min-width:0;padding-top:4px;">'+
-        '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">'+esc(s.content)+'</div>'+
-        '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+
-          (s.alarm!=='none'?'<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;background:var(--p1-bg);color:var(--p1);">🔔 '+esc(alarmLabel)+'</span>':'')+
-          (s.repeat!=='none'?'<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;background:#FFF0F0;color:var(--p2);">🔁 '+esc(repeatLabel)+'</span>':'')+
+      '<div style="flex:1;min-width:0;padding-top:2px;">'+
+        '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px;">'+esc(s.content)+'</div>'+
+        '<div style="display:flex;gap:5px;flex-wrap:wrap;">'+
+          (s.alarm&&s.alarm!=='none'?'<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--p1-bg);color:var(--p1);">🔔 '+esc(alarmLabel)+'</span>':'')+
+          (s.repeat&&s.repeat!=='none'?'<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:#FFF0F0;color:var(--p2);">🔁 '+esc(repeatLabel)+'</span>':'')+
         '</div>'+
+      '</div>'+
+      '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">'+
+        '<button onclick="openScheduleEdit(\''+s.id+'\')" style="background:var(--p1-bg);border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--p1);cursor:pointer;font-family:inherit;">✏️</button>'+
+        '<button onclick="delSchedule(\''+s.id+'\')" style="background:#FFF0F0;border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--expense);cursor:pointer;font-family:inherit;">🗑</button>'+
       '</div>'+
     '</div>';
   }).join('');
@@ -2912,8 +2961,40 @@ window.addSchedule = async function() {
   } catch(e){ toast('저장 실패'); }
 };
 
+window.openScheduleEdit = function(id) {
+  var s = schedules.find(function(x){ return x.id === id; });
+  if(!s) return;
+  document.getElementById('editScheduleId').value = id;
+  document.getElementById('editScheduleDate').value = s.date || '';
+  document.getElementById('editScheduleTime').value = s.time || '';
+  document.getElementById('editScheduleContent').value = s.content || '';
+  document.getElementById('editScheduleAlarm').value = s.alarm || 'none';
+  document.getElementById('editScheduleRepeat').value = s.repeat || 'none';
+  document.getElementById('scheduleEditModal').style.display = 'flex';
+};
+
+window.saveScheduleEdit = async function() {
+  var id = document.getElementById('editScheduleId').value;
+  var date = document.getElementById('editScheduleDate').value;
+  var time = document.getElementById('editScheduleTime').value;
+  var content = document.getElementById('editScheduleContent').value.trim();
+  var alarm = document.getElementById('editScheduleAlarm').value;
+  var repeat = document.getElementById('editScheduleRepeat').value;
+  if(!date || !content){ toast('날짜와 내용을 입력해주세요'); return; }
+  var datetime = new Date(date+'T'+(time||'00:00')).getTime();
+  try {
+    await updateDoc(doc(db,'schedules',id), {
+      date:date, time:time||'', datetime:datetime,
+      content:content, alarm:alarm, repeat:repeat
+    });
+    document.getElementById('scheduleEditModal').style.display = 'none';
+    toast('일정 수정됐어요 ✅');
+  } catch(e){ toast('수정 실패'); }
+};
+
 window.delSchedule = async function(id) {
-  try { await deleteDoc(doc(db,'schedules',id)); toast('삭제됨'); }
+  if(!confirm('이 일정을 삭제할까요?')) return;
+  try { await deleteDoc(doc(db,'schedules',id)); toast('삭제됐어요 🗑'); }
   catch(e){ toast('삭제 실패'); }
 };
 
