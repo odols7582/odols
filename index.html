@@ -496,6 +496,14 @@
     <div class="records-header">
       <div class="sec-title">📋 내역</div>
     </div>
+    <!-- 검색창 -->
+    <div style="position:relative;margin-bottom:10px;">
+      <input class="finput" id="recordSearch" type="text" placeholder="🔍 내역 검색 (메모, 카테고리, 금액)"
+        oninput="renderRecords()"
+        style="padding-left:16px;padding-right:40px;background:#fff;">
+      <button onclick="document.getElementById('recordSearch').value='';renderRecords();"
+        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;">✕</button>
+    </div>
     <div class="filter-row">
       <button class="fbtn active" onclick="setFilter('all',this)">전체</button>
       <button class="fbtn" onclick="setFilter('p1',this)">🦡 오소리</button>
@@ -539,6 +547,10 @@
   </div>
   <div id="budgetStatus" style="margin-bottom:12px;"></div>
 
+  <!-- 공동 저축 목표 -->
+  <div id="savingGoalsWrap" style="margin-bottom:12px;"></div>
+
+
   <!-- 3. 이번달 달력 -->
   <div class="chart-box">
     <div class="chart-title">📅 이번 달 수입/지출 달력</div>
@@ -558,6 +570,13 @@
     <div id="aiResult" style="font-size:14px;color:var(--sub);line-height:1.7;">
       <span style="color:var(--muted);">분석하기 버튼을 누르면 이번달 지출을 AI가 분석해드려요 😊</span>
     </div>
+  </div>
+
+  <!-- 요일별 지출 패턴 -->
+  <div class="chart-box">
+    <div class="chart-title">📆 요일별 지출 패턴</div>
+    <div class="chart-wrap" style="height:200px;"><canvas id="dowChart"></canvas></div>
+    <div id="dowText" style="margin-top:10px;"></div>
   </div>
 
   <!-- 5. 카테고리/지출처/인물별/수입vs지출 차트 -->
@@ -695,6 +714,54 @@
     <div class="manual-notif-row">
       <input class="finput" id="manualNotifMsg" type="text" placeholder="메시지 입력" maxlength="50">
       <button class="manual-notif-btn" onclick="sendManualNotif()">전송</button>
+    </div>
+  </div>
+
+  <!-- 공동 저축 목표 관리 -->
+  <div class="section-block" style="box-shadow:var(--shadow);margin-bottom:12px;">
+    <div class="section-block-header" onclick="toggleSection('goalBlock')" style="background:linear-gradient(135deg,#059669,#10B981);color:#fff;">
+      <span>🎯 공동 저축 목표</span>
+      <span class="section-toggle" id="goalBlockArrow">▲</span>
+    </div>
+    <div id="goalBlock" style="padding:16px;background:#F0FDF4;">
+      <div id="goalList" style="margin-bottom:14px;"></div>
+      <div class="form-card show" style="margin-bottom:0;box-shadow:none;border:1px solid #A7F3D0;">
+        <div class="fgroup">
+          <label class="flabel">목표 제목</label>
+          <input class="finput" id="goalTitle" type="text" placeholder="예: 제주도 여행 ✈️">
+        </div>
+        <div class="form-row">
+          <div class="fgroup" style="margin-bottom:0;">
+            <label class="flabel">목표 금액</label>
+            <input class="finput" id="goalTarget" type="number" placeholder="0" oninput="calcGoalMonths()">
+          </div>
+          <div class="fgroup" style="margin-bottom:0;">
+            <label class="flabel">월 적금액</label>
+            <input class="finput" id="goalMonthly" type="number" placeholder="0" oninput="calcGoalMonths()">
+          </div>
+        </div>
+        <div id="goalMonthsPreview" style="font-size:13px;color:#059669;font-weight:700;margin-bottom:10px;min-height:20px;"></div>
+        <button class="submit-btn" onclick="addGoal()" style="background:linear-gradient(135deg,#059669,#10B981);">목표 추가</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 엑셀 내보내기 -->
+  <div class="section-block" style="box-shadow:var(--shadow);margin-bottom:12px;">
+    <div class="section-block-header" onclick="toggleSection('exportBlock')" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);color:#fff;">
+      <span>📤 엑셀 내보내기</span>
+      <span class="section-toggle" id="exportBlockArrow">▲</span>
+    </div>
+    <div id="exportBlock" style="padding:16px;background:#EFF6FF;">
+      <div style="font-size:14px;color:var(--sub);margin-bottom:14px;">이번달 지출/수입 내역을 엑셀 파일로 저장해요</div>
+      <div class="fgroup">
+        <label class="flabel">내보낼 기간</label>
+        <select class="finput" id="exportPeriod">
+          <option value="current">이번달</option>
+          <option value="all">전체</option>
+        </select>
+      </div>
+      <button class="submit-btn" onclick="exportExcel()" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);">📥 엑셀 다운로드</button>
     </div>
   </div>
 
@@ -1235,6 +1302,7 @@ function showMain() {
   } catch(e){}
   try { subscribeWishes(); } catch(e){ console.error('wish 오류:', e); }
   try { subscribeDiaries(); } catch(e){ console.error('diary 오류:', e); }
+  try { subscribeGoals(); } catch(e){ console.error('goals 오류:', e); }
   bindKeys();
   checkNotifStatus();
   if(deferredPrompt) document.getElementById('pwaBanner').style.display = 'flex';
@@ -2002,6 +2070,254 @@ function updateNavBadges() {
   }
 }
 
+// ══════════════════════════════════════════════════
+// 신규 기능: 공동저축목표 / 요일별분석 / 검색 / 엑셀
+// ══════════════════════════════════════════════════
+
+// ── 1. 공동 저축 목표 ─────────────────────────────
+var savingGoals = [];
+var goalUnsub = null;
+
+function subscribeGoals() {
+  if(goalUnsub) return;
+  var q = query(collection(db,'goals'), orderBy('createdAt','asc'));
+  goalUnsub = onSnapshot(q, function(snap){
+    savingGoals = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    renderGoalList();
+    renderSavingGoalsWidget();
+  }, function(e){ console.error('goals 오류:',e); });
+}
+
+window.calcGoalMonths = function() {
+  var target = parseNum(document.getElementById('goalTarget').value);
+  var monthly = parseNum(document.getElementById('goalMonthly').value);
+  var el = document.getElementById('goalMonthsPreview');
+  if(target > 0 && monthly > 0) {
+    var months = Math.ceil(target / monthly);
+    var years = Math.floor(months / 12);
+    var rem = months % 12;
+    var txt = months + '개월';
+    if(years > 0) txt += ' (' + years + '년 ' + (rem > 0 ? rem + '개월' : '') + ')';
+    el.textContent = '⏱ 달성까지 약 ' + txt;
+  } else {
+    el.textContent = '';
+  }
+};
+
+window.addGoal = async function() {
+  var title = document.getElementById('goalTitle').value.trim();
+  var target = parseNum(document.getElementById('goalTarget').value);
+  var monthly = parseNum(document.getElementById('goalMonthly').value);
+  if(!title || !target || !monthly){ toast('제목, 목표금액, 월 적금액을 입력해주세요'); return; }
+  var months = Math.ceil(target / monthly);
+  try {
+    await addDoc(collection(db,'goals'), {
+      title:title, target:target, monthly:monthly, months:months,
+      saved:0, createdAt:Date.now(), addedBy:currentUser.id
+    });
+    document.getElementById('goalTitle').value='';
+    document.getElementById('goalTarget').value='';
+    document.getElementById('goalMonthly').value='';
+    document.getElementById('goalMonthsPreview').textContent='';
+    toast('목표 추가됐어요 🎯');
+  } catch(e){ toast('저장 실패'); }
+};
+
+window.updateGoalSaved = async function(id, delta) {
+  var g = savingGoals.find(function(x){return x.id===id;});
+  if(!g) return;
+  var newSaved = Math.max(0, (g.saved||0) + delta);
+  await updateDoc(doc(db,'goals',id), {saved: newSaved});
+  if(newSaved >= g.target) {
+    toast('🎉 목표 달성! 축하해요!');
+    if(Notification.permission==='granted') {
+      new Notification('🎯 저축 목표 달성!', {body: g.title+' 목표를 달성했어요! 🎉'});
+    }
+  }
+};
+
+window.delGoal = async function(id) {
+  if(!confirm('이 목표를 삭제할까요?')) return;
+  try { await deleteDoc(doc(db,'goals',id)); toast('삭제됐어요'); }
+  catch(e){ toast('삭제 실패'); }
+};
+
+function renderGoalList() {
+  var list = document.getElementById('goalList');
+  if(!list) return;
+  if(!savingGoals.length){ list.innerHTML='<div style="font-size:13px;color:var(--muted);margin-bottom:8px;">등록된 목표가 없어요</div>'; return; }
+  list.innerHTML = savingGoals.map(function(g){
+    var ratio = Math.min(Math.round((g.saved||0)/g.target*100), 100);
+    var barColor = ratio>=100?'#059669':ratio>=50?'#10B981':'#34D399';
+    var rem = g.target - (g.saved||0);
+    var remMonths = rem > 0 ? Math.ceil(rem / g.monthly) : 0;
+    return '<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid #A7F3D0;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
+        '<span style="font-size:15px;font-weight:700;color:var(--text);">'+esc(g.title)+'</span>'+
+        '<button onclick="delGoal(\''+g.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;">×</button>'+
+      '</div>'+
+      '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px;">'+
+        '<span>'+fmt(g.saved||0)+'원 / '+fmt(g.target)+'원</span>'+
+        '<span style="font-weight:700;color:#059669;">'+ratio+'%</span>'+
+      '</div>'+
+      '<div style="background:#D1FAE5;border-radius:99px;height:10px;overflow:hidden;margin-bottom:10px;">'+
+        '<div style="background:'+barColor+';height:100%;width:'+ratio+'%;border-radius:99px;transition:width .4s;"></div>'+
+      '</div>'+
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">'+
+        '월 '+fmt(g.monthly)+'원 · '+(ratio>=100?'✅ 달성완료!':'남은금액 '+fmt(rem)+'원 · 약 '+remMonths+'개월')+
+      '</div>'+
+      '<div style="display:flex;gap:8px;">'+
+        '<button onclick="updateGoalSaved(\''+g.id+'\','+g.monthly+')" style="flex:1;padding:8px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">+ 이번달 납입</button>'+
+        '<button onclick="updateGoalSaved(\''+g.id+'\','+(g.monthly*-1)+')" style="padding:8px 12px;background:#F0FDF4;color:#059669;border:1px solid #A7F3D0;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">-</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function renderSavingGoalsWidget() {
+  var el = document.getElementById('savingGoalsWrap');
+  if(!el || !savingGoals.length){ if(el) el.innerHTML=''; return; }
+  el.innerHTML = '<div style="background:#fff;border-radius:16px;box-shadow:var(--shadow2);padding:16px;margin-bottom:12px;">'+
+    '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px;">🎯 공동 저축 목표</div>'+
+    savingGoals.map(function(g){
+      var ratio = Math.min(Math.round((g.saved||0)/g.target*100),100);
+      return '<div style="margin-bottom:12px;">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'+
+          '<span style="font-size:14px;font-weight:600;">'+esc(g.title)+'</span>'+
+          '<span style="font-size:13px;font-weight:700;color:#059669;">'+ratio+'%</span>'+
+        '</div>'+
+        '<div style="background:#D1FAE5;border-radius:99px;height:8px;overflow:hidden;">'+
+          '<div style="background:#059669;height:100%;width:'+ratio+'%;border-radius:99px;"></div>'+
+        '</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:3px;">'+fmt(g.saved||0)+'원 / '+fmt(g.target)+'원</div>'+
+      '</div>';
+    }).join('')+
+  '</div>';
+}
+
+// ── 2. 요일별 지출 패턴 ──────────────────────────
+var dowChartObj = null;
+
+function renderDowChart() {
+  var canvas = document.getElementById('dowChart');
+  if(!canvas) return;
+  var dowLabels = ['일','월','화','수','목','금','토'];
+  var dowData = [0,0,0,0,0,0,0];
+  var dowCount = [0,0,0,0,0,0,0];
+  var investCats = ['주식 매수','코인 매수','적금/예금'];
+  records.forEach(function(r){
+    if(r.type!=='expense'||investCats.indexOf(r.category)>=0) return;
+    if(!r.date) return;
+    var d = new Date(r.date).getDay();
+    dowData[d] += r.amount;
+    dowCount[d]++;
+  });
+  var avg = dowData.map(function(v,i){ return dowCount[i]>0 ? Math.round(v/dowCount[i]) : 0; });
+  var maxIdx = avg.indexOf(Math.max.apply(null,avg));
+  var colors = avg.map(function(v,i){
+    return i===maxIdx ? '#FF6F0F' : i===0||i===6 ? '#FFB347' : '#FFD9B3';
+  });
+  if(dowChartObj) dowChartObj.destroy();
+  dowChartObj = new Chart(canvas.getContext('2d'), {
+    type:'bar',
+    data:{
+      labels:dowLabels,
+      datasets:[{data:avg, backgroundColor:colors, borderRadius:8, borderSkipped:false}]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:function(c){return ' 평균 '+fmt(c.raw)+'원';}}}},
+      scales:{
+        y:{beginAtZero:true, ticks:{callback:function(v){return fmt(v);}, font:{size:10}}, grid:{color:'rgba(0,0,0,.05)'}},
+        x:{grid:{display:false}, ticks:{font:{size:13, weight:'600'}}}
+      }
+    }
+  });
+  // 텍스트 요약
+  var el = document.getElementById('dowText');
+  if(el && maxIdx>=0 && avg[maxIdx]>0) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--sub);">'+
+      '💡 <b>'+dowLabels[maxIdx]+'요일</b>에 가장 많이 써요 (평균 '+fmt(avg[maxIdx])+'원)'+
+    '</div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">'+
+    dowLabels.map(function(l,i){
+      if(avg[i]===0) return '';
+      return '<div style="font-size:12px;background:#FFF1E6;color:var(--p1);padding:4px 10px;border-radius:20px;font-weight:600;">'+l+' '+fmt(avg[i])+'원</div>';
+    }).join('')+
+    '</div>';
+  }
+}
+
+// ── 3. 내역 검색 ──────────────────────────────────
+function filteredRecords() {
+  var recs = records.filter(function(r){
+    if(recordFilter==='p1') return r.person===1;
+    if(recordFilter==='p2') return r.person===2;
+    if(recordFilter==='income') return r.type==='income';
+    if(recordFilter==='expense') return r.type==='expense';
+    return true;
+  });
+  var searchEl = document.getElementById('recordSearch');
+  var q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  if(q) {
+    recs = recs.filter(function(r){
+      return (r.memo||'').toLowerCase().includes(q) ||
+             (r.category||'').toLowerCase().includes(q) ||
+             (r.payment||'').toLowerCase().includes(q) ||
+             String(r.amount).includes(q);
+    });
+  }
+  return recs;
+}
+
+// ── 4. 엑셀 내보내기 ──────────────────────────────
+window.exportExcel = function() {
+  var period = document.getElementById('exportPeriod').value;
+  var data = period==='current' ? records : allInvestRecords.concat(records);
+  // 현재 기간 전체 records 사용 (allInvestRecords는 투자용이므로 records만)
+  var exportRecs = period==='current' ? records : records;
+
+  if(!exportRecs.length){ toast('내보낼 데이터가 없어요'); return; }
+
+  // CSV 생성 (엑셀에서 열 수 있음)
+  var headers = ['날짜','유형','카테고리','금액','지출처','메모','입력자','기간'];
+  var rows = exportRecs.map(function(r){
+    return [
+      r.date||'',
+      r.type==='expense'?'지출':'수입',
+      r.category||'',
+      r.amount||0,
+      r.payment||'',
+      r.memo||'',
+      r.person===1?'오소리':'부엉이',
+      r.period||''
+    ];
+  });
+
+  var csvContent = '\uFEFF'; // BOM for Korean
+  csvContent += headers.join(',') + '\n';
+  rows.forEach(function(row){
+    csvContent += row.map(function(cell){
+      var s = String(cell);
+      if(s.includes(',') || s.includes('"') || s.includes('\n')) {
+        s = '"' + s.replace(/"/g,'""') + '"';
+      }
+      return s;
+    }).join(',') + '\n';
+  });
+
+  var blob = new Blob([csvContent], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = '가계부_' + (period==='current' ? currentKey : '전체') + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('📥 다운로드 완료!');
+};
+
 window.showDebug = async function() {
   var box = document.getElementById('debugBox');
   var txt = document.getElementById('debugText');
@@ -2226,7 +2542,8 @@ function renderAll() {
   renderSavingsRate();
   renderGroupExpense();
   renderCardSummary();
-  if(currentPage==='chart') { renderCharts(); renderTrendChart(); }
+  renderSavingGoalsWidget();
+  if(currentPage==='chart') { renderCharts(); renderTrendChart(); renderDowChart(); }
 }
 
 function renderSummary() {
@@ -2250,13 +2567,6 @@ function renderSummary() {
   document.getElementById('p2expense').textContent=fmt(p2e)+' 원';
 }
 
-function filteredRecords() {
-  if(currentFilter==='all') return records;
-  if(currentFilter==='p1') return records.filter(function(r){return r.person===1;});
-  if(currentFilter==='p2') return records.filter(function(r){return r.person===2;});
-  if(currentFilter==='income') return records.filter(function(r){return r.type==='income';});
-  return records.filter(function(r){return r.type==='expense';});
-}
 
 function renderRecords() {
   var fr = filteredRecords(), list = document.getElementById('recordList');
@@ -2784,6 +3094,8 @@ window.switchPage = function(page) {
     renderSavingsRate();
     renderBudgetStatus();
     renderGroupExpense();
+    renderDowChart();
+    renderSavingGoalsWidget();
   }
 };
 
