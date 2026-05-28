@@ -1166,7 +1166,9 @@ const USERS = {
 };
 
 var records = [];
-var recordViewMode = 'date'; // 기본값 일자별
+var recordViewMode = 'date';
+var recordFilter = 'all';
+var currentFilter = 'all';
 var todos = [];
 var todoFilter = 'all';
 var todoUnsub = null;
@@ -3417,7 +3419,7 @@ window.setTodoFilter = function(f, btn) {
   btn.classList.add('active');
   renderTodos();
 };
-window.setFilter=function(f,btn){currentFilter=f;document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderRecords();};
+window.setFilter=function(f,btn){currentFilter=f;recordFilter=f;document.querySelectorAll('#pageHome .fbtn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderRecords();};
 
 // ── 카드 결제 예상금액 (수기 입력) ───────────────
 var CARD_PAYMENTS = [
