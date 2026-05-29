@@ -432,7 +432,7 @@
         <option value="신한 신용카드(오소리)">💳 신한 신용카드(오소리)</option>
         <option value="국민 신용카드(오소리)">💳 국민 신용카드(오소리)</option>
         <option value="삼성 신용카드(오소리)">💳 삼성 신용카드(오소리)</option>
-        <option value="백채 신용카드(오소리)">💳 백채 신용카드(오소리)</option>
+        <option value="백채 신용카드">💳 백채 신용카드</option>
         <option value="현금(오소리)">💵 현금(오소리)</option>
         <option value="현금(우리통장)">💵 현금(우리통장)</option>
         <option value="현금(부엉이)">💵 현금(부엉이)</option>
@@ -624,7 +624,7 @@
         <span>📈 투자 레포트 <span style="font-size:11px;opacity:.8;">(전체 누적)</span></span>
         <span class="section-toggle" id="investBlockArrow">▲</span>
       </div>
-      <div id="investBlock" style="padding:14px;background:rgba(59,130,246,.08);">
+      <div id="investBlock" style="padding:14px;background:var(--surface2);">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
           <div style="background:var(--surface);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border2);">
             <div style="font-size:11px;color:#38BDF8;font-weight:700;margin-bottom:4px;">💰 총 납입</div>
@@ -735,7 +735,7 @@
       <span>🎯 공동 저축 목표</span>
       <span class="section-toggle" id="goalBlockArrow">▲</span>
     </div>
-    <div id="goalBlock" style="padding:16px;background:rgba(5,150,105,.1);">
+    <div id="goalBlock" style="padding:16px;background:var(--surface2);">
       <div id="goalList" style="margin-bottom:14px;"></div>
       <div class="form-card show" style="margin-bottom:0;box-shadow:none;border:1px solid rgba(5,150,105,.3);">
         <div class="fgroup">
@@ -764,7 +764,7 @@
       <span>📤 엑셀 내보내기</span>
       <span class="section-toggle" id="exportBlockArrow">▲</span>
     </div>
-    <div id="exportBlock" style="padding:16px;background:rgba(59,130,246,.08);">
+    <div id="exportBlock" style="padding:16px;background:var(--surface2);">
       <div style="font-size:14px;color:var(--sub);margin-bottom:14px;">이번달 지출/수입 내역을 엑셀 파일로 저장해요</div>
       <div class="fgroup">
         <label class="flabel">내보낼 기간</label>
@@ -783,7 +783,7 @@
       <span>💸 카테고리별 예산 설정</span>
       <span class="section-toggle" id="budgetBlockArrow">▲</span>
     </div>
-    <div id="budgetBlock" style="padding:16px;background:#F0FDFA;">
+    <div id="budgetBlock" style="padding:16px;background:var(--surface2);">
       <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">카테고리별 월 예산을 설정하면 초과시 알려드려요!</div>
       <div id="budgetList"></div>
       <div style="display:flex;gap:8px;margin-top:12px;">
@@ -824,7 +824,7 @@
       <span>🔁 고정지출 관리</span>
       <span class="section-toggle" id="fixedBlockArrow">▲</span>
     </div>
-    <div id="fixedBlock" style="padding:16px;background:#F5F0FF;">
+    <div id="fixedBlock" style="padding:16px;background:var(--surface2);">
       <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">매월 반복되는 고정지출을 등록하면 자동으로 추가해드려요!</div>
       <div id="fixedList"></div>
       <div class="form-card show" style="margin-top:12px;margin-bottom:0;box-shadow:none;border:1px solid var(--border2);">
@@ -861,7 +861,7 @@
               <option value="신한 신용카드(오소리)">💳 신한(오소리)</option>
               <option value="국민 신용카드(오소리)">💳 국민(오소리)</option>
               <option value="삼성 신용카드(오소리)">💳 삼성(오소리)</option>
-              <option value="백채 신용카드(오소리)">💳 백채(오소리)</option>
+              <option value="백채 신용카드">💳 백채</option>
               <option value="현금(오소리)">💵 현금(오소리)</option>
               <option value="현금(우리통장)">💵 우리통장</option>
               <option value="현금(부엉이)">💵 현금(부엉이)</option>
@@ -896,7 +896,7 @@
       <span>🍽 오늘 뭐먹지?</span>
       <span class="section-toggle" id="foodBlockArrow">▲</span>
     </div>
-    <div id="foodBlock" style="padding:16px;background:rgba(234,88,12,.08);">
+    <div id="foodBlock" style="padding:16px;background:var(--surface2);">
       <div id="foodResult" style="text-align:center;padding:16px 0;font-size:22px;font-weight:800;color:#EA580C;min-height:60px;"></div>
       <div style="display:flex;gap:8px;margin-bottom:12px;">
         <button onclick="pickFood()" style="flex:1;padding:12px;background:#EA580C;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">🎲 랜덤 추천!</button>
@@ -934,7 +934,7 @@
       <span>📝 하루 한 줄 다이어리</span>
       <span class="section-toggle" id="diaryBlockArrow">▲</span>
     </div>
-    <div id="diaryBlock" style="padding:16px;background:rgba(5,150,105,.1);">
+    <div id="diaryBlock" style="padding:16px;background:var(--surface2);">
       <div style="display:flex;gap:8px;margin-bottom:12px;">
         <input class="finput" id="diaryInput" placeholder="오늘 하루 어땠어? 😊" style="flex:1;">
         <button onclick="addDiary()" style="background:#059669;color:#fff;border:none;border-radius:10px;padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">저장</button>
@@ -1120,7 +1120,7 @@
         <option value="신한 신용카드(오소리)">💳 신한 신용카드(오소리)</option>
         <option value="국민 신용카드(오소리)">💳 국민 신용카드(오소리)</option>
         <option value="삼성 신용카드(오소리)">💳 삼성 신용카드(오소리)</option>
-        <option value="백채 신용카드(오소리)">💳 백채 신용카드(오소리)</option>
+        <option value="백채 신용카드">💳 백채 신용카드</option>
         <option value="현금(오소리)">💵 현금(오소리)</option>
         <option value="현금(우리통장)">💵 현금(우리통장)</option>
         <option value="현금(부엉이)">💵 현금(부엉이)</option>
@@ -2185,7 +2185,7 @@ function renderGoalList() {
       '</div>'+
       '<div style="display:flex;gap:8px;">'+
         '<button onclick="updateGoalSaved(\''+g.id+'\','+g.monthly+')" style="flex:1;padding:8px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">+ 이번달 납입</button>'+
-        '<button onclick="updateGoalSaved(\''+g.id+'\','+(g.monthly*-1)+')" style="padding:8px 12px;background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.3);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">-</button>'+
+        '<button onclick="updateGoalSaved(\''+g.id+'\','+(g.monthly*-1)+')" style="padding:8px 12px;background:var(--surface2);color:#059669;border:1px solid rgba(5,150,105,.3);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">-</button>'+
       '</div>'+
     '</div>';
   }).join('');
@@ -3458,7 +3458,7 @@ var CARD_PAYMENTS = [
   { key: 'shinhan', name: '신한 신용카드', color: '#0066CC', auto: false },
   { key: 'kukmin',  name: '국민 신용카드', color: '#FF6600', auto: false },
   { key: 'samsung', name: '삼성 신용카드', color: '#1428A0', auto: false },
-  { key: 'baekchai',name: '백채 신용카드', color: '#059669', auto: true, payment: '백채 신용카드(오소리)' }
+  { key: 'baekchai',name: '백채 신용카드', color: '#059669', auto: true, payment: '백채 신용카드' }
 ];
 
 function getCardAmtKey(cardKey) { return 'card_'+cardKey+'_'+currentKey; }
