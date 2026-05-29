@@ -449,7 +449,7 @@
     </div>
 
     <!-- 할부 -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:#F5F5F5;border-radius:10px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:15px;font-weight:600;color:var(--sub);">
         <input type="checkbox" id="installmentCheck" onchange="toggleInstallment(this)" style="width:18px;height:18px;accent-color:var(--p1);cursor:pointer;">
         💳 할부
@@ -506,7 +506,7 @@
     <div style="position:relative;margin-bottom:10px;">
       <input class="finput" id="recordSearch" type="text" placeholder="🔍 내역 검색 (메모, 카테고리, 금액)"
         oninput="renderRecords()"
-        style="padding-left:16px;padding-right:40px;background:#fff;">
+        style="padding-left:16px;padding-right:40px;">
       <button onclick="document.getElementById('recordSearch').value='';renderRecords();"
         style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;">✕</button>
     </div>
@@ -547,7 +547,7 @@
   </div>
 
   <!-- 서브탭 -->
-  <div style="display:flex;background:#fff;border-radius:16px;padding:4px;margin-bottom:12px;gap:3px;box-shadow:var(--shadow2);">
+  <div style="display:flex;background:var(--surface);border-radius:16px;padding:4px;margin-bottom:12px;gap:3px;box-shadow:var(--shadow2);">
     <button class="chart-subtab active" id="csub-summary" onclick="switchChartTab('summary',this)" style="flex:1;padding:9px 4px;font-size:13px;font-weight:700;border-radius:12px;border:none;background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;cursor:pointer;font-family:inherit;">💰 재무</button>
     <button class="chart-subtab" id="csub-analysis" onclick="switchChartTab('analysis',this)" style="flex:1;padding:9px 4px;font-size:13px;font-weight:700;border-radius:12px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:inherit;">📊 분석</button>
     <button class="chart-subtab" id="csub-chart" onclick="switchChartTab('chart',this)" style="flex:1;padding:9px 4px;font-size:13px;font-weight:700;border-radius:12px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:inherit;">📈 차트</button>
@@ -556,7 +556,7 @@
 
   <!-- 재무 탭 -->
   <div id="chartTab-summary">
-    <div style="background:#fff;border-radius:16px;box-shadow:var(--shadow2);padding:16px;margin-bottom:12px;">
+    <div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow2);padding:16px;margin-bottom:12px;">
       <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;">💹 저축률</div>
       <div id="savingsRate"></div>
     </div>
@@ -588,7 +588,7 @@
       <div class="chart-wrap" style="height:180px;"><canvas id="dowChart"></canvas></div>
       <div id="dowText" style="margin-top:10px;"></div>
     </div>
-    <div style="background:#fff;border-radius:16px;box-shadow:var(--shadow2);padding:16px;margin-bottom:12px;">
+    <div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow2);padding:16px;margin-bottom:12px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div style="font-size:15px;font-weight:700;color:var(--text);">🤖 AI 지출 분석</div>
         <button id="aiAnalyzeBtn" onclick="runAiAnalysis()" style="background:var(--p1);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">분석하기</button>
@@ -624,26 +624,26 @@
         <span>📈 투자 레포트 <span style="font-size:11px;opacity:.8;">(전체 누적)</span></span>
         <span class="section-toggle" id="investBlockArrow">▲</span>
       </div>
-      <div id="investBlock" style="padding:14px;background:#EFF6FF;">
+      <div id="investBlock" style="padding:14px;background:rgba(59,130,246,.08);">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
-          <div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #BAE6FD;">
-            <div style="font-size:11px;color:#0369A1;font-weight:700;margin-bottom:4px;">💰 총 납입</div>
-            <div style="font-size:15px;font-weight:700;color:#0369A1;" id="investTotal">0원</div>
+          <div style="background:var(--surface);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border2);">
+            <div style="font-size:11px;color:#38BDF8;font-weight:700;margin-bottom:4px;">💰 총 납입</div>
+            <div style="font-size:15px;font-weight:700;color:#38BDF8;" id="investTotal">0원</div>
           </div>
-          <div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #BAE6FD;">
-            <div style="font-size:11px;color:#0891B2;font-weight:700;margin-bottom:4px;">📤 총 회수</div>
-            <div style="font-size:15px;font-weight:700;color:#0891B2;" id="investReturn">0원</div>
+          <div style="background:var(--surface);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border2);">
+            <div style="font-size:11px;color:#22D3EE;font-weight:700;margin-bottom:4px;">📤 총 회수</div>
+            <div style="font-size:15px;font-weight:700;color:#22D3EE;" id="investReturn">0원</div>
           </div>
-          <div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #BAE6FD;">
-            <div style="font-size:11px;color:#0F766E;font-weight:700;margin-bottom:4px;">💹 순손익</div>
+          <div style="background:var(--surface);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border2);">
+            <div style="font-size:11px;color:#2DD4BF;font-weight:700;margin-bottom:4px;">💹 순손익</div>
             <div style="font-size:15px;font-weight:700;" id="investNet">0원</div>
           </div>
         </div>
-        <div style="background:#fff;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid #BAE6FD;">
-          <div style="font-size:13px;font-weight:700;color:#0369A1;margin-bottom:10px;">항목별 납입 현황</div>
+        <div style="background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--border2);">
+          <div style="font-size:13px;font-weight:700;color:#38BDF8;margin-bottom:10px;">항목별 납입 현황</div>
           <div class="chart-wrap" style="height:180px;"><canvas id="investChart"></canvas></div>
         </div>
-        <div style="font-size:13px;font-weight:700;color:#0369A1;margin-bottom:8px;">투자 내역</div>
+        <div style="font-size:13px;font-weight:700;color:#38BDF8;margin-bottom:8px;">투자 내역</div>
         <div id="investList"></div>
       </div>
     </div>
@@ -735,9 +735,9 @@
       <span>🎯 공동 저축 목표</span>
       <span class="section-toggle" id="goalBlockArrow">▲</span>
     </div>
-    <div id="goalBlock" style="padding:16px;background:#F0FDF4;">
+    <div id="goalBlock" style="padding:16px;background:rgba(5,150,105,.1);">
       <div id="goalList" style="margin-bottom:14px;"></div>
-      <div class="form-card show" style="margin-bottom:0;box-shadow:none;border:1px solid #A7F3D0;">
+      <div class="form-card show" style="margin-bottom:0;box-shadow:none;border:1px solid rgba(5,150,105,.3);">
         <div class="fgroup">
           <label class="flabel">목표 제목</label>
           <input class="finput" id="goalTitle" type="text" placeholder="예: 제주도 여행 ✈️">
@@ -764,7 +764,7 @@
       <span>📤 엑셀 내보내기</span>
       <span class="section-toggle" id="exportBlockArrow">▲</span>
     </div>
-    <div id="exportBlock" style="padding:16px;background:#EFF6FF;">
+    <div id="exportBlock" style="padding:16px;background:rgba(59,130,246,.08);">
       <div style="font-size:14px;color:var(--sub);margin-bottom:14px;">이번달 지출/수입 내역을 엑셀 파일로 저장해요</div>
       <div class="fgroup">
         <label class="flabel">내보낼 기간</label>
@@ -827,7 +827,7 @@
     <div id="fixedBlock" style="padding:16px;background:#F5F0FF;">
       <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">매월 반복되는 고정지출을 등록하면 자동으로 추가해드려요!</div>
       <div id="fixedList"></div>
-      <div class="form-card show" style="margin-top:12px;margin-bottom:0;box-shadow:none;border:1px solid #C4B5FD;">
+      <div class="form-card show" style="margin-top:12px;margin-bottom:0;box-shadow:none;border:1px solid var(--border2);">
         <div class="form-row">
           <div class="fgroup" style="margin-bottom:0;">
             <label class="flabel">금액</label>
@@ -896,11 +896,11 @@
       <span>🍽 오늘 뭐먹지?</span>
       <span class="section-toggle" id="foodBlockArrow">▲</span>
     </div>
-    <div id="foodBlock" style="padding:16px;background:#FFF7ED;">
+    <div id="foodBlock" style="padding:16px;background:rgba(234,88,12,.08);">
       <div id="foodResult" style="text-align:center;padding:16px 0;font-size:22px;font-weight:800;color:#EA580C;min-height:60px;"></div>
       <div style="display:flex;gap:8px;margin-bottom:12px;">
         <button onclick="pickFood()" style="flex:1;padding:12px;background:#EA580C;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">🎲 랜덤 추천!</button>
-        <button onclick="toggleSection('foodAddBlock')" style="padding:12px 16px;background:#fff;color:#EA580C;border:1.5px solid #EA580C;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">+ 추가</button>
+        <button onclick="toggleSection('foodAddBlock')" style="padding:12px 16px;background:var(--surface2);color:var(--p1);border:1.5px solid var(--p1);border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">+ 추가</button>
       </div>
       <div id="foodAddBlock" style="display:none;margin-bottom:12px;">
         <div style="display:flex;gap:8px;">
@@ -934,7 +934,7 @@
       <span>📝 하루 한 줄 다이어리</span>
       <span class="section-toggle" id="diaryBlockArrow">▲</span>
     </div>
-    <div id="diaryBlock" style="padding:16px;background:#F0FDF4;">
+    <div id="diaryBlock" style="padding:16px;background:rgba(5,150,105,.1);">
       <div style="display:flex;gap:8px;margin-bottom:12px;">
         <input class="finput" id="diaryInput" placeholder="오늘 하루 어땠어? 😊" style="flex:1;">
         <button onclick="addDiary()" style="background:#059669;color:#fff;border:none;border-radius:10px;padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">저장</button>
@@ -975,7 +975,7 @@
 
 <!-- 일정 수정 모달 -->
 <div id="scheduleEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:flex-end;justify-content:center;">
-  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:85vh;overflow-y:auto;">
+  <div style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:85vh;overflow-y:auto;">
     <div style="font-size:17px;font-weight:700;margin-bottom:18px;">📅 일정 수정</div>
     <div class="form-row">
       <div class="fgroup" style="margin-bottom:0;">
@@ -1020,7 +1020,7 @@
 
 <!-- 삭제 확인 모달 -->
 <div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:360px;text-align:center;">
+  <div style="background:var(--surface);border-radius:20px;padding:28px 24px;width:100%;max-width:360px;text-align:center;">
     <div style="font-size:32px;margin-bottom:12px;">🗑️</div>
     <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px;">내역을 삭제할까요?</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">PIN 번호를 입력하면 삭제돼요</div>
@@ -1050,7 +1050,7 @@
 
 <!-- 수정 모달 -->
 <div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:flex-end;justify-content:center;">
-  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:85vh;overflow-y:auto;">
+  <div style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:85vh;overflow-y:auto;">
     <div style="font-size:17px;font-weight:700;margin-bottom:20px;">✏️ 내역 수정</div>
     <div class="fgroup">
       <label class="flabel">금액</label>
@@ -1478,7 +1478,7 @@ function renderBudgetList() {
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #CCFBF1;">'+
       '<span style="font-size:14px;font-weight:600;color:var(--text);">'+esc(cat)+'</span>'+
       '<div style="display:flex;align-items:center;gap:10px;">'+
-        '<span style="font-size:14px;font-weight:700;color:#0F766E;">'+fmt(budgets[cat])+'원</span>'+
+        '<span style="font-size:14px;font-weight:700;color:#2DD4BF;">'+fmt(budgets[cat])+'원</span>'+
         '<button onclick="delBudget(\''+esc(cat)+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;">×</button>'+
       '</div>'+
     '</div>';
@@ -1504,7 +1504,7 @@ function renderBudgetStatus() {
     if(r.type==='expense' && investCats.indexOf(r.category)<0)
       catMap[r.category]=(catMap[r.category]||0)+r.amount;
   });
-  var html = '<div style="background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:18px;margin-bottom:12px;">'+
+  var html = '<div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:18px;margin-bottom:12px;">'+
     '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;">💸 예산 현황</div>'+
     keys.map(function(cat){
       var spent = catMap[cat]||0;
@@ -1563,7 +1563,7 @@ function renderFixedList() {
   if(!list) return;
   if(!fixedExpenses.length){ list.innerHTML='<div style="font-size:13px;color:var(--muted);">등록된 고정지출이 없어요</div>'; return; }
   list.innerHTML = fixedExpenses.map(function(f){
-    return '<div style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid #C4B5FD;">'+
+    return '<div style="background:var(--surface);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border2);">'+
       '<div>'+
         '<div style="font-size:14px;font-weight:700;">'+esc(f.memo)+'</div>'+
         '<div style="font-size:12px;color:var(--muted);margin-top:3px;">'+esc(f.category)+' · 매월 '+f.day+'일 · '+esc(f.payment)+'</div>'+
@@ -1666,7 +1666,7 @@ function renderSavingsRate() {
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">'+
       '<div style="text-align:center;background:var(--bg);border-radius:12px;padding:12px;">'+
         '<div style="font-size:12px;color:var(--muted);margin-bottom:4px;">총 수입</div>'+
-        '<div style="font-size:14px;font-weight:700;color:#00B488;">'+fmt(totalInc)+'원</div>'+
+        '<div style="font-size:14px;font-weight:700;color:#4ADE80;">'+fmt(totalInc)+'원</div>'+
       '</div>'+
       '<div style="text-align:center;background:var(--bg);border-radius:12px;padding:12px;">'+
         '<div style="font-size:12px;color:var(--muted);margin-bottom:4px;">총 지출</div>'+
@@ -1674,7 +1674,7 @@ function renderSavingsRate() {
       '</div>'+
       '<div style="text-align:center;background:var(--bg);border-radius:12px;padding:12px;">'+
         '<div style="font-size:12px;color:var(--muted);margin-bottom:4px;">투자</div>'+
-        '<div style="font-size:14px;font-weight:700;color:#0369A1;">'+fmt(totalInvest)+'원</div>'+
+        '<div style="font-size:14px;font-weight:700;color:#38BDF8;">'+fmt(totalInvest)+'원</div>'+
       '</div>'+
     '</div>'+
     '<div style="margin-bottom:8px;">'+
@@ -1781,7 +1781,7 @@ function renderWishList() {
   if(!list) return;
   if(!wishes.length){ list.innerHTML='<div style="font-size:13px;color:var(--muted);">위시리스트가 비어있어요 💝</div>'; return; }
   list.innerHTML = wishes.map(function(w){
-    return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:1px solid #FBCFE8;opacity:'+(w.done?.5:1)+';">'+
+    return '<div style="background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:1px solid var(--border2);opacity:'+(w.done?.5:1)+';">'+
       '<button onclick="toggleWish(\''+w.id+'\','+w.done+')" style="width:24px;height:24px;border-radius:50%;border:2px solid '+(w.done?'#DB2777':'#FBCFE8')+';background:'+(w.done?'#DB2777':'none')+';cursor:pointer;flex-shrink:0;color:#fff;font-size:12px;">'+
         (w.done?'✓':'')+
       '</button>'+
@@ -1839,7 +1839,7 @@ function renderDiaryList() {
   if(!list) return;
   if(!diaries.length){ list.innerHTML='<div style="font-size:13px;color:var(--muted);">아직 기록이 없어요. 오늘 하루를 기록해봐요! 📝</div>'; return; }
   list.innerHTML = diaries.slice(0,10).map(function(d){
-    return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border-left:4px solid #059669;">'+
+    return '<div style="background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px;border-left:4px solid #059669;">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
         '<span style="font-size:12px;font-weight:700;color:#059669;">'+esc(d.emoji||'')+' '+esc(d.author||'')+'</span>'+
         '<span style="font-size:11px;color:var(--muted);">'+esc(d.date||'')+'</span>'+
@@ -1928,7 +1928,7 @@ function renderBudgetStatusHome() {
   var overItems = keys.filter(function(cat){ return catMap[cat] > 0; });
   if(!overItems.length){ el.innerHTML=''; return; }
 
-  var html = '<div style="background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:12px;">'+
+  var html = '<div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:12px;">'+
     '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">💸 이번달 예산 현황</div>'+
     overItems.map(function(cat){
       var spent = catMap[cat]||0;
@@ -1997,7 +1997,7 @@ function renderGroupExpense() {
 
   if(!groups.length){ el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">지출 내역이 없어요</div>'; return; }
 
-  var bgColors = ['#EBF3FE','#F0FDF4','#FFF7ED','#F5F0FF','#FFF0F0','#ECFEFF','#FFFBEB','#EFF6FF','#F0F9FF'];
+  var bgColors = ['rgba(0,229,255,.08)','rgba(204,255,0,.08)','rgba(255,159,28,.08)','rgba(167,139,250,.08)','rgba(255,87,87,.08)','rgba(0,229,255,.06)','rgba(251,191,36,.08)','rgba(59,130,246,.08)','rgba(74,222,128,.08)'];
 
   var html = '<div style="overflow-x:auto;">'+
     '<table style="width:100%;border-collapse:collapse;font-size:13px;">'+
@@ -2015,14 +2015,14 @@ function renderGroupExpense() {
       var diffColor = diff > 0 ? '#F04452' : diff < 0 ? '#00B488' : '#8B95A1';
       var diffStr = diff===0 ? '-' : (diff>0?'▲ +':'▼ ')+fmt(Math.abs(diff));
       return '<tr style="background:'+bgColors[i%bgColors.length]+';" onclick="toggleGroupDetail(\'gd_'+i+'\')" style="cursor:pointer;background:'+bgColors[i%bgColors.length]+';">'+
-        '<td style="padding:10px 12px;font-weight:700;border:1px solid #D1D5DB;cursor:pointer;">'+esc(g)+' <span style="font-size:10px;color:var(--muted);">▼</span></td>'+
-        '<td style="padding:10px 12px;text-align:right;font-weight:700;border:1px solid #D1D5DB;">'+fmt(cur)+'원</td>'+
-        '<td style="padding:10px 12px;text-align:right;color:#4E5968;border:1px solid #D1D5DB;">'+fmt(prev)+'원</td>'+
-        '<td style="padding:10px 12px;text-align:right;font-weight:700;color:'+diffColor+';border:1px solid #D1D5DB;">'+diffStr+'</td>'+
+        '<td style="padding:10px 12px;font-weight:700;border:1px solid var(--border);cursor:pointer;">'+esc(g)+' <span style="font-size:10px;color:var(--muted);">▼</span></td>'+
+        '<td style="padding:10px 12px;text-align:right;font-weight:700;border:1px solid var(--border);">'+fmt(cur)+'원</td>'+
+        '<td style="padding:10px 12px;text-align:right;color:var(--sub);border:1px solid var(--border);">'+fmt(prev)+'원</td>'+
+        '<td style="padding:10px 12px;text-align:right;font-weight:700;color:'+diffColor+';border:1px solid var(--border);">'+diffStr+'</td>'+
       '</tr>'+
       // 세부 카테고리 행
       '<tr id="gd_'+i+'" style="display:none;">'+
-        '<td colspan="4" style="padding:0;border:1px solid #D1D5DB;">'+
+        '<td colspan="4" style="padding:0;border:1px solid var(--border);">'+
           CAT_GROUPS[g].filter(function(c){
             var catThis = records.filter(function(r){return r.type==='expense'&&r.category===c;}).reduce(function(a,r){return a+r.amount;},0);
             var catPrev = (window.prevRecords||[]).filter(function(r){return r.type==='expense'&&r.category===c;}).reduce(function(a,r){return a+r.amount;},0);
@@ -2036,7 +2036,7 @@ function renderGroupExpense() {
             return '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:8px 14px;background:#F8FAFC;border-bottom:1px solid #E8EAED;font-size:12px;">'+
               '<span style="color:var(--sub);font-weight:600;">　'+esc(c)+'</span>'+
               '<span style="text-align:right;font-weight:600;">'+fmt(catThis)+'원</span>'+
-              '<span style="text-align:right;color:#4E5968;">'+fmt(catPrev)+'원</span>'+
+              '<span style="text-align:right;color:var(--sub);">'+fmt(catPrev)+'원</span>'+
               '<span style="text-align:right;font-weight:700;color:'+dc+';">'+ds+'</span>'+
             '</div>';
           }).join('')+
@@ -2168,7 +2168,7 @@ function renderGoalList() {
     var barColor = ratio>=100?'#059669':ratio>=50?'#10B981':'#34D399';
     var rem = g.target - (g.saved||0);
     var remMonths = rem > 0 ? Math.ceil(rem / g.monthly) : 0;
-    return '<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid #A7F3D0;">'+
+    return '<div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid rgba(5,150,105,.3);">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
         '<span style="font-size:15px;font-weight:700;color:var(--text);">'+esc(g.title)+'</span>'+
         '<button onclick="delGoal(\''+g.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;">×</button>'+
@@ -2185,7 +2185,7 @@ function renderGoalList() {
       '</div>'+
       '<div style="display:flex;gap:8px;">'+
         '<button onclick="updateGoalSaved(\''+g.id+'\','+g.monthly+')" style="flex:1;padding:8px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">+ 이번달 납입</button>'+
-        '<button onclick="updateGoalSaved(\''+g.id+'\','+(g.monthly*-1)+')" style="padding:8px 12px;background:#F0FDF4;color:#059669;border:1px solid #A7F3D0;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">-</button>'+
+        '<button onclick="updateGoalSaved(\''+g.id+'\','+(g.monthly*-1)+')" style="padding:8px 12px;background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.3);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">-</button>'+
       '</div>'+
     '</div>';
   }).join('');
@@ -2194,7 +2194,7 @@ function renderGoalList() {
 function renderSavingGoalsWidget() {
   var el = document.getElementById('savingGoalsWrap');
   if(!el || !savingGoals.length){ if(el) el.innerHTML=''; return; }
-  el.innerHTML = '<div style="background:#fff;border-radius:16px;box-shadow:var(--shadow2);padding:16px;margin-bottom:12px;">'+
+  el.innerHTML = '<div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow2);padding:16px;margin-bottom:12px;">'+
     '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px;">🎯 공동 저축 목표</div>'+
     savingGoals.map(function(g){
       var ratio = Math.min(Math.round((g.saved||0)/g.target*100),100);
@@ -2259,7 +2259,7 @@ function renderDowChart() {
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">'+
     dowLabels.map(function(l,i){
       if(avg[i]===0) return '';
-      return '<div style="font-size:12px;background:#FFF1E6;color:var(--p1);padding:4px 10px;border-radius:20px;font-weight:600;">'+l+' '+fmt(avg[i])+'원</div>';
+      return '<div style="font-size:12px;background:var(--p1-bg);color:var(--p1);padding:4px 10px;border-radius:20px;font-weight:600;">'+l+' '+fmt(avg[i])+'원</div>';
     }).join('')+
     '</div>';
   }
@@ -2619,7 +2619,7 @@ function renderRecords() {
     function recHtml(r) {
       var sign=r.type==='income'?'+':'-', pClass='p'+r.person;
       var pEmoji=r.person===1?'🦡':'🦉', pName=r.person===1?'오소리':'부엉이';
-      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid #F2F4F6;">'+
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid var(--border);">'+
         '<div class="rec-dot '+r.type+'"></div>'+
         '<div class="rec-info"><div class="rec-place">'+esc(r.memo||r.category)+'</div>'+
         '<div class="rec-meta"><span class="badge '+pClass+'">'+pEmoji+' '+esc(pName)+'</span>'+
@@ -2631,9 +2631,9 @@ function renderRecords() {
       '</div>';
     }
 
-    return '<div style="margin-bottom:16px;background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;">'+
+    return '<div style="margin-bottom:16px;background:var(--surface);border-radius:16px;box-shadow:var(--shadow2);overflow:hidden;">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px;">'+
-        '<span style="font-size:14px;font-weight:700;color:#4E5968;">'+dayStr+' '+dowStr+'</span>'+
+        '<span style="font-size:14px;font-weight:700;color:var(--sub);">'+dayStr+' '+dowStr+'</span>'+
         '<span style="font-size:13px;font-weight:700;color:'+(dayTotal>0?'#00B488':dayTotal<0?'#F04452':'#8B95A1')+';">'+(dayTotal>0?'+':dayTotal<0?'-':'')+fmt(Math.abs(dayTotal))+'원</span>'+
       '</div>'+
       '<div style="padding:0 10px 10px;">'+
@@ -2655,7 +2655,7 @@ function renderRecords() {
     html += '<div id="oldRecordsWrap" style="display:none;">'+
       oldDates.map(renderDateGroup).join('')+
     '</div>'+
-    '<button onclick="toggleOldRecords(this)" style="width:100%;padding:12px;background:#fff;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;color:var(--sub);cursor:pointer;margin-top:4px;">'+
+    '<button onclick="toggleOldRecords(this)" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;color:var(--sub);cursor:pointer;margin-top:4px;">'+
       '이전 내역 '+oldCount+'건 더보기 ▼'+
     '</button>';
   }
@@ -2786,7 +2786,7 @@ function renderCharts() {
       }
     });
   // 카테고리 범례 → 엑셀 스타일 테이블
-  var tableColors = ['#EBF3FE','#F0FDF4','#FFF7ED','#F5F0FF','#FFF0F0','#ECFEFF','#FFFBEB','#F0F9FF','#FDF4FF','#F0FDF4','#FEF2F2','#F0FDFA'];
+  var tableColors = ['rgba(0,229,255,.08)','rgba(204,255,0,.08)','rgba(255,159,28,.08)','rgba(167,139,250,.08)','rgba(255,87,87,.08)','rgba(0,229,255,.06)','rgba(251,191,36,.08)','rgba(59,130,246,.08)','rgba(255,110,199,.08)','rgba(74,222,128,.08)','rgba(255,87,87,.06)','rgba(5,150,105,.08)'];
   var tableHtml = '<div style="overflow-x:auto;margin-top:14px;">'+
     '<table style="width:100%;border-collapse:collapse;font-size:14px;">'+
     '<thead>'+
@@ -2805,10 +2805,10 @@ function renderCharts() {
       var diffStr = diff === 0 ? '-' : (diff>0?'▲ +':' ▼ ')+fmt(Math.abs(diff));
       var bg = tableColors[i % tableColors.length];
       return '<tr style="background:'+bg+';">'+
-        '<td style="padding:11px 12px;font-weight:700;color:#191F28;border:1px solid #D1D5DB;font-size:14px;">'+esc(l)+'</td>'+
-        '<td style="padding:11px 12px;text-align:right;font-weight:700;color:#191F28;border:1px solid #D1D5DB;font-size:14px;">'+fmt(cur)+'원</td>'+
-        '<td style="padding:11px 12px;text-align:right;font-weight:600;color:#4E5968;border:1px solid #D1D5DB;font-size:14px;">'+fmt(prev)+'원</td>'+
-        '<td style="padding:11px 12px;text-align:right;font-weight:700;color:'+diffColor+';border:1px solid #D1D5DB;font-size:14px;">'+diffStr+'</td>'+
+        '<td style="padding:11px 12px;font-weight:700;color:var(--text);border:1px solid var(--border);font-size:14px;">'+esc(l)+'</td>'+
+        '<td style="padding:11px 12px;text-align:right;font-weight:700;color:var(--text);border:1px solid var(--border);font-size:14px;">'+fmt(cur)+'원</td>'+
+        '<td style="padding:11px 12px;text-align:right;font-weight:600;color:var(--sub);border:1px solid var(--border);font-size:14px;">'+fmt(prev)+'원</td>'+
+        '<td style="padding:11px 12px;text-align:right;font-weight:700;color:'+diffColor+';border:1px solid var(--border);font-size:14px;">'+diffStr+'</td>'+
       '</tr>';
     }).join('')+
     '<tr style="background:#191F28;">'+
@@ -2848,7 +2848,7 @@ function renderCharts() {
       var totalPay = pDat.reduce(function(a,b){return a+b;},0);
       textEl.innerHTML = pL.map(function(l,i){
         var ratio = Math.round(pDat[i]/totalPay*100);
-        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #F5F5F5;font-size:14px;">'+
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:14px;">'+
           '<span style="font-weight:600;color:var(--sub);">'+esc(l)+'</span>'+
           '<span style="font-weight:700;color:var(--text);">'+fmt(pDat[i])+'원 <span style="font-size:12px;color:var(--muted);">('+ratio+'%)</span></span>'+
         '</div>';
@@ -2952,7 +2952,7 @@ function renderCalendarChart() {
       var data = dayMap[dateStr];
       var dow_idx = new Date(y, m, d).getDay();
 
-      var bg = isToday ? '#3182F6' : isInPeriod ? '#fff' : '#F2F4F6';
+      var bg = isToday ? 'var(--p1)' : isInPeriod ? 'var(--surface2)' : 'var(--surface)';
       var textColor = isToday ? '#fff' : !isInPeriod ? '#C0C6CE' : dow_idx===0 ? '#F04452' : dow_idx===6 ? '#3182F6' : '#191F28';
       var border = isToday ? 'none' : isInPeriod ? '1px solid #E8EAED' : 'none';
 
@@ -2960,7 +2960,7 @@ function renderCalendarChart() {
         '<div style="font-size:12px;font-weight:'+(isToday?'800':'600')+';color:'+textColor+';margin-bottom:2px;">'+d+'</div>';
 
       if(data && isInPeriod) {
-        if(data.inc > 0) html += '<div style="font-size:9px;font-weight:700;color:#00B488;line-height:1.3;">+'+fmtShort(data.inc)+'</div>';
+        if(data.inc > 0) html += '<div style="font-size:9px;font-weight:700;color:#4ADE80;line-height:1.3;">+'+fmtShort(data.inc)+'</div>';
         if(data.exp > 0) html += '<div style="font-size:9px;font-weight:700;color:#F04452;line-height:1.3;">-'+fmtShort(data.exp)+'</div>';
       }
       html += '</div>';
@@ -3023,7 +3023,7 @@ function renderInvest() {
     var date = r.date?r.date.slice(5).replace('-','/'):'';
     return '<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #BAE6FD;gap:10px;">'+
       '<div style="flex:1;font-size:12px;font-weight:600;">'+esc(r.memo||r.category)+
-        '<div style="font-size:10px;color:#64748B;margin-top:2px;"><span style="background:#DBEAFE;color:#1D4ED8;border-radius:20px;padding:1px 7px;font-size:9px;">'+esc(r.category)+'</span> '+date+'</div>'+
+        '<div style="font-size:10px;color:#64748B;margin-top:2px;"><span style="background:#DBEAFE;color:#60A5FA;border-radius:20px;padding:1px 7px;font-size:9px;">'+esc(r.category)+'</span> '+date+'</div>'+
       '</div>'+
       '<div style="font-size:13px;font-weight:700;color:'+color+';">'+sign+fmt(r.amount)+'원</div>'+
     '</div>';
@@ -3264,7 +3264,7 @@ function renderSchedules() {
     var timeStr = String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
     var alarmLabel = ALARM_LABELS[s.alarm]||'';
     var repeatLabel = REPEAT_LABELS[s.repeat]||'';
-    return '<div style="background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;opacity:'+(isPast?.5:1)+';">'+
+    return '<div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow2);padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;opacity:'+(isPast?.5:1)+';">'+
       '<div style="text-align:center;min-width:46px;background:var(--p1-bg);border-radius:12px;padding:8px 4px;flex-shrink:0;">'+
         '<div style="font-size:10px;color:var(--p1);font-weight:700;">'+month+'</div>'+
         '<div style="font-size:22px;font-weight:800;line-height:1.1;color:var(--p1);">'+day+'</div>'+
@@ -3274,12 +3274,12 @@ function renderSchedules() {
         '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px;">'+esc(s.content)+'</div>'+
         '<div style="display:flex;gap:5px;flex-wrap:wrap;">'+
           (s.alarm&&s.alarm!=='none'?'<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--p1-bg);color:var(--p1);">🔔 '+esc(alarmLabel)+'</span>':'')+
-          (s.repeat&&s.repeat!=='none'?'<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:#FFF0F0;color:var(--p2);">🔁 '+esc(repeatLabel)+'</span>':'')+
+          (s.repeat&&s.repeat!=='none'?'<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:rgba(255,87,87,.1);color:var(--p2);">🔁 '+esc(repeatLabel)+'</span>':'')+
         '</div>'+
       '</div>'+
       '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">'+
         '<button onclick="openScheduleEdit(\''+s.id+'\')" style="background:var(--p1-bg);border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--p1);cursor:pointer;font-family:inherit;">✏️</button>'+
-        '<button onclick="delSchedule(\''+s.id+'\')" style="background:#FFF0F0;border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--expense);cursor:pointer;font-family:inherit;">🗑</button>'+
+        '<button onclick="delSchedule(\''+s.id+'\')" style="background:rgba(255,87,87,.1);border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--expense);cursor:pointer;font-family:inherit;">🗑</button>'+
       '</div>'+
     '</div>';
   }).join('');
@@ -3509,7 +3509,7 @@ function renderCardSummary() {
   var inputDate = cardDataCache['input_date'] || '';
   var baseDate  = cardDataCache['base_date']  || '';
 
-  var html = '<div style="background:#fff;border-radius:14px;box-shadow:var(--shadow2);overflow:hidden;margin-bottom:10px;">'+
+  var html = '<div style="background:var(--surface);border-radius:14px;box-shadow:var(--shadow2);overflow:hidden;margin-bottom:10px;">'+
     '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 14px 8px;">'+
       '<div style="font-size:15px;font-weight:700;color:var(--text);">💳 카드 결제 예상금액</div>'+
       '<button onclick="openCardEditModal()" style="font-size:12px;font-weight:600;color:var(--p1);background:var(--p1-bg);border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-family:inherit;">✏️ 수정</button>'+
@@ -3521,7 +3521,7 @@ function renderCardSummary() {
       '</div>':'')+
     rows.map(function(row){
       if(row.total===0&&!row.isPaid) return '';
-      return '<div style="padding:10px 14px;border-top:1px solid #F0F0F0;">'+
+      return '<div style="padding:10px 14px;border-top:1px solid var(--border);">'+
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'+
           '<div>'+
             '<span style="font-size:14px;font-weight:700;color:var(--text);">'+esc(row.c.name)+'</span>'+
@@ -3529,7 +3529,7 @@ function renderCardSummary() {
           '</div>'+
           '<div style="display:flex;align-items:center;gap:8px;">'+
             '<span style="font-size:16px;font-weight:800;color:'+(row.isPaid?'var(--muted)':row.c.color)+';'+(row.isPaid?'text-decoration:line-through;':'')+'">'+fmt(row.total)+'원</span>'+
-            '<button onclick="toggleCardPaid(\''+row.c.key+'\')" style="background:'+(row.isPaid?'#F0F0F0':'var(--p1)')+';color:'+(row.isPaid?'var(--muted)':'#fff')+';border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">'+(row.isPaid?'취소':'납부완료')+'</button>'+
+            '<button onclick="toggleCardPaid(\''+row.c.key+'\')" style="background:'+(row.isPaid?'var(--surface2)':'var(--p1)')+';color:'+(row.isPaid?'var(--muted)':'#0D0D0F')+';border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">'+(row.isPaid?'취소':'납부완료')+'</button>'+
           '</div>'+
         '</div>'+
         '<div style="display:flex;gap:12px;font-size:12px;color:var(--muted);">'+
@@ -3541,7 +3541,7 @@ function renderCardSummary() {
       '</div>';
     }).join('')+
     (grandTotal>0?
-      '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#F9F9F9;border-top:1px solid #F0F0F0;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--surface2);border-top:1px solid var(--border);">'+
         '<span style="font-size:14px;font-weight:700;color:var(--sub);">이번달 총 예상</span>'+
         '<span style="font-size:18px;font-weight:800;color:var(--expense);">'+fmt(grandTotal)+'원</span>'+
       '</div>':
@@ -3551,7 +3551,7 @@ function renderCardSummary() {
   // 수정 모달 (백채 제외 수기입력만)
   var manualCards = CARD_PAYMENTS.filter(function(c){return !c.auto;});
   html += '<div id="cardEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:flex-end;justify-content:center;">'+
-    '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:85vh;overflow-y:auto;">'+
+    '<div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:85vh;overflow-y:auto;">'+
       '<div style="font-size:17px;font-weight:700;margin-bottom:6px;">💳 카드 결제 예상금액 입력</div>'+
       '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">카드사 앱에서 확인한 금액을 입력해주세요<br><span style="color:#059669;font-weight:600;">백채 신용카드는 가계부에서 자동 집계돼요 ✅</span></div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">'+
@@ -3567,7 +3567,7 @@ function renderCardSummary() {
       manualCards.map(function(c){
         var lump = cardDataCache['lump_'+c.key] || 0;
         var inst = cardDataCache['inst_'+c.key] || 0;
-        return '<div style="background:#F9F9F9;border-radius:10px;padding:12px;margin-bottom:10px;">'+
+        return '<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:10px;">'+
           '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;">'+esc(c.name)+'</div>'+
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
             '<div class="fgroup" style="margin-bottom:0;">'+
@@ -3733,7 +3733,7 @@ function showBudgetAlert(cat, spent, budget) {
   var over = spent - budget;
   var el = document.createElement('div');
   el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;';
-  el.innerHTML='<div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:360px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.2);">'+
+  el.innerHTML='<div style="background:var(--surface);border-radius:20px;padding:28px 24px;width:100%;max-width:360px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.2);">'+
     '<div style="font-size:40px;margin-bottom:12px;">⚠️</div>'+
     '<div style="font-size:18px;font-weight:800;color:#F04452;margin-bottom:8px;">예산 초과!</div>'+
     '<div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">'+esc(cat)+' 예산을 초과했어요</div>'+
