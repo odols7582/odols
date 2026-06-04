@@ -3254,6 +3254,14 @@ function renderSchedules() {
     var timeStr = String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
     var alarmLabel = ALARM_LABELS[s.alarm]||'';
     var repeatLabel = REPEAT_LABELS[s.repeat]||'';
+    // D-day 계산 (날짜 기준)
+    var today0 = new Date(); today0.setHours(0,0,0,0);
+    var target0 = new Date(dt); target0.setHours(0,0,0,0);
+    var diffDays = Math.round((target0.getTime()-today0.getTime())/86400000);
+    var ddayText, ddayColor, ddayBg;
+    if(diffDays===0){ ddayText='D-DAY'; ddayColor='#fff'; ddayBg='var(--expense)'; }
+    else if(diffDays>0){ ddayText='D-'+diffDays; ddayColor='var(--p1)'; ddayBg='var(--p1-bg)'; }
+    else { ddayText='D+'+Math.abs(diffDays); ddayColor='var(--muted)'; ddayBg='var(--surface2)'; }
     return '<div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow2);padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;opacity:'+(isPast?.5:1)+';">'+
       '<div style="text-align:center;min-width:46px;background:var(--p1-bg);border-radius:12px;padding:8px 4px;flex-shrink:0;">'+
         '<div style="font-size:10px;color:var(--p1);font-weight:700;">'+month+'</div>'+
@@ -3261,7 +3269,10 @@ function renderSchedules() {
         '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+timeStr+'</div>'+
       '</div>'+
       '<div style="flex:1;min-width:0;padding-top:2px;">'+
-        '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px;">'+esc(s.content)+'</div>'+
+        '<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap;">'+
+          '<span style="font-size:15px;font-weight:700;color:var(--text);">'+esc(s.content)+'</span>'+
+          '<span style="font-size:12px;font-weight:800;padding:2px 9px;border-radius:20px;background:'+ddayBg+';color:'+ddayColor+';">'+ddayText+'</span>'+
+        '</div>'+
         '<div style="display:flex;gap:5px;flex-wrap:wrap;">'+
           (s.alarm&&s.alarm!=='none'?'<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--p1-bg);color:var(--p1);">🔔 '+esc(alarmLabel)+'</span>':'')+
           (s.repeat&&s.repeat!=='none'?'<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:rgba(255,87,87,.1);color:var(--p2);">🔁 '+esc(repeatLabel)+'</span>':'')+
