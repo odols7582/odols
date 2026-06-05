@@ -741,6 +741,19 @@
     </div>
   </div>
 
+  <!-- 할부 날짜 정리 (일회성 도구) -->
+  <div class="section-block" style="margin-bottom:12px;">
+    <div class="section-block-header" onclick="toggleSection('installFixBlock')">
+      <span>🔧 할부 날짜 정리</span>
+      <span class="section-toggle" id="installFixBlockArrow">▼</span>
+    </div>
+    <div id="installFixBlock" style="display:none;padding:16px;background:var(--surface2);">
+      <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:12px;">기존 할부 내역 중 <b>2회차 이후</b> 항목의 날짜를 모두 <b>해당 월 20일</b>로 정리해요.<br>(1회차는 원래 입력일 그대로 유지)</div>
+      <button class="submit-btn" onclick="fixInstallmentDates()" style="background:#F06595;">할부 날짜 20일로 정리하기</button>
+      <div id="installFixResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
+    </div>
+  </div>
+
   <!-- 공동 저축 목표 관리 -->
   <div class="section-block" style="box-shadow:var(--shadow);margin-bottom:12px;">
     <div class="section-block-header" onclick="toggleSection('goalBlock')" style="background:linear-gradient(135deg,#059669,#10B981);color:#fff;">
@@ -1169,7 +1182,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, where, orderBy, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, where, orderBy, setDoc, getDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
 const firebaseConfig = {
@@ -2515,6 +2528,37 @@ window.sendManualNotif = async function() {
     toast('알림 전송됨 📣');
   } catch(e){ toast('전송 실패'); }
 };
+
+// 기존 할부 2회차+ 날짜를 해당 월 20일로 일괄 정리
+window.fixInstallmentDates = async function() {
+  var resultEl = document.getElementById('installFixResult');
+  resultEl.textContent = '정리 중...';
+  try {
+    var snap = await getDocs(query(collection(db,'records'), where('installment','==',true)));
+    var fixCount = 0;
+    var promises = [];
+    snap.forEach(function(docSnap){
+      var r = docSnap.data();
+      // 2회차 이상만 (1회차는 입력일 유지)
+      if(r.installmentIndex && r.installmentIndex >= 2 && r.date){
+        var parts = r.date.split('-');
+        var newDate = parts[0]+'-'+parts[1]+'-20'; // 같은 월의 20일
+        var newPeriod = getPeriodKey(new Date(parseInt(parts[0]), parseInt(parts[1])-1, 20));
+        if(r.date !== newDate || r.period !== newPeriod){
+          promises.push(updateDoc(doc(db,'records',docSnap.id), { date:newDate, period:newPeriod }));
+          fixCount++;
+        }
+      }
+    });
+    await Promise.all(promises);
+    resultEl.textContent = fixCount>0 ? ('✅ '+fixCount+'건 정리 완료!') : '✅ 정리할 항목이 없어요';
+    toast(fixCount>0 ? (fixCount+'건 정리됐어요 🔧') : '이미 정리되어 있어요');
+  } catch(e){
+    resultEl.textContent = '❌ 오류: '+e.message;
+    toast('정리 실패');
+  }
+};
+
 
 async function saveFcmToken() {
   if(!messaging || !currentUser) return;
