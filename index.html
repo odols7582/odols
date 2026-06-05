@@ -2757,10 +2757,12 @@ function renderRecords() {
     var hiddenRecs = showMore ? recs.slice(5) : [];
 
     function recHtml(r) {
-      var sign=r.type==='income'?'+':'-', pClass='p'+r.person;
+      var sign=r.type==='income'?'+':'-';
       var pEmoji=r.person===1?'🦡':'🦉', pName=r.person===1?'오소리':'부엉이';
       var cs = r.type==='income' ? {emoji:'💰',color:'#3182F6'} : getCatStyle(r.category);
-      // 할부 정보 (작게 88% 축소)
+      var barColor = r.type==='income' ? '#3182F6' : '#F04452';
+      var amtColor = r.type==='income' ? '#3182F6' : '#F04452';
+      // 할부 정보
       var isInst = r.installment && r.installmentTotal && r.installmentMonths;
       var isLast = isInst && r.installmentIndex === r.installmentMonths;
       var instInfo = '';
@@ -2770,33 +2772,34 @@ function renderRecords() {
         var paid = perM * r.installmentIndex; if(paid > r.installmentTotal) paid = r.installmentTotal;
         var remain = r.installmentTotal - paid;
         var remainCnt = r.installmentMonths - r.installmentIndex;
-        instInfo = '<div style="font-size:12px;color:var(--muted);font-weight:500;margin-top:1px;white-space:nowrap;transform:scale(.88);transform-origin:right;">총 '+fmt(r.installmentTotal)+'원</div>';
         if(isLast){
-          instInfo += '<div style="font-size:12px;color:#37B24D;font-weight:600;margin-top:1px;white-space:nowrap;transform:scale(.88);transform-origin:right;">완납 ✓</div>';
-          lastMsg = '<div style="font-size:12px;color:#E8590C;font-weight:700;margin-top:3px;line-height:1.3;">🎉 이번 달에 납부하면 해당 할부가 끝나요!</div>';
+          instInfo = '<div style="font-size:12px;color:var(--muted);margin-top:2px;">총 '+fmt(r.installmentTotal)+'원 · <span style="color:#37B24D;font-weight:600;">완납 ✓</span></div>';
+          lastMsg = '<div style="font-size:12px;color:#E8590C;font-weight:700;margin-top:2px;line-height:1.3;">🎉 이번 달에 납부하면 해당 할부가 끝나요!</div>';
         } else {
-          instInfo += '<div style="font-size:12px;color:#F06595;font-weight:600;margin-top:1px;white-space:nowrap;transform:scale(.88);transform-origin:right;">잔여 '+fmt(remain)+'원 ('+remainCnt+'회)</div>';
+          instInfo = '<div style="font-size:12px;color:var(--muted);margin-top:2px;">총 '+fmt(r.installmentTotal)+'원 · <span style="color:#F06595;font-weight:600;">잔여 '+fmt(remain)+'원 ('+remainCnt+'회)</span></div>';
         }
       }
-      // 카드명 짧게 ("신한 신용카드(오소리)" → "신한")
+      // 카드명 짧게
       function shortCard(p){
         if(!p) return '';
         var m = p.match(/^(신한|국민|삼성|백채|현대|롯데|하나|우리|농협|BC|카카오|토스|네이버)/);
         return m ? m[1] : p.replace(/\s*신용카드.*$/,'').replace(/\(.*\)/,'').trim() || p;
       }
-      // 메타 텍스트 (· 구분) + 카드칩
+      // 메타 한 줄
       var metaParts = [pEmoji+' '+esc(pName), esc(r.category)];
+      if(r.payment) metaParts.push(esc(shortCard(r.payment)));
       if(isInst) metaParts.push(isLast ? '🎉 마지막' : '💳'+r.installmentIndex+'/'+r.installmentMonths);
       var metaText = metaParts.join(' · ');
-      var cardChip = r.payment ? ' · <span style="display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:600;padding:1px 6px;border-radius:6px;background:#EEF1F4;color:#6B7684;transform:scale(.92);">💳'+esc(shortCard(r.payment))+'</span>' : '';
-      return '<div style="display:flex;align-items:center;gap:11px;padding:11px 4px;border-bottom:1px solid var(--border);">'+
-        '<div style="width:44px;height:44px;border-radius:12px;background:'+cs.color+'1A;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">'+cs.emoji+'</div>'+
+      return '<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);border-left:3px solid '+barColor+';">'+
+        '<span style="font-size:20px;flex-shrink:0;">'+cs.emoji+'</span>'+
         '<div style="flex:1;min-width:0;">'+
-          '<div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.3;word-break:break-all;">'+esc(r.memo||r.category)+'</div>'+
-          lastMsg+
-          '<div style="font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+metaText+cardChip+'</div>'+
+          '<div style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;">'+esc(r.memo||r.category)+'</div>'+
+          '<div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+metaText+'</div>'+
+          instInfo+lastMsg+
         '</div>'+
-        '<div style="flex-shrink:0;text-align:right;"><div class="rec-amt '+r.type+'">'+sign+fmt(r.amount)+'원</div>'+instInfo+'</div>'+
+        '<div style="flex-shrink:0;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:80px;">'+
+          '<div style="font-size:15px;font-weight:800;color:'+amtColor+';">'+sign+fmt(r.amount)+'원</div>'+
+        '</div>'+
         '<button class="rec-del" style="color:var(--p1);flex-shrink:0;" onclick="openEditModal(\''+r.id+'\')">✏️</button>'+
         '<button class="rec-del" style="color:#F04452;flex-shrink:0;" onclick="openDeleteModal(\''+r.id+'\')">🗑</button>'+
       '</div>';
