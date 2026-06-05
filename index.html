@@ -2851,40 +2851,46 @@ function renderCharts() {
         }
       }
     });
-  // 카테고리 범례 → 엑셀 스타일 테이블
-  var tableColors = ['rgba(0,229,255,.08)','rgba(204,255,0,.08)','rgba(255,159,28,.08)','rgba(167,139,250,.08)','rgba(255,87,87,.08)','rgba(0,229,255,.06)','rgba(251,191,36,.08)','rgba(59,130,246,.08)','rgba(255,110,199,.08)','rgba(74,222,128,.08)','rgba(255,87,87,.06)','rgba(5,150,105,.08)'];
-  var tableHtml = '<div style="overflow-x:auto;margin-top:14px;">'+
-    '<table style="width:100%;border-collapse:collapse;font-size:14px;">'+
-    '<thead>'+
-      '<tr style="background:#191F28;">'+
-        '<th style="padding:11px 12px;text-align:left;color:#fff;font-weight:700;border:1px solid #374151;font-size:13px;">항목</th>'+
-        '<th style="padding:11px 12px;text-align:right;color:#fff;font-weight:700;border:1px solid #374151;font-size:13px;">당월</th>'+
-        '<th style="padding:11px 12px;text-align:right;color:#fff;font-weight:700;border:1px solid #374151;font-size:13px;">전월</th>'+
-        '<th style="padding:11px 12px;text-align:right;color:#fff;font-weight:700;border:1px solid #374151;font-size:13px;">증감액</th>'+
-      '</tr>'+
-    '</thead>'+
-    '<tbody>'+
-    cL.map(function(l, i){
-      var cur = catMap[l]||0, prev = prevCatMap[l]||0;
-      var diff = cur - prev;
-      var diffColor = diff > 0 ? '#F04452' : diff < 0 ? '#00B488' : '#8B95A1';
-      var diffStr = diff === 0 ? '-' : (diff>0?'▲ +':' ▼ ')+fmt(Math.abs(diff));
-      var bg = tableColors[i % tableColors.length];
-      return '<tr style="background:'+bg+';">'+
-        '<td style="padding:11px 12px;font-weight:700;color:var(--text);border:1px solid var(--border);font-size:14px;">'+esc(l)+'</td>'+
-        '<td style="padding:11px 12px;text-align:right;font-weight:700;color:var(--text);border:1px solid var(--border);font-size:14px;">'+fmt(cur)+'원</td>'+
-        '<td style="padding:11px 12px;text-align:right;font-weight:600;color:var(--sub);border:1px solid var(--border);font-size:14px;">'+fmt(prev)+'원</td>'+
-        '<td style="padding:11px 12px;text-align:right;font-weight:700;color:'+diffColor+';border:1px solid var(--border);font-size:14px;">'+diffStr+'</td>'+
-      '</tr>';
-    }).join('')+
-    '<tr style="background:#191F28;">'+
-      '<td style="padding:11px 12px;font-weight:700;color:#fff;border:1px solid #374151;font-size:14px;">합계</td>'+
-      '<td style="padding:11px 12px;text-align:right;font-weight:700;color:#fff;border:1px solid #374151;font-size:14px;">'+fmt(cD.reduce(function(a,b){return a+b;},0))+'원</td>'+
-      '<td style="padding:11px 12px;text-align:right;font-weight:700;color:#fff;border:1px solid #374151;font-size:14px;">'+fmt(Object.values(prevCatMap).reduce(function(a,b){return a+b;},0))+'원</td>'+
-      '<td style="padding:11px 12px;text-align:right;font-weight:700;border:1px solid #374151;font-size:14px;color:'+(cD.reduce(function(a,b){return a+b;},0)-Object.values(prevCatMap).reduce(function(a,b){return a+b;},0)>0?'#FCA5A5':'#86EFAC')+';">'+
-        (function(){var t=cD.reduce(function(a,b){return a+b;},0)-Object.values(prevCatMap).reduce(function(a,b){return a+b;},0);return t===0?'-':(t>0?'▲ +':'▼ ')+fmt(Math.abs(t));})()+'</td>'+
-    '</tr>'+
-    '</tbody></table></div>';
+  // 카테고리 범례 → 카드형 전월비교
+  var tableHtml = cL.map(function(l, i){
+    var cur = catMap[l]||0, prev = prevCatMap[l]||0;
+    var diff = cur - prev;
+    var diffColor = diff > 0 ? '#F04452' : diff < 0 ? '#00B488' : 'var(--muted)';
+    var diffStr = diff === 0 ? '변동없음' : (diff>0?'▲ +':'▼ ')+fmt(Math.abs(diff))+'원';
+    var cs = getCatStyle(l);
+    var maxCur = Math.max.apply(null, cD);
+    var pct = maxCur>0 ? Math.round(cur/maxCur*100) : 0;
+    return '<div style="background:var(--surface2);border-radius:12px;padding:11px 13px;margin-bottom:7px;">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">'+
+        '<span style="font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;">'+
+          '<span style="width:22px;height:22px;border-radius:7px;background:'+cs.color+'1A;display:inline-flex;align-items:center;justify-content:center;font-size:12px;">'+cs.emoji+'</span>'+
+          esc(l)+
+        '</span>'+
+        '<div style="text-align:right;">'+
+          '<span style="font-size:13px;font-weight:800;color:var(--text);">'+fmt(cur)+'원</span>'+
+          '<span style="font-size:10px;color:'+diffColor+';font-weight:600;margin-left:6px;">'+diffStr+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:6px;">'+
+        '<div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;">'+
+          '<div style="height:100%;width:'+pct+'%;background:'+cs.color+';border-radius:3px;"></div>'+
+        '</div>'+
+        '<span style="font-size:10px;color:var(--muted);min-width:60px;text-align:right;">전월 '+fmt(prev)+'</span>'+
+      '</div>'+
+    '</div>';
+  }).join('')+
+  // 합계
+  (function(){
+    var tCur=cD.reduce(function(a,b){return a+b;},0);
+    var tPrev=Object.values(prevCatMap).reduce(function(a,b){return a+b;},0);
+    var tDiff=tCur-tPrev;
+    var tcStr=tDiff===0?'변동없음':(tDiff>0?'▲ +':'▼ ')+fmt(Math.abs(tDiff))+'원';
+    return '<div style="background:var(--p1);border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;margin-top:4px;">'+
+      '<span style="font-size:12px;font-weight:700;color:#fff;">합계</span>'+
+      '<div style="text-align:right;"><div style="font-size:14px;font-weight:800;color:#fff;">'+fmt(tCur)+'원</div>'+
+      '<div style="font-size:10px;color:rgba(255,255,255,.85);">전월 '+fmt(tPrev)+'원 · '+tcStr+'</div></div>'+
+    '</div>';
+  })();
   document.getElementById('catLegend').innerHTML = tableHtml;
   } else { document.getElementById('catLegend').innerHTML=''; }
 
