@@ -3212,6 +3212,7 @@ var prevUnsub = null;
 
 function subscribePrevRecords() {
   if(prevUnsub) prevUnsub();
+  window.prevRecords = []; // 월 전환 시 즉시 초기화
   var parts = currentKey.split('-');
   var py = parseInt(parts[0]), pm = parseInt(parts[1])-1;
   if(pm<1){pm=12;py-=1;}
