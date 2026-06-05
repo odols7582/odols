@@ -2773,10 +2773,10 @@ function renderRecords() {
         var remain = r.installmentTotal - paid;
         var remainCnt = r.installmentMonths - r.installmentIndex;
         if(isLast){
-          instInfo = '<div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;">총 '+fmt(r.installmentTotal)+'원 · <span style="color:#37B24D;font-weight:600;">완납 ✓</span></div>';
-          lastMsg = '<div style="font-size:12px;color:#E8590C;font-weight:700;margin-top:2px;line-height:1.3;">🎉 이번 달에 납부하면 해당 할부가 끝나요!</div>';
+          instInfo = '<div style="font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">총 '+fmt(r.installmentTotal)+'원 · <span style="color:#37B24D;font-weight:600;">완납 ✓</span></div>';
+          lastMsg = '<div style="font-size:10px;color:#E8590C;font-weight:700;margin-top:2px;">🎉 이번 달에 납부하면 해당 할부가 끝나요!</div>';
         } else {
-          instInfo = '<div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">총 '+fmt(r.installmentTotal)+'원 · <span style="color:#F06595;font-weight:600;">잔여 '+fmt(remain)+'원 ('+remainCnt+'회)</span></div>';
+          instInfo = '<div style="font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">총 '+fmt(r.installmentTotal)+'원 · <span style="color:#F06595;font-weight:600;">잔여 '+fmt(remain)+'원 ('+remainCnt+'회)</span></div>';
         }
       }
       // 카드명 짧게
@@ -2790,18 +2790,18 @@ function renderRecords() {
       if(r.payment) metaParts.push(esc(shortCard(r.payment)));
       if(isInst) metaParts.push(isLast ? '🎉 마지막' : '💳'+r.installmentIndex+'/'+r.installmentMonths);
       var metaText = metaParts.join(' · ');
-      return '<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);border-left:3px solid '+barColor+';">'+
-        '<span style="font-size:20px;flex-shrink:0;">'+cs.emoji+'</span>'+
+      return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);border-left:3px solid '+barColor+';">'+
+        '<span style="font-size:18px;flex-shrink:0;margin-top:1px;">'+cs.emoji+'</span>'+
         '<div style="flex:1;min-width:0;">'+
-          '<div style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;">'+esc(r.memo||r.category)+'</div>'+
-          '<div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+metaText+'</div>'+
+          '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:2px;">'+
+            '<span style="font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;">'+esc(r.memo||r.category)+'</span>'+
+            '<span style="font-size:13px;font-weight:800;color:'+amtColor+';white-space:nowrap;flex-shrink:0;">'+sign+fmt(r.amount)+'원</span>'+
+          '</div>'+
+          '<div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+metaText+'</div>'+
           instInfo+lastMsg+
         '</div>'+
-        '<div style="flex-shrink:0;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:60px;">'+
-          '<div style="font-size:15px;font-weight:800;color:'+amtColor+';">'+sign+fmt(r.amount)+'원</div>'+
-        '</div>'+
-        '<button class="rec-del" style="color:var(--p1);flex-shrink:0;" onclick="openEditModal(\''+r.id+'\')">✏️</button>'+
-        '<button class="rec-del" style="color:#F04452;flex-shrink:0;" onclick="openDeleteModal(\''+r.id+'\')">🗑</button>'+
+        '<button class="rec-del" style="color:var(--p1);flex-shrink:0;margin-top:1px;" onclick="openEditModal(\''+r.id+'\')">✏️</button>'+
+        '<button class="rec-del" style="color:#F04452;flex-shrink:0;margin-top:1px;" onclick="openDeleteModal(\''+r.id+'\')">🗑</button>'+
       '</div>';
     }
 
