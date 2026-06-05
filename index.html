@@ -2535,21 +2535,45 @@ window.fixInstallmentDates = async function() {
   resultEl.textContent = '정리 중...';
   try {
     var snap = await getDocs(query(collection(db,'records'), where('installment','==',true)));
-    var fixCount = 0;
-    var promises = [];
+    // 같은 할부끼리 그룹핑
+    var groups = {};
     snap.forEach(function(docSnap){
       var r = docSnap.data();
-      // 2회차 이상만 (1회차는 입력일 유지)
-      if(r.installmentIndex && r.installmentIndex >= 2 && r.date){
-        var parts = r.date.split('-');
-        var newDate = parts[0]+'-'+parts[1]+'-20'; // 같은 월의 20일
-        var newPeriod = getPeriodKey(new Date(parseInt(parts[0]), parseInt(parts[1])-1, 20));
-        if(r.date !== newDate || r.period !== newPeriod){
-          promises.push(updateDoc(doc(db,'records',docSnap.id), { date:newDate, period:newPeriod }));
+      if(!r.installmentMonths || !r.installmentIndex) return;
+      var pureMemo = (r.memo||'').replace(/\s*\(\d+개월 할부 \d+\/\d+\)\s*$/, '');
+      var key = pureMemo+'|'+r.installmentTotal+'|'+r.installmentMonths+'|'+(r.addedBy||'')+'|'+(r.category||'');
+      if(!groups[key]) groups[key] = [];
+      groups[key].push({ id:docSnap.id, data:r });
+    });
+
+    var fixCount = 0;
+    var promises = [];
+    Object.keys(groups).forEach(function(key){
+      var items = groups[key];
+      // 1회차 찾기
+      var first = items.find(function(it){ return it.data.installmentIndex === 1; });
+      if(!first || !first.data.date) return;
+      // 1회차 결제주기(period) 기준
+      var baseParts = first.data.date.split('-');
+      var basePeriod = getPeriodKey(new Date(parseInt(baseParts[0]), parseInt(baseParts[1])-1, parseInt(baseParts[2])));
+      var bp = basePeriod.split('-');
+      var baseY = parseInt(bp[0]), baseM = parseInt(bp[1]);
+
+      items.forEach(function(it){
+        var idx = it.data.installmentIndex;
+        if(idx === 1) return; // 1회차는 입력일 유지
+        // 1회차 결제주기 + (회차-1) 달 → 그 달 20일
+        var tY = baseY, tM = baseM + (idx - 1);
+        while(tM > 12){ tM -= 12; tY += 1; }
+        var newDate = tY+'-'+String(tM).padStart(2,'0')+'-20';
+        var newPeriod = tY+'-'+String(tM).padStart(2,'0');
+        if(it.data.date !== newDate || it.data.period !== newPeriod){
+          promises.push(updateDoc(doc(db,'records',it.id), { date:newDate, period:newPeriod }));
           fixCount++;
         }
-      }
+      });
     });
+
     await Promise.all(promises);
     resultEl.textContent = fixCount>0 ? ('✅ '+fixCount+'건 정리 완료!') : '✅ 정리할 항목이 없어요';
     toast(fixCount>0 ? (fixCount+'건 정리됐어요 🔧') : '이미 정리되어 있어요');
