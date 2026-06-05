@@ -2764,8 +2764,8 @@ function renderRecords() {
       var isInst = r.installment && r.installmentTotal && r.installmentMonths;
       var isLast = isInst && r.installmentIndex === r.installmentMonths;
       var instInfo = '';
-      var instTag = '';
       var lastMsg = '';
+      var instLabel = '';
       if(isInst){
         var perM = Math.ceil(r.installmentTotal / r.installmentMonths);
         var paid = perM * r.installmentIndex; if(paid > r.installmentTotal) paid = r.installmentTotal;
@@ -2774,19 +2774,23 @@ function renderRecords() {
         instInfo = '<div style="font-size:12px;color:var(--muted);font-weight:500;margin-top:2px;white-space:nowrap;">총 '+fmt(r.installmentTotal)+'원</div>';
         if(isLast){
           instInfo += '<div style="font-size:12px;color:#37B24D;font-weight:600;margin-top:1px;white-space:nowrap;">완납 ✓</div>';
-          instTag = '<span class="tag" style="background:#FFF3BF;color:#E8590C;font-weight:700;">🎉 마지막</span>';
           lastMsg = '<div style="font-size:12px;color:#E8590C;font-weight:700;margin-top:3px;">🎉 이번 달에 납부하면 해당 할부가 끝나요!</div>';
         } else {
           instInfo += '<div style="font-size:12px;color:#F06595;font-weight:600;margin-top:1px;white-space:nowrap;">잔여 '+fmt(remain)+'원 ('+remainCnt+'회)</div>';
-          instTag = '<span class="tag" style="background:rgba(49,130,246,.12);color:#3182F6;font-weight:700;">💳 '+r.installmentIndex+'/'+r.installmentMonths+'</span>';
         }
       }
-      return '<div style="display:flex;align-items:flex-start;gap:11px;padding:10px 6px;border-bottom:1px solid var(--border);">'+
-        '<div style="width:38px;height:38px;border-radius:11px;background:'+cs.color+'1A;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">'+cs.emoji+'</div>'+
-        '<div class="rec-info" style="flex:1;min-width:0;"><div class="rec-place">'+esc(r.memo||r.category)+'</div>'+lastMsg+
-        '<div class="rec-meta"><span class="badge '+pClass+'">'+pEmoji+' '+esc(pName)+'</span>'+
-        '<span class="tag">'+esc(r.category)+'</span>'+(r.payment?'<span class="tag">'+esc(r.payment)+'</span>':'')+instTag+
-        '</div></div>'+
+      // 메타 텍스트 (· 구분)
+      var metaParts = [pEmoji+' '+esc(pName), esc(r.category)];
+      if(r.payment) metaParts.push(esc(r.payment));
+      if(isInst) metaParts.push(isLast ? '🎉 마지막' : '💳 '+r.installmentIndex+'/'+r.installmentMonths);
+      var metaText = metaParts.join(' · ');
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--border);">'+
+        '<div style="width:46px;height:46px;border-radius:13px;background:'+cs.color+'1A;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">'+cs.emoji+'</div>'+
+        '<div style="flex:1;min-width:0;">'+
+          '<div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(r.memo||r.category)+'</div>'+
+          lastMsg+
+          '<div style="font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+metaText+'</div>'+
+        '</div>'+
         '<div style="flex-shrink:0;text-align:right;"><div class="rec-amt '+r.type+'">'+sign+fmt(r.amount)+'원</div>'+instInfo+'</div>'+
         '<button class="rec-del" style="color:var(--p1);flex-shrink:0;" onclick="openEditModal(\''+r.id+'\')">✏️</button>'+
         '<button class="rec-del" style="color:#F04452;flex-shrink:0;" onclick="openDeleteModal(\''+r.id+'\')">🗑</button>'+
