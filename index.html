@@ -2692,14 +2692,34 @@ function renderRecords() {
       var sign=r.type==='income'?'+':'-', pClass='p'+r.person;
       var pEmoji=r.person===1?'🦡':'🦉', pName=r.person===1?'오소리':'부엉이';
       var cs = r.type==='income' ? {emoji:'💰',color:'#3182F6'} : getCatStyle(r.category);
-      var instTotal = (r.installment && r.installmentTotal) ? '<div style="font-size:10px;color:var(--muted);font-weight:500;margin-top:2px;white-space:nowrap;">총 '+fmt(r.installmentTotal)+'원</div>' : '';
+      // 할부 정보
+      var isInst = r.installment && r.installmentTotal && r.installmentMonths;
+      var isLast = isInst && r.installmentIndex === r.installmentMonths;
+      var instInfo = '';
+      var instTag = '';
+      var lastMsg = '';
+      if(isInst){
+        var perM = Math.ceil(r.installmentTotal / r.installmentMonths);
+        var paid = perM * r.installmentIndex; if(paid > r.installmentTotal) paid = r.installmentTotal;
+        var remain = r.installmentTotal - paid;
+        var remainCnt = r.installmentMonths - r.installmentIndex;
+        instInfo = '<div style="font-size:10px;color:var(--muted);font-weight:500;margin-top:2px;white-space:nowrap;">총 '+fmt(r.installmentTotal)+'원</div>';
+        if(isLast){
+          instInfo += '<div style="font-size:10px;color:#37B24D;font-weight:600;margin-top:1px;white-space:nowrap;">완납 ✓</div>';
+          instTag = '<span class="tag" style="background:#FFF3BF;color:#E8590C;font-weight:700;">🎉 마지막</span>';
+          lastMsg = '<div style="font-size:11px;color:#E8590C;font-weight:700;margin-top:3px;">🎉 이번 달에 납부하면 해당 할부가 끝나요!</div>';
+        } else {
+          instInfo += '<div style="font-size:10px;color:#F06595;font-weight:600;margin-top:1px;white-space:nowrap;">잔여 '+fmt(remain)+'원 ('+remainCnt+'회)</div>';
+          instTag = '<span class="tag" style="background:rgba(49,130,246,.12);color:#3182F6;font-weight:700;">💳 '+r.installmentIndex+'/'+r.installmentMonths+'</span>';
+        }
+      }
       return '<div style="display:flex;align-items:flex-start;gap:11px;padding:10px 6px;border-bottom:1px solid var(--border);">'+
         '<div style="width:38px;height:38px;border-radius:11px;background:'+cs.color+'1A;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">'+cs.emoji+'</div>'+
-        '<div class="rec-info" style="flex:1;min-width:0;"><div class="rec-place">'+esc(r.memo||r.category)+'</div>'+
+        '<div class="rec-info" style="flex:1;min-width:0;"><div class="rec-place">'+esc(r.memo||r.category)+'</div>'+lastMsg+
         '<div class="rec-meta"><span class="badge '+pClass+'">'+pEmoji+' '+esc(pName)+'</span>'+
-        '<span class="tag">'+esc(r.category)+'</span>'+(r.payment?'<span class="tag">'+esc(r.payment)+'</span>':'')+
+        '<span class="tag">'+esc(r.category)+'</span>'+(r.payment?'<span class="tag">'+esc(r.payment)+'</span>':'')+instTag+
         '</div></div>'+
-        '<div style="flex-shrink:0;text-align:right;"><div class="rec-amt '+r.type+'">'+sign+fmt(r.amount)+'원</div>'+instTotal+'</div>'+
+        '<div style="flex-shrink:0;text-align:right;"><div class="rec-amt '+r.type+'">'+sign+fmt(r.amount)+'원</div>'+instInfo+'</div>'+
         '<button class="rec-del" style="color:var(--p1);flex-shrink:0;" onclick="openEditModal(\''+r.id+'\')">✏️</button>'+
         '<button class="rec-del" style="color:#F04452;flex-shrink:0;" onclick="openDeleteModal(\''+r.id+'\')">🗑</button>'+
       '</div>';
@@ -3768,15 +3788,23 @@ window.addExpense = async function(){
 
   try {
     if(isInstallment) {
-      // 할부: N개월에 걸쳐 분할 입력 (입력일 기준 한 달씩, 날짜 그대로)
+      // 할부: N개월에 걸쳐 분할 입력 (1회차 입력일, 2회차부터 매월 20일 고정)
       var perMonth = Math.ceil(amt / months);
       var last = amt - perMonth * (months - 1); // 마지막달 나머지
       var now = new Date();
       var promises = [];
       for(var i = 0; i < months; i++) {
-        var d = new Date(now.getFullYear(), now.getMonth() + i, now.getDate());
-        var dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-        var period = getPeriodKey(d);
+        var dateStr, period;
+        if(i === 0) {
+          // 1회차: 입력한 오늘 날짜 그대로
+          dateStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+          period = getPeriodKey(now);
+        } else {
+          // 2회차부터: 한 달씩 뒤로 + 무조건 20일
+          var d = new Date(now.getFullYear(), now.getMonth() + i, 20);
+          dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-20';
+          period = getPeriodKey(d);
+        }
         var monthAmt = (i === months-1) ? last : perMonth;
         promises.push(addDoc(collection(db,'records'),{
           type:'expense', amount:monthAmt, category:cat, payment:payment,
