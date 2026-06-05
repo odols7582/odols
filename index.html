@@ -2024,69 +2024,76 @@ function renderGroupExpense() {
   var grandTotal = groups.reduce(function(a,g){return a+(thisMap[g]||0);},0);
   var grandPrev = groups.reduce(function(a,g){return a+(prevMap[g]||0);},0);
 
-  // 대분류별 컬러
-  var groupColors = {
-    '🍽 식생활':'#FF922B','🚗 교통/이동':'#3182F6','🛍 쇼핑/생활':'#E64980',
-    '🏥 건강/의료':'#FA5252','🐾 애견':'#82C91E','🏠 주거/고정':'#7950F2',
-    '🎬 여가/문화':'#F783AC','📈 투자/저축':'#37B24D','📦 기타':'#868E96'
-  };
+  // 증감 표시 헬퍼 (금액)
+  function diffAmtHtml(cur, prev, big){
+    var d = cur - prev;
+    if(d===0) return '<span style="color:var(--muted);">-</span>';
+    var c = d>0?'#F04452':'#1971C2';
+    var tri = d>0?'▲':'▼';
+    var sign = d>0?'+':'-';
+    return '<span style="color:'+c+';font-weight:700;">'+tri+' '+sign+fmt(Math.abs(d))+'</span>';
+  }
+  // 증감률
+  function diffPctHtml(cur, prev){
+    if(prev===0){ return cur>0 ? '<span style="color:#F04452;font-weight:700;">신규</span>' : '<span style="color:var(--muted);">-</span>'; }
+    var p = Math.round((cur-prev)/prev*100);
+    if(p===0) return '<span style="color:var(--muted);">0%</span>';
+    var c = p>0?'#F04452':'#1971C2';
+    var tri = p>0?'▲':'▼';
+    var sign = p>0?'+':'';
+    return '<span style="color:'+c+';font-weight:700;">'+tri+sign+p+'%</span>';
+  }
 
-  var html = groups.map(function(g, i){
+  // 컬럼 헤더
+  var headerRow = '<div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:4px;padding:8px 10px;background:var(--surface3);border-radius:8px;margin-bottom:6px;font-size:10px;font-weight:700;color:var(--sub);">'+
+    '<span>항목</span>'+
+    '<span style="text-align:right;">전월 → 현월</span>'+
+    '<span style="text-align:right;">증감액 / 률</span>'+
+  '</div>';
+
+  var html = headerRow + groups.map(function(g, i){
     var cur = thisMap[g]||0, prev = prevMap[g]||0;
-    var diff = cur - prev;
-    var pct = grandTotal>0 ? Math.round(cur/grandTotal*100) : 0;
-    var color = groupColors[g] || '#868E96';
-    var diffColor = diff > 0 ? '#F04452' : diff < 0 ? '#00B488' : 'var(--muted)';
-    var diffStr = diff===0 ? '변동없음' : (diff>0?'▲ ':'▼ ')+fmt(Math.abs(diff))+'원';
+    var groupColor = '#7950F2';
 
     // 세부 카테고리
     var subCats = CAT_GROUPS[g].filter(function(c){
       var ct = records.filter(function(r){return r.type==='expense'&&r.category===c;}).reduce(function(a,r){return a+r.amount;},0);
-      return ct>0;
+      var cp = (window.prevRecords||[]).filter(function(r){return r.type==='expense'&&r.category===c;}).reduce(function(a,r){return a+r.amount;},0);
+      return ct>0||cp>0;
     }).map(function(c){
       var ct = records.filter(function(r){return r.type==='expense'&&r.category===c;}).reduce(function(a,r){return a+r.amount;},0);
-      return {name:c, amt:ct};
-    }).sort(function(a,b){return b.amt-a.amt;});
+      var cp = (window.prevRecords||[]).filter(function(r){return r.type==='expense'&&r.category===c;}).reduce(function(a,r){return a+r.amount;},0);
+      return {name:c, cur:ct, prev:cp};
+    }).sort(function(a,b){return b.cur-a.cur;});
 
     var subHtml = subCats.map(function(sc){
-      var subPct = cur>0?Math.round(sc.amt/cur*100):0;
-      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:11px;">'+
-        '<span style="color:var(--sub);">'+esc(sc.name)+' <span style="color:var(--muted);">'+subPct+'%</span></span>'+
-        '<span style="font-weight:600;color:var(--text);">'+fmt(sc.amt)+'원</span>'+
+      var cs = getCatStyle(sc.name);
+      return '<div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:4px;padding:8px 10px;font-size:11px;align-items:center;border-top:1px solid var(--border);">'+
+        '<span style="color:var(--sub);font-weight:600;display:flex;align-items:center;gap:4px;">'+cs.emoji+' '+esc(sc.name)+'</span>'+
+        '<span style="text-align:right;color:var(--text);">'+fmt(sc.prev)+'<br><b>'+fmt(sc.cur)+'</b></span>'+
+        '<span style="text-align:right;font-size:10px;line-height:1.5;">'+diffAmtHtml(sc.cur,sc.prev)+'<br>'+diffPctHtml(sc.cur,sc.prev)+'</span>'+
       '</div>';
     }).join('');
 
-    return '<div style="background:var(--surface2);border-radius:14px;padding:14px;margin-bottom:8px;cursor:pointer;" onclick="toggleGroupDetail(\'gd_'+i+'\')">'+
-      // 헤더 줄
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+
-        '<span style="font-size:13px;font-weight:700;color:var(--text);">'+esc(g)+'</span>'+
-        '<div style="text-align:right;">'+
-          '<div style="font-size:14px;font-weight:800;color:var(--text);">'+fmt(cur)+'원</div>'+
-          '<div style="font-size:10px;color:'+diffColor+';font-weight:600;margin-top:1px;">'+diffStr+'</div>'+
-        '</div>'+
+    // 대분류 행
+    return '<div style="background:var(--surface2);border-radius:12px;margin-bottom:7px;overflow:hidden;">'+
+      '<div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:4px;padding:11px 10px;align-items:center;cursor:pointer;" onclick="toggleGroupDetail(\'gd_'+i+'\')">'+
+        '<span style="font-size:12px;font-weight:700;color:var(--text);">'+esc(g)+(subCats.length?' <span style="font-size:9px;color:var(--muted);">▼</span>':'')+'</span>'+
+        '<span style="text-align:right;font-size:11px;color:var(--text);">'+fmt(prev)+'<br><b style="font-size:13px;">'+fmt(cur)+'</b></span>'+
+        '<span style="text-align:right;font-size:11px;line-height:1.6;">'+diffAmtHtml(cur,prev)+'<br>'+diffPctHtml(cur,prev)+'</span>'+
       '</div>'+
-      // 진행바
-      '<div style="display:flex;align-items:center;gap:8px;">'+
-        '<div style="flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden;">'+
-          '<div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:4px;transition:width .5s;"></div>'+
-        '</div>'+
-        '<span style="font-size:11px;font-weight:700;color:'+color+';min-width:32px;text-align:right;">'+pct+'%</span>'+
-      '</div>'+
-      // 세부 (접힘)
-      (subCats.length?'<div id="gd_'+i+'" style="display:none;margin-top:10px;padding-top:8px;border-top:1px dashed var(--border2);">'+subHtml+'</div>':'')+
+      (subCats.length?'<div id="gd_'+i+'" style="display:none;background:var(--surface);">'+subHtml+'</div>':'')+
     '</div>';
   }).join('');
 
   // 합계 카드
-  var totalDiff = grandTotal - grandPrev;
-  var totalDiffColor = totalDiff>0?'#F04452':totalDiff<0?'#00B488':'var(--muted)';
-  var totalDiffStr = totalDiff===0?'변동없음':(totalDiff>0?'▲ +':'▼ ')+fmt(Math.abs(totalDiff))+'원';
-  html += '<div style="background:var(--p1);border-radius:14px;padding:14px;display:flex;align-items:center;justify-content:space-between;margin-top:4px;">'+
-    '<span style="font-size:13px;font-weight:700;color:#fff;">합계</span>'+
-    '<div style="text-align:right;">'+
-      '<div style="font-size:16px;font-weight:800;color:#fff;">'+fmt(grandTotal)+'원</div>'+
-      '<div style="font-size:10px;color:rgba(255,255,255,.85);margin-top:1px;">전월 '+fmt(grandPrev)+'원 · '+totalDiffStr+'</div>'+
-    '</div>'+
+  html += '<div style="background:var(--p1);border-radius:12px;padding:12px 10px;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:4px;align-items:center;margin-top:4px;">'+
+    '<span style="font-size:12px;font-weight:700;color:#fff;">합계</span>'+
+    '<span style="text-align:right;font-size:11px;color:rgba(255,255,255,.8);">'+fmt(grandPrev)+'<br><b style="font-size:14px;color:#fff;">'+fmt(grandTotal)+'</b></span>'+
+    '<span style="text-align:right;font-size:11px;line-height:1.6;color:#fff;">'+
+      (function(){var d=grandTotal-grandPrev;if(d===0)return '-';var tri=d>0?'▲':'▼';return tri+' '+(d>0?'+':'-')+fmt(Math.abs(d));})()+'<br>'+
+      (function(){if(grandPrev===0)return '신규';var p=Math.round((grandTotal-grandPrev)/grandPrev*100);var tri=p>0?'▲':'▼';return tri+(p>0?'+':'')+p+'%';})()+
+    '</span>'+
   '</div>';
 
   el.innerHTML = html;
@@ -2851,44 +2858,39 @@ function renderCharts() {
         }
       }
     });
-  // 카테고리 범례 → 카드형 전월비교
-  var tableHtml = cL.map(function(l, i){
+  // 카테고리 범례 → 4컬럼 비교표 (전월/현월/증감액/증감률)
+  function dAmt(cur, prev){
+    var d=cur-prev; if(d===0) return '<span style="color:var(--muted);">-</span>';
+    var c=d>0?'#F04452':'#1971C2'; var tri=d>0?'▲':'▼'; var sign=d>0?'+':'-';
+    return '<span style="color:'+c+';font-weight:700;">'+tri+' '+sign+fmt(Math.abs(d))+'</span>';
+  }
+  function dPct(cur, prev){
+    if(prev===0) return cur>0?'<span style="color:#F04452;font-weight:700;">신규</span>':'<span style="color:var(--muted);">-</span>';
+    var p=Math.round((cur-prev)/prev*100); if(p===0) return '<span style="color:var(--muted);">0%</span>';
+    var c=p>0?'#F04452':'#1971C2'; var tri=p>0?'▲':'▼'; var sign=p>0?'+':'';
+    return '<span style="color:'+c+';font-weight:700;">'+tri+sign+p+'%</span>';
+  }
+  var tableHtml = '<div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:4px;padding:8px 10px;background:var(--surface3);border-radius:8px;margin-bottom:6px;font-size:10px;font-weight:700;color:var(--sub);">'+
+      '<span>항목</span><span style="text-align:right;">전월 → 현월</span><span style="text-align:right;">증감액 / 률</span></div>'+
+    cL.map(function(l, i){
     var cur = catMap[l]||0, prev = prevCatMap[l]||0;
-    var diff = cur - prev;
-    var diffColor = diff > 0 ? '#F04452' : diff < 0 ? '#00B488' : 'var(--muted)';
-    var diffStr = diff === 0 ? '변동없음' : (diff>0?'▲ +':'▼ ')+fmt(Math.abs(diff))+'원';
     var cs = getCatStyle(l);
-    var maxCur = Math.max.apply(null, cD);
-    var pct = maxCur>0 ? Math.round(cur/maxCur*100) : 0;
-    return '<div style="background:var(--surface2);border-radius:12px;padding:11px 13px;margin-bottom:7px;">'+
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">'+
-        '<span style="font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;">'+
-          '<span style="width:22px;height:22px;border-radius:7px;background:'+cs.color+'1A;display:inline-flex;align-items:center;justify-content:center;font-size:12px;">'+cs.emoji+'</span>'+
-          esc(l)+
-        '</span>'+
-        '<div style="text-align:right;">'+
-          '<span style="font-size:13px;font-weight:800;color:var(--text);">'+fmt(cur)+'원</span>'+
-          '<span style="font-size:10px;color:'+diffColor+';font-weight:600;margin-left:6px;">'+diffStr+'</span>'+
-        '</div>'+
-      '</div>'+
-      '<div style="display:flex;align-items:center;gap:6px;">'+
-        '<div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;">'+
-          '<div style="height:100%;width:'+pct+'%;background:'+cs.color+';border-radius:3px;"></div>'+
-        '</div>'+
-        '<span style="font-size:10px;color:var(--muted);min-width:60px;text-align:right;">전월 '+fmt(prev)+'</span>'+
-      '</div>'+
+    return '<div style="background:var(--surface2);border-radius:10px;padding:10px;margin-bottom:6px;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:4px;align-items:center;">'+
+      '<span style="font-size:11px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px;">'+cs.emoji+' '+esc(l)+'</span>'+
+      '<span style="text-align:right;font-size:11px;color:var(--text);">'+fmt(prev)+'<br><b style="font-size:12px;">'+fmt(cur)+'</b></span>'+
+      '<span style="text-align:right;font-size:10px;line-height:1.6;">'+dAmt(cur,prev)+'<br>'+dPct(cur,prev)+'</span>'+
     '</div>';
   }).join('')+
-  // 합계
   (function(){
     var tCur=cD.reduce(function(a,b){return a+b;},0);
     var tPrev=Object.values(prevCatMap).reduce(function(a,b){return a+b;},0);
-    var tDiff=tCur-tPrev;
-    var tcStr=tDiff===0?'변동없음':(tDiff>0?'▲ +':'▼ ')+fmt(Math.abs(tDiff))+'원';
-    return '<div style="background:var(--p1);border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;margin-top:4px;">'+
-      '<span style="font-size:12px;font-weight:700;color:#fff;">합계</span>'+
-      '<div style="text-align:right;"><div style="font-size:14px;font-weight:800;color:#fff;">'+fmt(tCur)+'원</div>'+
-      '<div style="font-size:10px;color:rgba(255,255,255,.85);">전월 '+fmt(tPrev)+'원 · '+tcStr+'</div></div>'+
+    return '<div style="background:var(--p1);border-radius:10px;padding:11px 10px;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:4px;align-items:center;margin-top:4px;">'+
+      '<span style="font-size:11px;font-weight:700;color:#fff;">합계</span>'+
+      '<span style="text-align:right;font-size:11px;color:rgba(255,255,255,.8);">'+fmt(tPrev)+'<br><b style="font-size:12px;color:#fff;">'+fmt(tCur)+'</b></span>'+
+      '<span style="text-align:right;font-size:10px;line-height:1.6;color:#fff;">'+
+        (function(){var d=tCur-tPrev;if(d===0)return '-';var tri=d>0?'▲':'▼';return tri+' '+(d>0?'+':'-')+fmt(Math.abs(d));})()+'<br>'+
+        (function(){if(tPrev===0)return '신규';var p=Math.round((tCur-tPrev)/tPrev*100);var tri=p>0?'▲':'▼';return tri+(p>0?'+':'')+p+'%';})()+
+      '</span>'+
     '</div>';
   })();
   document.getElementById('catLegend').innerHTML = tableHtml;
