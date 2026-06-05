@@ -2773,10 +2773,10 @@ function renderRecords() {
         var remain = r.installmentTotal - paid;
         var remainCnt = r.installmentMonths - r.installmentIndex;
         if(isLast){
-          instInfo = '<div style="font-size:12px;color:var(--muted);margin-top:2px;">총 '+fmt(r.installmentTotal)+'원 · <span style="color:#37B24D;font-weight:600;">완납 ✓</span></div>';
+          instInfo = '<div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;">총 '+fmt(r.installmentTotal)+'원 · <span style="color:#37B24D;font-weight:600;">완납 ✓</span></div>';
           lastMsg = '<div style="font-size:12px;color:#E8590C;font-weight:700;margin-top:2px;line-height:1.3;">🎉 이번 달에 납부하면 해당 할부가 끝나요!</div>';
         } else {
-          instInfo = '<div style="font-size:12px;color:var(--muted);margin-top:2px;">총 '+fmt(r.installmentTotal)+'원 · <span style="color:#F06595;font-weight:600;">잔여 '+fmt(remain)+'원 ('+remainCnt+'회)</span></div>';
+          instInfo = '<div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">총 '+fmt(r.installmentTotal)+'원 · <span style="color:#F06595;font-weight:600;">잔여 '+fmt(remain)+'원 ('+remainCnt+'회)</span></div>';
         }
       }
       // 카드명 짧게
@@ -2797,7 +2797,7 @@ function renderRecords() {
           '<div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+metaText+'</div>'+
           instInfo+lastMsg+
         '</div>'+
-        '<div style="flex-shrink:0;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:80px;">'+
+        '<div style="flex-shrink:0;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:60px;">'+
           '<div style="font-size:15px;font-weight:800;color:'+amtColor+';">'+sign+fmt(r.amount)+'원</div>'+
         '</div>'+
         '<button class="rec-del" style="color:var(--p1);flex-shrink:0;" onclick="openEditModal(\''+r.id+'\')">✏️</button>'+
