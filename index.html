@@ -3570,43 +3570,43 @@ function renderCardSummary() {
   var inputDate = cardDataCache['input_date'] || '';
   var baseDate  = cardDataCache['base_date']  || '';
 
-  var html = '<div style="background:var(--surface);border-radius:14px;box-shadow:var(--shadow2);overflow:hidden;margin-bottom:10px;">'+
+  var html = '<div style="background:#FFE3EC;border-radius:14px;box-shadow:var(--shadow2);overflow:hidden;margin-bottom:10px;">'+
     '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 14px 8px;">'+
-      '<div style="font-size:15px;font-weight:700;color:var(--text);">💳 카드 결제 예상금액</div>'+
-      '<button onclick="openCardEditModal()" style="font-size:12px;font-weight:600;color:var(--p1);background:var(--p1-bg);border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-family:inherit;">✏️ 수정</button>'+
+      '<div style="font-size:13px;font-weight:700;color:#C2255C;">💳 카드 결제 예상금액</div>'+
+      '<button onclick="openCardEditModal()" style="font-size:11px;font-weight:600;color:#fff;background:#F06595;border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-family:inherit;">✏️ 수정</button>'+
     '</div>'+
     (inputDate||baseDate?
-      '<div style="padding:0 14px 8px;display:flex;gap:14px;font-size:12px;color:var(--muted);">'+
-        (inputDate?'<span>📅 입력일: <b style="color:var(--sub);">'+inputDate.slice(5).replace('-','/')+'</b></span>':'')+
-        (baseDate?'<span>📊 집계기준: <b style="color:var(--sub);">'+baseDate.slice(5).replace('-','/')+'</b></span>':'')+
+      '<div style="padding:0 14px 8px;display:flex;gap:14px;font-size:11px;color:#D6759C;">'+
+        (inputDate?'<span>📅 입력일: <b style="color:#C2255C;">'+inputDate.slice(5).replace('-','/')+'</b></span>':'')+
+        (baseDate?'<span>📊 집계기준: <b style="color:#C2255C;">'+baseDate.slice(5).replace('-','/')+'</b></span>':'')+
       '</div>':'')+
     rows.map(function(row){
       if(row.total===0&&!row.isPaid) return '';
-      return '<div style="padding:10px 14px;border-top:1px solid var(--border);">'+
+      return '<div style="padding:10px 14px;border-top:1px solid #FBCAD9;">'+
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'+
           '<div>'+
-            '<span style="font-size:14px;font-weight:700;color:var(--text);">'+esc(row.c.name)+'</span>'+
+            '<span style="font-size:12px;font-weight:700;color:#86214A;">'+esc(row.c.name)+'</span>'+
             (row.c.auto?'<span style="font-size:10px;font-weight:600;color:#059669;background:#D1FAE5;padding:2px 6px;border-radius:10px;margin-left:6px;">자동집계</span>':'')+
           '</div>'+
           '<div style="display:flex;align-items:center;gap:8px;">'+
-            '<span style="font-size:16px;font-weight:800;color:'+(row.isPaid?'var(--muted)':row.c.color)+';'+(row.isPaid?'text-decoration:line-through;':'')+'">'+fmt(row.total)+'원</span>'+
-            '<button onclick="toggleCardPaid(\''+row.c.key+'\')" style="background:'+(row.isPaid?'var(--surface2)':'var(--p1)')+';color:'+(row.isPaid?'var(--muted)':'#fff')+';border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">'+(row.isPaid?'취소':'납부완료')+'</button>'+
+            '<span style="font-size:14px;font-weight:800;color:'+(row.isPaid?'#C99':'#C2255C')+';'+(row.isPaid?'text-decoration:line-through;':'')+'">'+fmt(row.total)+'원</span>'+
+            '<button onclick="toggleCardPaid(\''+row.c.key+'\')" style="background:'+(row.isPaid?'#FBCAD9':'#F06595')+';color:'+(row.isPaid?'#C2255C':'#fff')+';border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">'+(row.isPaid?'취소':'납부완료')+'</button>'+
           '</div>'+
         '</div>'+
-        '<div style="display:flex;gap:12px;font-size:12px;color:var(--muted);">'+
+        '<div style="display:flex;gap:12px;font-size:11px;color:#D6759C;">'+
           (row.c.auto?'<span>가계부 입력 합계</span>':'')+
           (!row.c.auto&&row.lump>0?'<span>일시불: '+fmt(row.lump)+'원</span>':'')+
           (!row.c.auto&&row.inst>0?'<span>할부: '+fmt(row.inst)+'원</span>':'')+
-          (row.isPaid?'<span style="color:var(--p1);">✅ 납부완료</span>':'')+
+          (row.isPaid?'<span style="color:#F06595;">✅ 납부완료</span>':'')+
         '</div>'+
       '</div>';
     }).join('')+
     (grandTotal>0?
-      '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--surface2);border-top:1px solid var(--border);">'+
-        '<span style="font-size:14px;font-weight:700;color:var(--sub);">이번달 총 예상</span>'+
-        '<span style="font-size:18px;font-weight:800;color:var(--expense);">'+fmt(grandTotal)+'원</span>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#FBCAD9;border-top:1px solid #F8B0C8;">'+
+        '<span style="font-size:12px;font-weight:700;color:#86214A;">이번달 총 예상</span>'+
+        '<span style="font-size:16px;font-weight:800;color:#C2255C;">'+fmt(grandTotal)+'원</span>'+
       '</div>':
-      '<div style="padding:12px 14px;font-size:14px;color:var(--muted);">✏️ 수정 버튼을 눌러 카드별 금액을 입력해주세요</div>')+
+      '<div style="padding:12px 14px;font-size:12px;color:#D6759C;">✏️ 수정 버튼을 눌러 카드별 금액을 입력해주세요</div>')+
   '</div>';
 
   // 수정 모달 (백채 제외 수기입력만)
