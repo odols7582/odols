@@ -3768,28 +3768,15 @@ window.addExpense = async function(){
 
   try {
     if(isInstallment) {
-      // 할부: N개월에 걸쳐 분할 입력
+      // 할부: N개월에 걸쳐 분할 입력 (입력일 기준 한 달씩, 날짜 그대로)
       var perMonth = Math.ceil(amt / months);
       var last = amt - perMonth * (months - 1); // 마지막달 나머지
       var now = new Date();
-      var firstPeriod = getPeriodKey(now); // 첫 달 결제주기
       var promises = [];
-      // 첫 달 period의 연/월 파싱
-      var fp = firstPeriod.split('-');
-      var fpY = parseInt(fp[0]), fpM = parseInt(fp[1]);
       for(var i = 0; i < months; i++) {
-        var dateStr, period;
-        if(i === 0) {
-          // 첫 달: 입력한 오늘 날짜 그대로
-          dateStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-          period = firstPeriod;
-        } else {
-          // 다음 달부터: 해당 결제주기 시작일(20일)에 입력
-          var tY = fpY, tM = fpM + i;
-          while(tM > 12){ tM -= 12; tY += 1; }
-          period = tY+'-'+String(tM).padStart(2,'0');
-          dateStr = period+'-20'; // 결제주기 시작일
-        }
+        var d = new Date(now.getFullYear(), now.getMonth() + i, now.getDate());
+        var dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        var period = getPeriodKey(d);
         var monthAmt = (i === months-1) ? last : perMonth;
         promises.push(addDoc(collection(db,'records'),{
           type:'expense', amount:monthAmt, category:cat, payment:payment,
