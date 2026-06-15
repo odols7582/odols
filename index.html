@@ -756,7 +756,27 @@
     </div>
   </div>
 
-  <!-- 공동 저축 목표 관리 -->
+  <!-- 계좌번호 메모 -->
+  <div class="section-block" style="margin-bottom:12px;">
+    <div class="section-block-header" onclick="toggleSection('acctBlock')" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);color:#fff;">
+      <span>🏦 계좌번호 메모</span>
+      <span class="section-toggle" id="acctBlockArrow">▼</span>
+    </div>
+    <div id="acctBlock" style="display:none;padding:16px;background:var(--surface2);">
+      <div id="acctList" style="margin-bottom:10px;"></div>
+      <button onclick="toggleSection('acctAddForm');document.getElementById('acctAddFormArrow').textContent=document.getElementById('acctAddForm').style.display==='none'?'▲':'▼'" style="width:100%;padding:11px;background:#EFF6FF;color:#3182F6;border:1px dashed #3182F6;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">+ 계좌 추가</button>
+      <div id="acctAddForm" style="display:none;background:var(--surface);border-radius:12px;padding:14px;margin-top:8px;border:1px solid var(--border);">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div><label class="flabel">예금주</label><input class="finput" id="acctHolder" placeholder="예: 현석"></div>
+          <div><label class="flabel">은행명</label><input class="finput" id="acctBank" placeholder="예: 우리은행"></div>
+        </div>
+        <div class="fgroup"><label class="flabel">계좌번호</label><input class="finput" id="acctNum" placeholder="예: 1002-123-456789"></div>
+        <button class="submit-btn" onclick="addAcct()" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);">저장</button>
+      </div>
+    </div>
+  </div>
+
+
   <div class="section-block" style="box-shadow:var(--shadow);margin-bottom:12px;">
     <div class="section-block-header" onclick="toggleSection('goalBlock')" style="background:linear-gradient(135deg,#059669,#10B981);color:#fff;">
       <span>🎯 공동 저축 목표</span>
@@ -1371,6 +1391,7 @@ function showMain() {
   try { subscribeWishes(); } catch(e){ console.error('wish 오류:', e); }
   try { subscribeDiaries(); } catch(e){ console.error('diary 오류:', e); }
   try { subscribeGoals(); } catch(e){ console.error('goals 오류:', e); }
+  try { loadAccts(); } catch(e){ console.error('accts 오류:', e); }
   bindKeys();
   checkNotifStatus();
   if(deferredPrompt) document.getElementById('pwaBanner').style.display = 'flex';
@@ -1978,28 +1999,29 @@ function renderBudgetStatusHome() {
     if(r.type==='expense' && investCats.indexOf(r.category)<0)
       catMap[r.category]=(catMap[r.category]||0)+r.amount;
   });
-  // 예산 설정된 카테고리만 표시
-  var overItems = keys.filter(function(cat){ return catMap[cat] > 0; });
-  if(!overItems.length){ el.innerHTML=''; return; }
 
   var html = '<div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:12px;">'+
     '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;">💸 이번달 예산 현황</div>'+
-    overItems.map(function(cat){
+    keys.map(function(cat){
       var spent = catMap[cat]||0;
       var budget = budgets[cat];
       var ratio = Math.min(Math.round(spent/budget*100),100);
       var over = spent > budget;
       var barColor = over?'#F04452':ratio>80?'#F5A623':'#00B488';
+      var cs = getCatStyle(cat);
       return '<div style="margin-bottom:10px;">'+
-        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'+
-          '<span style="font-size:12px;font-weight:600;">'+esc(cat)+'</span>'+
-          '<span style="font-size:12px;font-weight:700;color:'+(over?'#F04452':'var(--sub)')+';">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;align-items:center;">'+
+          '<span style="font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px;">'+cs.emoji+' '+esc(cat)+'</span>'+
+          '<span style="font-size:12px;font-weight:700;color:'+(over?'#F04452':spent===0?'var(--muted)':'var(--sub)')+';">'+
             (over?'⚠️ ':'')+fmt(spent)+' / '+fmt(budget)+'원'+
           '</span>'+
         '</div>'+
         '<div style="background:var(--bg);border-radius:99px;height:8px;overflow:hidden;">'+
-          '<div style="background:'+barColor+';height:100%;width:'+ratio+'%;border-radius:99px;"></div>'+
+          '<div style="background:'+(spent===0?'var(--border)':barColor)+';height:100%;width:'+(spent===0?0:ratio)+'%;border-radius:99px;"></div>'+
         '</div>'+
+        (over?'<div style="font-size:11px;color:#F04452;margin-top:3px;font-weight:600;">⚠️ 예산 '+fmt(spent-budget)+'원 초과!</div>':
+         spent===0?'<div style="font-size:11px;color:var(--muted);margin-top:3px;">이번달 지출 없음</div>':
+         '<div style="font-size:11px;color:var(--muted);margin-top:3px;">'+ratio+'% 사용 · 남은 예산 '+fmt(budget-spent)+'원</div>')+
       '</div>';
     }).join('')+
   '</div>';
@@ -2697,6 +2719,89 @@ window.fixInstallmentDates = async function() {
     toast('정리 실패');
   }
 };
+
+// ── 계좌번호 메모 ──────────────────────────────────
+var acctList = [];
+
+function loadAccts() {
+  getDoc(doc(db,'settings','accounts')).then(function(d){
+    acctList = d.exists() ? (d.data().list||[]) : [];
+    renderAcctList();
+  }).catch(function(){ acctList=[]; renderAcctList(); });
+}
+
+function saveAccts() {
+  setDoc(doc(db,'settings','accounts'), {list: acctList});
+}
+
+window.addAcct = function() {
+  var holder = document.getElementById('acctHolder').value.trim();
+  var bank   = document.getElementById('acctBank').value.trim();
+  var num    = document.getElementById('acctNum').value.trim();
+  if(!holder||!num){ toast('예금주와 계좌번호를 입력해주세요'); return; }
+  acctList.push({ id:Date.now().toString(), holder:holder, bank:bank, num:num });
+  saveAccts();
+  renderAcctList();
+  document.getElementById('acctHolder').value='';
+  document.getElementById('acctBank').value='';
+  document.getElementById('acctNum').value='';
+  toggleSection('acctAddForm');
+  toast('계좌가 추가됐어요 🏦');
+};
+
+window.delAcct = function(id) {
+  acctList = acctList.filter(function(a){return a.id!==id;});
+  saveAccts();
+  renderAcctList();
+  toast('삭제됐어요');
+};
+
+window.copyAcctNum = function(num, btnId) {
+  var btn = document.getElementById(btnId);
+  function onCopied(){
+    if(btn){ btn.textContent='✓ 복사됨'; btn.style.background='#059669'; }
+    toast('✅ 복사됐어요!');
+    setTimeout(function(){ if(btn){ btn.textContent='복사'; btn.style.background='#3182F6'; } }, 1500);
+  }
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(num).then(onCopied).catch(function(){
+      var ta=document.createElement('textarea'); ta.value=num;
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta); onCopied();
+    });
+  } else {
+    var ta=document.createElement('textarea'); ta.value=num;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); onCopied();
+  }
+};
+
+function renderAcctList() {
+  var list = document.getElementById('acctList');
+  if(!list) return;
+  if(!acctList.length){
+    list.innerHTML='<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">등록된 계좌가 없어요</div>';
+    return;
+  }
+  list.innerHTML = acctList.map(function(a){
+    var btnId = 'copyBtn_'+a.id;
+    return '<div style="background:var(--surface);border-radius:12px;padding:13px 14px;margin-bottom:8px;border:1px solid var(--border);">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+
+        '<div>'+
+          '<div style="font-size:12px;font-weight:700;color:var(--text);">'+esc(a.holder)+'</div>'+
+          (a.bank?'<div style="font-size:11px;color:var(--muted);">'+esc(a.bank)+'</div>':'')+
+        '</div>'+
+        '<button onclick="delAcct(\''+a.id+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px;">×</button>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:8px;padding:9px 12px;">'+
+        '<span style="font-size:13px;font-weight:700;color:#3182F6;letter-spacing:.5px;flex:1;">'+esc(a.num)+'</span>'+
+        '<button id="'+btnId+'" onclick="copyAcctNum(\''+a.num+'\',\''+btnId+'\')" style="padding:6px 14px;background:#3182F6;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0;">복사</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+
 
 
 async function saveFcmToken() {
