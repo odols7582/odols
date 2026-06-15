@@ -422,6 +422,8 @@
             <option value="적금/예금">💰 적금/예금</option>
           </optgroup>
           <optgroup label="📦 기타">
+            <option value="오소리 용돈">🦡 오소리 용돈</option>
+            <option value="부엉이 용돈">🦉 부엉이 용돈</option>
             <option value="기타">📦 기타</option>
           </optgroup>
         </select>
@@ -1148,6 +1150,8 @@
             <option value="적금/예금">💰 적금/예금</option>
           </optgroup>
           <optgroup label="📦 기타">
+            <option value="오소리 용돈">🦡 오소리 용돈</option>
+            <option value="부엉이 용돈">🦉 부엉이 용돈</option>
             <option value="기타">📦 기타</option>
           </optgroup>
         <optgroup label="💼 수입">
@@ -1551,6 +1555,7 @@ function renderBudgetStatus() {
     if(r.type==='expense' && investCats.indexOf(r.category)<0)
       catMap[r.category]=(catMap[r.category]||0)+r.amount;
   });
+  // 지출 0원이어도 예산 설정된 카테고리 항상 표시
   var html = '<div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:18px;margin-bottom:12px;">'+
     '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:14px;">💸 예산 현황</div>'+
     keys.map(function(cat){
@@ -1559,15 +1564,17 @@ function renderBudgetStatus() {
       var ratio = Math.min(Math.round(spent/budget*100),100);
       var over = spent > budget;
       var barColor = over?'#F04452':ratio>80?'#F5A623':'#00B488';
+      var cs = getCatStyle(cat);
       return '<div style="margin-bottom:14px;">'+
-        '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">'+
-          '<span style="font-size:12px;font-weight:700;">'+esc(cat)+'</span>'+
-          '<span style="font-size:12px;font-weight:700;color:'+(over?'#F04452':'var(--sub)')+';">'+fmt(spent)+' / '+fmt(budget)+'원</span>'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:6px;align-items:center;">'+
+          '<span style="font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px;">'+cs.emoji+' '+esc(cat)+'</span>'+
+          '<span style="font-size:12px;font-weight:700;color:'+(over?'#F04452':spent===0?'var(--muted)':'var(--sub)')+';">'+fmt(spent)+' / '+fmt(budget)+'원</span>'+
         '</div>'+
         '<div style="background:var(--bg);border-radius:99px;height:10px;overflow:hidden;">'+
-          '<div style="background:'+barColor+';height:100%;width:'+ratio+'%;border-radius:99px;"></div>'+
+          '<div style="background:'+(spent===0?'var(--border)':barColor)+';height:100%;width:'+(spent===0?0:ratio)+'%;border-radius:99px;"></div>'+
         '</div>'+
         (over?'<div style="font-size:12px;color:#F04452;margin-top:4px;font-weight:600;">⚠️ 예산 '+fmt(spent-budget)+'원 초과!</div>':
+          spent===0?'<div style="font-size:12px;color:var(--muted);margin-top:4px;">이번달 지출 없음 · 예산 '+fmt(budget)+'원</div>':
           '<div style="font-size:12px;color:var(--muted);margin-top:4px;">'+ratio+'% 사용 · 남은 예산 '+fmt(budget-spent)+'원</div>')+
       '</div>';
     }).join('')+
@@ -2009,7 +2016,7 @@ var CAT_GROUPS = {
   '🏠 주거/고정': ['주거','전기요금','수도요금','가스요금','관리비','대출','보험','통신'],
   '🎬 여가/문화': ['문화','여행'],
   '📈 투자/저축': ['주식 매수','코인 매수','적금/예금'],
-  '📦 기타': ['기타']
+  '📦 기타': ['오소리 용돈','부엉이 용돈','기타']
 };
 
 function getCatGroup(cat) {
@@ -2790,7 +2797,7 @@ function getCatStyle(cat) {
     '주거':['🏠','#7950F2'], '전기요금':['⚡','#FAB005'], '수도요금':['💧','#4DABF7'], '가스요금':['🔥','#FF6B35'], '관리비':['🏢','#7950F2'], '대출':['🏦','#5F3DC4'], '보험':['🛡️','#9775FA'], '통신':['📱','#845EF7'],
     '문화':['🎬','#F783AC'], '여행':['✈️','#4DABF7'],
     '주식 매수':['📈','#37B24D'], '코인 매수':['🪙','#F59F00'], '적금/예금':['🏦','#1098AD'],
-    '기타':['📦','#868E96']
+    '오소리 용돈':['🦡','#4DABF7'], '부엉이 용돈':['🦉','#F783AC'], '기타':['📦','#868E96']
   };
   var d = map[cat] || ['💰','#868E96'];
   return {emoji:d[0], color:d[1]};
