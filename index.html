@@ -762,24 +762,32 @@
     </div>
     <div id="goalBlock" style="padding:16px;background:var(--surface2);">
       <div id="goalList" style="margin-bottom:14px;"></div>
-      <div class="form-card show" style="margin-bottom:0;box-shadow:none;border:1px solid rgba(5,150,105,.3);">
-        <div class="fgroup">
-          <label class="flabel">목표 제목</label>
-          <input class="finput" id="goalTitle" type="text" placeholder="예: 제주도 여행 ✈️">
-        </div>
-        <div class="form-row">
-          <div class="fgroup" style="margin-bottom:0;">
-            <label class="flabel">목표 금액</label>
-            <input class="finput" id="goalTarget" type="number" placeholder="0" oninput="calcGoalMonths()">
-          </div>
-          <div class="fgroup" style="margin-bottom:0;">
-            <label class="flabel">월 적금액</label>
-            <input class="finput" id="goalMonthly" type="number" placeholder="0" oninput="calcGoalMonths()">
-          </div>
-        </div>
-        <div id="goalMonthsPreview" style="font-size:12px;color:#059669;font-weight:700;margin-bottom:10px;min-height:20px;"></div>
-        <button class="submit-btn" onclick="addGoal()" style="background:linear-gradient(135deg,#059669,#10B981);">목표 추가</button>
+      <!-- 목표 추가: 제목만 -->
+      <div style="display:flex;gap:8px;align-items:center;background:var(--surface);border-radius:12px;padding:12px;border:1px dashed rgba(5,150,105,.4);">
+        <input class="finput" id="goalTitle" type="text" placeholder="새 목표 제목 (예: 제주도 여행 ✈️)" style="flex:1;">
+        <button onclick="addGoal()" style="padding:10px 14px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">추가</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 납입 모달 -->
+  <div id="goalPayModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeGoalModal()">
+    <div style="background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:440px;">
+      <div style="font-size:15px;font-weight:800;color:var(--text);text-align:center;margin-bottom:4px;" id="goalPayModalTitle">💰 납입하기</div>
+      <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:18px;" id="goalPayModalSub">가계부에 지출(투자/저축)로 자동 기록돼요</div>
+      <div class="fgroup">
+        <label class="flabel">금액</label>
+        <input class="finput" id="goalPayAmt" type="text" placeholder="0원" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      </div>
+      <div class="fgroup">
+        <label class="flabel">현금 보관 주체</label>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <div class="goal-cash-chip on" onclick="selGoalCash(this)" data-val="현석 우리은행" style="flex:1;padding:11px 6px;border:2px solid #059669;border-radius:12px;font-size:12px;font-weight:600;color:#059669;text-align:center;cursor:pointer;background:rgba(5,150,105,.08);line-height:1.4;">🏦 현석<br>우리은행</div>
+          <div class="goal-cash-chip" onclick="selGoalCash(this)" data-val="토스 우리통장" style="flex:1;padding:11px 6px;border:2px solid var(--border);border-radius:12px;font-size:12px;font-weight:600;color:var(--sub);text-align:center;cursor:pointer;line-height:1.4;">💙 토스<br>우리통장</div>
+        </div>
+      </div>
+      <button id="goalPayConfirmBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">납입 완료</button>
+      <button id="goalPayDeleteBtn" style="display:none;width:100%;padding:11px;background:#FFF1F2;color:#F04452;border:1px solid #FFD5DB;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;">🗑 이 내역 삭제 (가계부도 함께)</button>
     </div>
   </div>
 
@@ -2149,64 +2157,169 @@ function updateNavBadges() {
 
 // ── 1. 공동 저축 목표 ─────────────────────────────
 var savingGoals = [];
+var goalLogs = {};
 var goalUnsub = null;
+var goalLogUnsubs = {};
 
 function subscribeGoals() {
   if(goalUnsub) return;
   var q = query(collection(db,'goals'), orderBy('createdAt','asc'));
   goalUnsub = onSnapshot(q, function(snap){
     savingGoals = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    savingGoals.forEach(function(g){
+      if(!goalLogUnsubs[g.id]){
+        var lq = query(collection(db,'goals',g.id,'logs'), orderBy('createdAt','desc'));
+        goalLogUnsubs[g.id] = onSnapshot(lq, function(lsnap){
+          goalLogs[g.id] = lsnap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+          renderGoalList();
+          renderSavingGoalsWidget();
+        });
+      }
+    });
     renderGoalList();
     renderSavingGoalsWidget();
   }, function(e){ console.error('goals 오류:',e); });
 }
 
-window.calcGoalMonths = function() {
-  var target = parseNum(document.getElementById('goalTarget').value);
-  var monthly = parseNum(document.getElementById('goalMonthly').value);
-  var el = document.getElementById('goalMonthsPreview');
-  if(target > 0 && monthly > 0) {
-    var months = Math.ceil(target / monthly);
-    var years = Math.floor(months / 12);
-    var rem = months % 12;
-    var txt = months + '개월';
-    if(years > 0) txt += ' (' + years + '년 ' + (rem > 0 ? rem + '개월' : '') + ')';
-    el.textContent = '⏱ 달성까지 약 ' + txt;
-  } else {
-    el.textContent = '';
-  }
+window.selGoalCash = function(el) {
+  el.closest('div').querySelectorAll('.goal-cash-chip').forEach(function(c){
+    c.style.borderColor='var(--border)'; c.style.color='var(--sub)';
+    c.style.background='transparent'; c.classList.remove('on');
+  });
+  el.style.borderColor='#059669'; el.style.color='#059669';
+  el.style.background='rgba(5,150,105,.08)'; el.classList.add('on');
 };
+
+window.closeGoalModal = function() {
+  document.getElementById('goalPayModal').style.display='none';
+  window._editingGoalLog = null;
+};
+
+window.openGoalPayModal = function(goalId, type) {
+  window._goalPayType = type;
+  window._goalPayGoalId = goalId;
+  window._editingGoalLog = null;
+  var isOut = type === 'out';
+  document.getElementById('goalPayModalTitle').textContent = isOut ? '📤 출금하기' : '💰 납입하기';
+  document.getElementById('goalPayModalSub').textContent = isOut ? '가계부에 수입으로 자동 기록돼요' : '가계부에 지출(투자/저축)로 자동 기록돼요';
+  document.getElementById('goalPayAmt').value = '';
+  document.getElementById('goalPayConfirmBtn').textContent = isOut ? '출금 완료' : '납입 완료';
+  document.getElementById('goalPayConfirmBtn').style.background = isOut ? 'linear-gradient(135deg,#DC2626,#EF4444)' : 'linear-gradient(135deg,#059669,#10B981)';
+  document.getElementById('goalPayDeleteBtn').style.display = 'none';
+  var chips = document.querySelectorAll('#goalPayModal .goal-cash-chip');
+  chips.forEach(function(c,i){
+    var on = i===0;
+    c.style.borderColor=on?'#059669':'var(--border)';
+    c.style.color=on?'#059669':'var(--sub)';
+    c.style.background=on?'rgba(5,150,105,.08)':'transparent';
+    on?c.classList.add('on'):c.classList.remove('on');
+  });
+  document.getElementById('goalPayModal').style.display = 'flex';
+};
+
+window.openGoalEditModal = function(goalId, logId) {
+  var logs = goalLogs[goalId] || [];
+  var log = logs.find(function(l){return l.id===logId;});
+  if(!log) return;
+  window._goalPayType = log.type;
+  window._goalPayGoalId = goalId;
+  window._editingGoalLog = log;
+  var isOut = log.type === 'out';
+  document.getElementById('goalPayModalTitle').textContent = isOut ? '✏️ 출금 수정' : '✏️ 납입 수정';
+  document.getElementById('goalPayModalSub').textContent = '가계부 기록도 함께 수정돼요';
+  document.getElementById('goalPayAmt').value = log.amount;
+  document.getElementById('goalPayConfirmBtn').textContent = '수정 완료';
+  document.getElementById('goalPayConfirmBtn').style.background = 'linear-gradient(135deg,#059669,#10B981)';
+  document.getElementById('goalPayDeleteBtn').style.display = 'block';
+  var chips = document.querySelectorAll('#goalPayModal .goal-cash-chip');
+  chips.forEach(function(c){
+    var on = c.dataset.val === log.cashHolder;
+    c.style.borderColor=on?'#059669':'var(--border)';
+    c.style.color=on?'#059669':'var(--sub)';
+    c.style.background=on?'rgba(5,150,105,.08)':'transparent';
+    on?c.classList.add('on'):c.classList.remove('on');
+  });
+  document.getElementById('goalPayModal').style.display = 'flex';
+};
+
+document.addEventListener('DOMContentLoaded', function(){
+  var confirmBtn = document.getElementById('goalPayConfirmBtn');
+  if(confirmBtn) confirmBtn.addEventListener('click', async function(){
+    var amt = parseInt(document.getElementById('goalPayAmt').value) || 0;
+    if(!amt){ toast('금액을 입력해주세요'); return; }
+    var cashEl = document.querySelector('#goalPayModal .goal-cash-chip.on');
+    var cashHolder = cashEl ? cashEl.dataset.val : '현석 우리은행';
+    var goalId = window._goalPayGoalId;
+    var type = window._goalPayType;
+    var isOut = type === 'out';
+    var editing = window._editingGoalLog;
+    try {
+      if(editing) {
+        var g = savingGoals.find(function(x){return x.id===goalId;});
+        var oldDelta = editing.type==='out' ? editing.amount : -editing.amount;
+        var newDelta = isOut ? -amt : amt;
+        var newSaved = Math.max(0, (g.saved||0) + oldDelta + newDelta);
+        await updateDoc(doc(db,'goals',goalId), {saved:newSaved});
+        await updateDoc(doc(db,'goals',goalId,'logs',editing.id), {amount:amt, cashHolder:cashHolder, updatedAt:Date.now()});
+        if(editing.recordId) await updateDoc(doc(db,'records',editing.recordId), {amount:amt, payment:cashHolder});
+        toast('수정됐어요 ✅');
+      } else {
+        var g2 = savingGoals.find(function(x){return x.id===goalId;});
+        var delta = isOut ? -amt : amt;
+        var newSaved2 = Math.max(0, (g2.saved||0) + delta);
+        await updateDoc(doc(db,'goals',goalId), {saved:newSaved2});
+        var recData = {
+          type: isOut ? 'income' : 'expense',
+          amount: amt,
+          category: isOut ? '기타수입' : '적금/예금',
+          payment: cashHolder,
+          memo: (g2.title||'저축 목표') + (isOut?' 출금':' 납입'),
+          person: currentUser.person,
+          addedBy: currentUser.id,
+          date: new Date().toISOString().slice(0,10),
+          period: getPeriodKey(new Date()),
+          createdAt: Date.now()
+        };
+        var recRef = await addDoc(collection(db,'records'), recData);
+        await addDoc(collection(db,'goals',goalId,'logs'), {
+          amount:amt, type:type, cashHolder:cashHolder,
+          recordId:recRef.id, createdAt:Date.now(), addedBy:currentUser.id
+        });
+        toast(isOut ? '출금됐어요 📤' : '납입됐어요 💰');
+      }
+      closeGoalModal();
+    } catch(e){ console.error(e); toast('저장 실패'); }
+  });
+
+  var deleteBtn = document.getElementById('goalPayDeleteBtn');
+  if(deleteBtn) deleteBtn.addEventListener('click', async function(){
+    if(!window._editingGoalLog) return;
+    if(!confirm('삭제할까요? 가계부 기록도 함께 삭제돼요.')) return;
+    var log = window._editingGoalLog;
+    var goalId = window._goalPayGoalId;
+    try {
+      var g = savingGoals.find(function(x){return x.id===goalId;});
+      var delta = log.type==='out' ? log.amount : -log.amount;
+      var newSaved = Math.max(0, (g.saved||0) + delta);
+      await updateDoc(doc(db,'goals',goalId), {saved:newSaved});
+      await deleteDoc(doc(db,'goals',goalId,'logs',log.id));
+      if(log.recordId) await deleteDoc(doc(db,'records',log.recordId));
+      toast('삭제됐어요 🗑');
+      closeGoalModal();
+    } catch(e){ toast('삭제 실패'); }
+  });
+});
 
 window.addGoal = async function() {
   var title = document.getElementById('goalTitle').value.trim();
-  var target = parseNum(document.getElementById('goalTarget').value);
-  var monthly = parseNum(document.getElementById('goalMonthly').value);
-  if(!title || !target || !monthly){ toast('제목, 목표금액, 월 적금액을 입력해주세요'); return; }
-  var months = Math.ceil(target / monthly);
+  if(!title){ toast('목표 제목을 입력해주세요'); return; }
   try {
     await addDoc(collection(db,'goals'), {
-      title:title, target:target, monthly:monthly, months:months,
-      saved:0, createdAt:Date.now(), addedBy:currentUser.id
+      title:title, saved:0, createdAt:Date.now(), addedBy:currentUser.id
     });
     document.getElementById('goalTitle').value='';
-    document.getElementById('goalTarget').value='';
-    document.getElementById('goalMonthly').value='';
-    document.getElementById('goalMonthsPreview').textContent='';
     toast('목표 추가됐어요 🎯');
   } catch(e){ toast('저장 실패'); }
-};
-
-window.updateGoalSaved = async function(id, delta) {
-  var g = savingGoals.find(function(x){return x.id===id;});
-  if(!g) return;
-  var newSaved = Math.max(0, (g.saved||0) + delta);
-  await updateDoc(doc(db,'goals',id), {saved: newSaved});
-  if(newSaved >= g.target) {
-    toast('🎉 목표 달성! 축하해요!');
-    if(Notification.permission==='granted') {
-      new Notification('🎯 저축 목표 달성!', {body: g.title+' 목표를 달성했어요! 🎉'});
-    }
-  }
 };
 
 window.delGoal = async function(id) {
@@ -2220,28 +2333,29 @@ function renderGoalList() {
   if(!list) return;
   if(!savingGoals.length){ list.innerHTML='<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">등록된 목표가 없어요</div>'; return; }
   list.innerHTML = savingGoals.map(function(g){
-    var ratio = Math.min(Math.round((g.saved||0)/g.target*100), 100);
-    var barColor = ratio>=100?'#059669':ratio>=50?'#10B981':'#34D399';
-    var rem = g.target - (g.saved||0);
-    var remMonths = rem > 0 ? Math.ceil(rem / g.monthly) : 0;
-    return '<div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid rgba(5,150,105,.3);">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
-        '<span style="font-size:12px;font-weight:700;color:var(--text);">'+esc(g.title)+'</span>'+
-        '<button onclick="delGoal(\''+g.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;">×</button>'+
+    var logs = goalLogs[g.id] || [];
+    var logHtml = logs.slice(0,5).map(function(l){
+      var isOut = l.type==='out';
+      var d = l.createdAt ? new Date(l.createdAt) : new Date();
+      var dateStr = (d.getMonth()+1)+'/'+(d.getDate());
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;">'+
+        '<div style="display:flex;align-items:center;gap:5px;">'+
+          '<span>'+(isOut?'📤':'📥')+'</span>'+
+          '<span style="color:var(--muted);"><span style="font-weight:700;color:'+(isOut?'#F04452':'#059669')+';">'+(isOut?'-':'+')+fmt(l.amount)+'원</span> · '+esc(l.cashHolder||'')+' · '+dateStr+'</span>'+
+        '</div>'+
+        '<button onclick="openGoalEditModal(\''+g.id+'\',\''+l.id+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:2px 6px;border-radius:6px;">✏️</button>'+
+      '</div>';
+    }).join('');
+    return '<div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid rgba(5,150,105,.2);">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'+
+        '<span style="font-size:13px;font-weight:700;color:var(--text);">'+esc(g.title)+'</span>'+
+        '<button onclick="delGoal(\''+g.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;">×</button>'+
       '</div>'+
-      '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;">'+
-        '<span>'+fmt(g.saved||0)+'원 / '+fmt(g.target)+'원</span>'+
-        '<span style="font-weight:700;color:#059669;">'+ratio+'%</span>'+
-      '</div>'+
-      '<div style="background:#D1FAE5;border-radius:99px;height:10px;overflow:hidden;margin-bottom:10px;">'+
-        '<div style="background:'+barColor+';height:100%;width:'+ratio+'%;border-radius:99px;transition:width .4s;"></div>'+
-      '</div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">'+
-        '월 '+fmt(g.monthly)+'원 · '+(ratio>=100?'✅ 달성완료!':'남은금액 '+fmt(rem)+'원 · 약 '+remMonths+'개월')+
-      '</div>'+
+      '<div style="font-size:17px;font-weight:800;color:#059669;margin-bottom:8px;">잔액 '+fmt(g.saved||0)+'원</div>'+
+      (logHtml?'<div style="margin-bottom:10px;">'+logHtml+'</div>':'<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">납입 내역이 없어요</div>')+
       '<div style="display:flex;gap:8px;">'+
-        '<button onclick="updateGoalSaved(\''+g.id+'\','+g.monthly+')" style="flex:1;padding:8px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">+ 이번달 납입</button>'+
-        '<button onclick="updateGoalSaved(\''+g.id+'\','+(g.monthly*-1)+')" style="padding:8px 12px;background:var(--surface2);color:#059669;border:1px solid rgba(5,150,105,.3);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">-</button>'+
+        '<button onclick="openGoalPayModal(\''+g.id+'\',\'in\')" style="flex:1;padding:10px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">💰 납입</button>'+
+        '<button onclick="openGoalPayModal(\''+g.id+'\',\'out\')" style="flex:1;padding:10px;background:var(--surface2);color:var(--sub);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 출금</button>'+
       '</div>'+
     '</div>';
   }).join('');
@@ -2253,20 +2367,14 @@ function renderSavingGoalsWidget() {
   el.innerHTML = '<div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow2);padding:16px;margin-bottom:12px;">'+
     '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;">🎯 공동 저축 목표</div>'+
     savingGoals.map(function(g){
-      var ratio = Math.min(Math.round((g.saved||0)/g.target*100),100);
-      return '<div style="margin-bottom:12px;">'+
-        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'+
-          '<span style="font-size:12px;font-weight:600;">'+esc(g.title)+'</span>'+
-          '<span style="font-size:12px;font-weight:700;color:#059669;">'+ratio+'%</span>'+
-        '</div>'+
-        '<div style="background:#D1FAE5;border-radius:99px;height:8px;overflow:hidden;">'+
-          '<div style="background:#059669;height:100%;width:'+ratio+'%;border-radius:99px;"></div>'+
-        '</div>'+
-        '<div style="font-size:12px;color:var(--muted);margin-top:3px;">'+fmt(g.saved||0)+'원 / '+fmt(g.target)+'원</div>'+
+      return '<div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">'+
+        '<span style="font-size:12px;font-weight:600;color:var(--text);">'+esc(g.title)+'</span>'+
+        '<span style="font-size:13px;font-weight:800;color:#059669;">'+fmt(g.saved||0)+'원</span>'+
       '</div>';
     }).join('')+
   '</div>';
 }
+
 
 // ── 2. 요일별 지출 패턴 ──────────────────────────
 var dowChartObj = null;
