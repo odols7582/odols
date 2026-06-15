@@ -3777,15 +3777,26 @@ function getCardAmtKey(cardKey) { return 'card_'+cardKey+'_'+currentKey; }
 function getPaidKey(cardKey)    { return 'cardPaid_'+cardKey+'_'+currentKey; }
 
 var cardDataCache = {};
+var prevCardDataCache = {};
 
 function getCardBase(cardKey) { return cardDataCache['lump_'+cardKey] || 0; }
 function getCardInst(cardKey) { return cardDataCache['inst_'+cardKey] || 0; }
 
 function loadCardData() {
+  // 현재 월 데이터 로드
   getDoc(doc(db,'settings','cardAmounts_'+currentKey)).then(function(d){
     cardDataCache = d.exists() ? (d.data()||{}) : {};
+    // 전월 키 계산
+    var parts = currentKey.split('-');
+    var py = parseInt(parts[0]), pm = parseInt(parts[1])-1;
+    if(pm<1){pm=12;py-=1;}
+    var prevKey2 = py+'-'+String(pm).padStart(2,'0');
+    // 전월 데이터도 로드
+    return getDoc(doc(db,'settings','cardAmounts_'+prevKey2));
+  }).then(function(pd){
+    prevCardDataCache = (pd && pd.exists()) ? (pd.data()||{}) : {};
     renderCardSummary();
-  }).catch(function(){ cardDataCache={}; renderCardSummary(); });
+  }).catch(function(){ cardDataCache={}; prevCardDataCache={}; renderCardSummary(); });
 }
 
 function saveCardData(key, val) {
@@ -3817,9 +3828,38 @@ function renderCardSummary() {
     return {c:c, lump:lump, inst:inst, total:total, isPaid:isPaid};
   });
 
+  // 전월 미납 카드 계산
+  var prevUnpaid = CARD_PAYMENTS.filter(function(c){
+    if(c.auto) return false;
+    var prevLump = prevCardDataCache['lump_'+c.key] || 0;
+    var prevInst = prevCardDataCache['inst_'+c.key] || 0;
+    var prevTotal = prevLump + prevInst;
+    var prevPaid = prevCardDataCache['paid_'+c.key] === true;
+    return prevTotal > 0 && !prevPaid;
+  }).map(function(c){
+    var prevLump = prevCardDataCache['lump_'+c.key] || 0;
+    var prevInst = prevCardDataCache['inst_'+c.key] || 0;
+    return {c:c, total:prevLump+prevInst, lump:prevLump, inst:prevInst};
+  });
+
   var grandTotal = rows.reduce(function(a,r){return a+r.total;},0);
   var inputDate = cardDataCache['input_date'] || '';
   var baseDate  = cardDataCache['base_date']  || '';
+
+  // 전월 미납 섹션
+  var prevUnpaidHtml = prevUnpaid.length ? 
+    '<div style="background:#3D1F1F;border-radius:10px;margin:0 14px 10px;padding:10px 12px;">'+
+      '<div style="font-size:11px;font-weight:700;color:#F87171;margin-bottom:6px;">⚠️ 전월 미납 카드</div>'+
+      prevUnpaid.map(function(row){
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.08);">'+
+          '<span style="font-size:12px;color:#FCA5A5;font-weight:600;">'+esc(row.c.name)+'</span>'+
+          '<div style="display:flex;align-items:center;gap:8px;">'+
+            '<span style="font-size:13px;font-weight:800;color:#F87171;">'+fmt(row.total)+'원</span>'+
+            '<span style="font-size:11px;color:#F87171;background:rgba(248,113,113,.2);padding:2px 8px;border-radius:6px;">미납</span>'+
+          '</div>'+
+        '</div>';
+      }).join('')+
+    '</div>' : '';
 
   var html = '<div style="background:#2D3338;border-radius:14px;box-shadow:var(--shadow2);overflow:hidden;margin-bottom:10px;">'+
     '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 14px 8px;">'+
@@ -3831,6 +3871,7 @@ function renderCardSummary() {
         (inputDate?'<span>📅 입력일: <b style="color:#5DA8FF;">'+inputDate.slice(5).replace('-','/')+'</b></span>':'')+
         (baseDate?'<span>📊 집계기준: <b style="color:#5DA8FF;">'+baseDate.slice(5).replace('-','/')+'</b></span>':'')+
       '</div>':'')+
+    prevUnpaidHtml+
     rows.map(function(row){
       if(row.total===0&&!row.isPaid) return '';
       return '<div style="padding:10px 14px;border-top:1px solid #3D444A;">'+
