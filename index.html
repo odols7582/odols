@@ -402,7 +402,7 @@
             <option value="애견 영양제">💊 애견 영양제</option>
             <option value="애견 병원비">🏥 애견 병원비</option>
           </optgroup>
-          <optgroup label="🏠 주거/고정">
+          <optgroup label="🏠 주거/통신/신용">
             <option value="주거">🏠 주거</option>
             <option value="전기요금">⚡ 전기요금</option>
             <option value="수도요금">💧 수도요금</option>
@@ -411,10 +411,12 @@
             <option value="대출">🏦 대출</option>
             <option value="보험">🛡 보험</option>
             <option value="통신">📱 통신</option>
+            <option value="카드값납부">💳 카드값납부</option>
           </optgroup>
           <optgroup label="🎬 여가/문화">
             <option value="문화">🎬 문화</option>
             <option value="여행">✈ 여행</option>
+            <option value="구독">📺 구독</option>
           </optgroup>
           <optgroup label="📈 투자/저축">
             <option value="주식 매수">📈 주식 매수</option>
@@ -895,17 +897,57 @@
           <div class="fgroup" style="margin-bottom:0;">
             <label class="flabel">카테고리</label>
             <select class="finput" id="fixedCategory">
-              <option value="대출">🏦 대출</option>
-              <option value="보험">🛡 보험</option>
-              <option value="통신">📱 통신</option>
-              <option value="주거">🏠 주거</option>
-              <option value="전기요금">⚡ 전기요금</option>
-              <option value="수도요금">💧 수도요금</option>
-              <option value="가스요금">🔥 가스요금</option>
-              <option value="관리비">🏢 관리비</option>
-              <option value="구독">📺 구독</option>
-              <option value="식비">🍽 식비</option>
-              <option value="기타">📦 기타</option>
+              <optgroup label="🍽 식생활">
+                <option value="식비">🍽 식비</option>
+                <option value="배달식비">🛵 배달식비</option>
+                <option value="조리식비">🍳 조리식비</option>
+                <option value="카페">☕ 카페</option>
+                <option value="담배">🚬 담배</option>
+              </optgroup>
+              <optgroup label="🚗 교통/이동">
+                <option value="교통">🚌 교통</option>
+              </optgroup>
+              <optgroup label="🛍 쇼핑/생활">
+                <option value="쇼핑">🛍 쇼핑</option>
+                <option value="마트">🛒 마트</option>
+                <option value="생활용품">🧴 생활용품</option>
+              </optgroup>
+              <optgroup label="🏥 건강/의료">
+                <option value="의료">🏥 의료</option>
+                <option value="영양제">💊 영양제</option>
+              </optgroup>
+              <optgroup label="🐾 애견">
+                <option value="애견용품">🐾 애견용품</option>
+                <option value="애견 미용비">✂️ 애견 미용비</option>
+                <option value="애견 사료비">🦴 애견 사료비</option>
+                <option value="애견 영양제">💊 애견 영양제</option>
+                <option value="애견 병원비">🏥 애견 병원비</option>
+              </optgroup>
+              <optgroup label="🏠 주거/통신/신용">
+                <option value="주거">🏠 주거</option>
+                <option value="전기요금">⚡ 전기요금</option>
+                <option value="수도요금">💧 수도요금</option>
+                <option value="가스요금">🔥 가스요금</option>
+                <option value="관리비">🏢 관리비</option>
+                <option value="대출">🏦 대출</option>
+                <option value="보험">🛡 보험</option>
+                <option value="통신">📱 통신</option>
+                <option value="카드값납부">💳 카드값납부</option>
+              </optgroup>
+              <optgroup label="🎬 여가/문화">
+                <option value="문화">🎬 문화</option>
+                <option value="여행">✈ 여행</option>
+              </optgroup>
+              <optgroup label="📈 투자/저축">
+                <option value="주식 매수">📈 주식 매수</option>
+                <option value="코인 매수">🪙 코인 매수</option>
+                <option value="적금/예금">💰 적금/예금</option>
+              </optgroup>
+              <optgroup label="📦 기타">
+                <option value="오소리 용돈">🦡 오소리 용돈</option>
+                <option value="부엉이 용돈">🦉 부엉이 용돈</option>
+                <option value="기타">📦 기타</option>
+              </optgroup>
             </select>
           </div>
         </div>
@@ -1150,7 +1192,7 @@
             <option value="애견 영양제">💊 애견 영양제</option>
             <option value="애견 병원비">🏥 애견 병원비</option>
           </optgroup>
-          <optgroup label="🏠 주거/고정">
+          <optgroup label="🏠 주거/통신/신용">
             <option value="주거">🏠 주거</option>
             <option value="전기요금">⚡ 전기요금</option>
             <option value="수도요금">💧 수도요금</option>
@@ -1159,10 +1201,12 @@
             <option value="대출">🏦 대출</option>
             <option value="보험">🛡 보험</option>
             <option value="통신">📱 통신</option>
+            <option value="카드값납부">💳 카드값납부</option>
           </optgroup>
           <optgroup label="🎬 여가/문화">
             <option value="문화">🎬 문화</option>
             <option value="여행">✈ 여행</option>
+            <option value="구독">📺 구독</option>
           </optgroup>
           <optgroup label="📈 투자/저축">
             <option value="주식 매수">📈 주식 매수</option>
@@ -2035,8 +2079,8 @@ var CAT_GROUPS = {
   '🛍 쇼핑/생활': ['쇼핑','마트','생활용품'],
   '🏥 건강/의료': ['의료','영양제'],
   '🐾 애견': ['애견용품','애견 미용비','애견 사료비','애견 영양제','애견 병원비'],
-  '🏠 주거/고정': ['주거','전기요금','수도요금','가스요금','관리비','대출','보험','통신'],
-  '🎬 여가/문화': ['문화','여행'],
+  '🏠 주거/통신/신용': ['주거','전기요금','수도요금','가스요금','관리비','대출','보험','통신','카드값납부'],
+  '🎬 여가/문화': ['문화','여행','구독'],
   '📈 투자/저축': ['주식 매수','코인 매수','적금/예금'],
   '📦 기타': ['오소리 용돈','부엉이 용돈','기타']
 };
@@ -2899,8 +2943,8 @@ function getCatStyle(cat) {
     '쇼핑':['🛍️','#E64980'], '마트':['🛒','#F06595'], '생활용품':['🧴','#CC5DE8'],
     '의료':['🏥','#FA5252'], '영양제':['💊','#FF8787'],
     '애견용품':['🦴','#94D82D'], '애견미용비':['✂️','#82C91E'], '애견사료비':['🐕','#A9E34B'], '애견영양제':['💊','#51CF66'], '애견병원비':['🏥','#69DB7C'],
-    '주거':['🏠','#7950F2'], '전기요금':['⚡','#FAB005'], '수도요금':['💧','#4DABF7'], '가스요금':['🔥','#FF6B35'], '관리비':['🏢','#7950F2'], '대출':['🏦','#5F3DC4'], '보험':['🛡️','#9775FA'], '통신':['📱','#845EF7'],
-    '문화':['🎬','#F783AC'], '여행':['✈️','#4DABF7'],
+    '주거':['🏠','#7950F2'], '전기요금':['⚡','#FAB005'], '수도요금':['💧','#4DABF7'], '가스요금':['🔥','#FF6B35'], '관리비':['🏢','#7950F2'], '대출':['🏦','#5F3DC4'], '보험':['🛡️','#9775FA'], '통신':['📱','#845EF7'], '카드값납부':['💳','#5DA8FF'],
+    '문화':['🎬','#F783AC'], '구독':['📺','#FF6B6B'], '여행':['✈️','#4DABF7'],
     '주식 매수':['📈','#37B24D'], '코인 매수':['🪙','#F59F00'], '적금/예금':['🏦','#1098AD'],
     '오소리 용돈':['🦡','#4DABF7'], '부엉이 용돈':['🦉','#F783AC'], '기타':['📦','#868E96']
   };
