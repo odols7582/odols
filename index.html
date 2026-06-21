@@ -95,6 +95,19 @@
   /* 페이지 전환 애니메이션 */
   .container{animation:pageIn .28s ease;}
   @keyframes pageIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  /* 더보기 탭 카드 그리드 */
+  .more-group-title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin:18px 4px 8px;}
+  .more-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
+  .more-card{background:var(--surface);border-radius:16px;padding:16px 14px;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent;transition:transform .1s;}
+  .more-card:active{transform:scale(.96);}
+  .more-icon{font-size:26px;margin-bottom:8px;}
+  .more-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;}
+  .more-desc{font-size:11px;color:var(--muted);line-height:1.4;}
+  .more-wide{background:var(--surface);border-radius:16px;padding:14px 16px;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.05);display:flex;align-items:center;gap:12px;margin-bottom:8px;-webkit-tap-highlight-color:transparent;}
+  .more-wide-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .more-wide-info{flex:1;}
+  .more-wide-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;}
+  .more-wide-desc{font-size:11px;color:var(--muted);}
 
   /* 배너 */
   .pwa-banner{background:var(--p1-bg);border-radius:16px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
@@ -736,312 +749,170 @@
 
 <!-- 더보기 페이지 -->
 <div class="container" id="pageMore" style="display:none;">
-  <!-- 메시지 -->
-  <div class="manual-notif-card" id="manualNotifCard" style="display:block;">
-    <div class="manual-notif-title">📣 상대방에게 알림 보내기</div>
-    <div class="manual-notif-row">
-      <input class="finput" id="manualNotifMsg" type="text" placeholder="메시지 입력" maxlength="50">
-      <button class="manual-notif-btn" onclick="sendManualNotif()">전송</button>
-    </div>
+
+  <!-- 💰 재무 관리 -->
+  <div class="more-group-title">💰 재무 관리</div>
+  <div class="more-grid">
+    <div class="more-card" onclick="openMoreSheet('goal')"><div class="more-icon">🎯</div><div class="more-name">공동 저축 목표</div><div class="more-desc">납입·출금 및 잔액 관리</div></div>
+    <div class="more-card" onclick="openMoreSheet('budget')"><div class="more-icon">💸</div><div class="more-name">카테고리별 예산</div><div class="more-desc">월 예산 설정 및 현황</div></div>
+    <div class="more-card" onclick="openMoreSheet('fixed')"><div class="more-icon">📋</div><div class="more-name">고정지출 관리</div><div class="more-desc">매월 반복 지출 자동 입력</div></div>
+    <div class="more-card" onclick="openMoreSheet('export')"><div class="more-icon">📊</div><div class="more-name">데이터 내보내기</div><div class="more-desc">CSV로 가계부 다운로드</div></div>
   </div>
 
-  <!-- 할부 날짜 정리 (일회성 도구) -->
-  <div class="section-block" style="margin-bottom:12px;">
-    <div class="section-block-header" onclick="toggleSection('installFixBlock')">
-      <span>🔧 할부 날짜 정리</span>
-      <span class="section-toggle" id="installFixBlockArrow">▼</span>
-    </div>
-    <div id="installFixBlock" style="display:none;padding:16px;background:var(--surface2);">
-      <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:12px;">기존 할부 내역 중 <b>2회차 이후</b> 항목의 날짜를 모두 <b>해당 월 20일</b>로 정리해요.<br>(1회차는 원래 입력일 그대로 유지)</div>
-      <button class="submit-btn" onclick="fixInstallmentDates()" style="background:#F06595;">할부 날짜 20일로 정리하기</button>
-      <div id="installFixResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
-    </div>
+  <!-- 🛠 편의 기능 -->
+  <div class="more-group-title">🛠 편의 기능</div>
+  <div class="more-grid">
+    <div class="more-card" onclick="openMoreSheet('acct')"><div class="more-icon">🏦</div><div class="more-name">계좌번호 메모</div><div class="more-desc">복사 버튼으로 빠르게 공유</div></div>
+    <div class="more-card" onclick="openMoreSheet('food')"><div class="more-icon">🍽</div><div class="more-name">뭐 먹지?</div><div class="more-desc">오늘 메뉴 랜덤 추천</div></div>
+    <div class="more-card" onclick="openMoreSheet('lotto')"><div class="more-icon">🎰</div><div class="more-name">AI 로또추천</div><div class="more-desc">AI가 행운번호 3세트 추천</div></div>
+    <div class="more-card" onclick="openMoreSheet('fix')"><div class="more-icon">🔧</div><div class="more-name">할부 날짜 정리</div><div class="more-desc">2회차부터 20일 일괄 수정</div></div>
   </div>
 
-  <!-- 계좌번호 메모 -->
-  <div class="section-block" style="margin-bottom:12px;">
-    <div class="section-block-header" onclick="toggleSection('acctBlock')" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);color:#fff;">
-      <span>🏦 계좌번호 메모</span>
-      <span class="section-toggle" id="acctBlockArrow">▼</span>
-    </div>
-    <div id="acctBlock" style="display:none;padding:16px;background:var(--surface2);">
-      <div id="acctList" style="margin-bottom:10px;"></div>
-      <button onclick="toggleSection('acctAddForm');document.getElementById('acctAddFormArrow').textContent=document.getElementById('acctAddForm').style.display==='none'?'▲':'▼'" style="width:100%;padding:11px;background:#EFF6FF;color:#3182F6;border:1px dashed #3182F6;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">+ 계좌 추가</button>
-      <div id="acctAddForm" style="display:none;background:var(--surface);border-radius:12px;padding:14px;margin-top:8px;border:1px solid var(--border);">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-          <div><label class="flabel">예금주</label><input class="finput" id="acctHolder" placeholder="예: 현석"></div>
-          <div><label class="flabel">은행명</label><input class="finput" id="acctBank" placeholder="예: 우리은행"></div>
-        </div>
-        <div class="fgroup"><label class="flabel">계좌번호</label><input class="finput" id="acctNum" placeholder="예: 1002-123-456789"></div>
-        <button class="submit-btn" onclick="addAcct()" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);">저장</button>
-      </div>
-    </div>
+  <!-- 📣 알림 & 일정 -->
+  <div class="more-group-title">📣 알림 & 일정</div>
+  <div class="more-wide" onclick="openMoreSheet('notif')">
+    <div class="more-wide-icon" style="background:linear-gradient(135deg,#EA580C,#F97316);">📣</div>
+    <div class="more-wide-info"><div class="more-wide-name">상대방에게 알림 보내기</div><div class="more-wide-desc">메시지 입력 후 푸시 알림 전송</div></div>
+    <span style="color:var(--muted);font-size:16px;">›</span>
   </div>
-
-  <!-- AI 로또번호 추천 -->
-  <div class="section-block" style="margin-bottom:12px;">
-    <div class="section-block-header" onclick="toggleSection('lottoBlock')" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);color:#fff;">
-      <span>🎰 AI 로또번호 추천</span>
-      <span class="section-toggle" id="lottoBlockArrow">▼</span>
-    </div>
-    <div id="lottoBlock" style="display:none;padding:16px;background:var(--surface2);">
-      <div id="lottoStart">
-        <div style="text-align:center;padding:8px 0 16px;">
-          <div style="font-size:32px;margin-bottom:8px;">🍀</div>
-          <div style="font-size:12px;color:var(--sub);line-height:1.7;">AI가 최근 당첨 패턴과 통계를 분석해<br>오소리🦡 & 부엉이🦉의 행운번호를 추천해드려요!</div>
-        </div>
-        <button onclick="getLottoNumbers()" style="width:100%;padding:13px;background:linear-gradient(135deg,#7C3AED,#6D28D9);color:#fff;border:none;border-radius:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">✨ AI 번호 추천받기</button>
-      </div>
-      <div id="lottoLoading" style="display:none;text-align:center;padding:24px;color:var(--sub);font-size:12px;">
-        <div style="font-size:24px;animation:spin 1s linear infinite;display:inline-block;">🔮</div>
-        <div style="margin-top:10px;">AI가 행운의 번호를 분석 중이에요...</div>
-      </div>
-      <div id="lottoResult" style="display:none;">
-        <div id="lottoSets"></div>
-        <button onclick="getLottoNumbers()" style="width:100%;padding:12px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;">🔄 다시 추천받기</button>
-      </div>
-    </div>
+  <div class="more-wide" onclick="openMoreSheet('dday')">
+    <div class="more-wide-icon" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);">📅</div>
+    <div class="more-wide-info"><div class="more-wide-name">기념일 / D-day</div><div class="more-wide-desc">중요한 날짜 등록 및 카운트다운</div></div>
+    <span style="color:var(--muted);font-size:16px;">›</span>
   </div>
 
 
-    <div class="section-block-header" onclick="toggleSection('goalBlock')" style="background:linear-gradient(135deg,#059669,#10B981);color:#fff;">
-      <span>🎯 공동 저축 목표</span>
-      <span class="section-toggle" id="goalBlockArrow">▲</span>
-    </div>
-    <div id="goalBlock" style="padding:16px;background:var(--surface2);">
-      <div id="goalList" style="margin-bottom:14px;"></div>
-      <!-- 목표 추가: 제목만 -->
-      <div style="display:flex;gap:8px;align-items:center;background:var(--surface);border-radius:12px;padding:12px;border:1px dashed rgba(5,150,105,.4);">
-        <input class="finput" id="goalTitle" type="text" placeholder="새 목표 제목 (예: 제주도 여행 ✈️)" style="flex:1;">
-        <button onclick="addGoal()" style="padding:10px 14px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">추가</button>
-      </div>
-    </div>
+<!-- 숨겨진 컨텐츠 (바텀시트에서 불러옴) -->
+<div id="goalContent" style="display:none;">
+  <div id="goalList" style="margin-bottom:14px;"></div>
+  <div style="display:flex;gap:8px;align-items:center;background:var(--surface2);border-radius:12px;padding:12px;border:1px dashed rgba(5,150,105,.4);">
+    <input class="finput" id="goalTitle" type="text" placeholder="새 목표 제목 (예: 제주도 여행 ✈️)" style="flex:1;">
+    <button onclick="addGoal()" style="padding:10px 14px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">추가</button>
   </div>
-
-  <!-- 납입 모달 -->
-  <div id="goalPayModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeGoalModal()">
-    <div style="background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:440px;">
-      <div style="font-size:15px;font-weight:800;color:var(--text);text-align:center;margin-bottom:4px;" id="goalPayModalTitle">💰 납입하기</div>
-      <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:18px;" id="goalPayModalSub">가계부에 지출(투자/저축)로 자동 기록돼요</div>
-      <div class="fgroup">
-        <label class="flabel">금액</label>
-        <input class="finput" id="goalPayAmt" type="text" placeholder="0원" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-      </div>
-      <div class="fgroup">
-        <label class="flabel">현금 보관 주체</label>
-        <div style="display:flex;gap:8px;margin-top:6px;">
-          <div class="goal-cash-chip on" onclick="selGoalCash(this)" data-val="현석 우리은행" style="flex:1;padding:11px 6px;border:2px solid #059669;border-radius:12px;font-size:12px;font-weight:600;color:#059669;text-align:center;cursor:pointer;background:rgba(5,150,105,.08);line-height:1.4;">🏦 현석<br>우리은행</div>
-          <div class="goal-cash-chip" onclick="selGoalCash(this)" data-val="토스 우리통장" style="flex:1;padding:11px 6px;border:2px solid var(--border);border-radius:12px;font-size:12px;font-weight:600;color:var(--sub);text-align:center;cursor:pointer;line-height:1.4;">💙 토스<br>우리통장</div>
-        </div>
-      </div>
-      <button id="goalPayConfirmBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">납입 완료</button>
-      <button id="goalPayDeleteBtn" style="display:none;width:100%;padding:11px;background:#FFF1F2;color:#F04452;border:1px solid #FFD5DB;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;">🗑 이 내역 삭제 (가계부도 함께)</button>
-    </div>
+</div>
+<div id="budgetContent" style="display:none;">
+  <div id="budgetList"></div>
+  <div style="display:flex;gap:8px;margin-top:10px;">
+    <select class="finput" id="budgetCat" style="flex:1.5;"></select>
+    <input class="finput" id="budgetAmt" type="number" placeholder="금액" style="flex:1;">
+    <button onclick="setBudget()" style="padding:10px 14px;background:linear-gradient(135deg,#0F766E,#14B8A6);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">설정</button>
   </div>
-
-  <!-- 엑셀 내보내기 -->
-  <div class="section-block" style="box-shadow:var(--shadow);margin-bottom:12px;">
-    <div class="section-block-header" onclick="toggleSection('exportBlock')" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);color:#fff;">
-      <span>📤 엑셀 내보내기</span>
-      <span class="section-toggle" id="exportBlockArrow">▲</span>
+  <div id="budgetStatus" style="margin-top:14px;"></div>
+</div>
+<div id="fixedContent" style="display:none;">
+  <div id="fixedList" style="margin-bottom:14px;"></div>
+  <div style="background:var(--surface2);border-radius:12px;padding:14px;">
+    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;">+ 고정지출 추가</div>
+    <div class="fgroup"><label class="flabel">카테고리</label>
+      <select class="finput" id="fixedCategory">
+        <optgroup label="🍽 식생활"><option value="식비">🍽 식비</option><option value="배달식비">🛵 배달식비</option><option value="조리식비">🍳 조리식비</option><option value="카페">☕ 카페</option><option value="담배">🚬 담배</option></optgroup>
+        <optgroup label="🚗 교통/이동"><option value="교통">🚌 교통</option></optgroup>
+        <optgroup label="🛍 쇼핑/생활"><option value="쇼핑">🛍 쇼핑</option><option value="마트">🛒 마트</option><option value="생활용품">🧴 생활용품</option></optgroup>
+        <optgroup label="🏥 건강/의료"><option value="의료">🏥 의료</option><option value="영양제">💊 영양제</option></optgroup>
+        <optgroup label="🐾 애견"><option value="애견용품">🐾 애견용품</option><option value="애견 미용비">✂️ 애견 미용비</option><option value="애견 사료비">🦴 애견 사료비</option><option value="애견 영양제">💊 애견 영양제</option><option value="애견 병원비">🏥 애견 병원비</option></optgroup>
+        <optgroup label="🏠 주거/통신/신용"><option value="주거">🏠 주거</option><option value="전기요금">⚡ 전기요금</option><option value="수도요금">💧 수도요금</option><option value="가스요금">🔥 가스요금</option><option value="관리비">🏢 관리비</option><option value="대출">🏦 대출</option><option value="보험">🛡 보험</option><option value="통신">📱 통신</option><option value="카드값납부">💳 카드값납부</option></optgroup>
+        <optgroup label="🎬 여가/문화"><option value="문화">🎬 문화</option><option value="여행">✈ 여행</option><option value="구독">📺 구독</option></optgroup>
+        <optgroup label="📈 투자/저축"><option value="주식 매수">📈 주식 매수</option><option value="코인 매수">🪙 코인 매수</option><option value="적금/예금">💰 적금/예금</option></optgroup>
+        <optgroup label="📦 기타"><option value="오소리 용돈">🦡 오소리 용돈</option><option value="부엉이 용돈">🦉 부엉이 용돈</option><option value="기타">📦 기타</option></optgroup>
+      </select>
     </div>
-    <div id="exportBlock" style="padding:16px;background:var(--surface2);">
-      <div style="font-size:12px;color:var(--sub);margin-bottom:14px;">이번달 지출/수입 내역을 엑셀 파일로 저장해요</div>
-      <div class="fgroup">
-        <label class="flabel">내보낼 기간</label>
-        <select class="finput" id="exportPeriod">
-          <option value="current">이번달</option>
-          <option value="all">전체</option>
+    <div class="fgroup"><label class="flabel">내용</label><input class="finput" id="fixedMemo" type="text" placeholder="예: 넷플릭스, 국민은행 대출"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div><label class="flabel">매월 몇 일</label><input class="finput" id="fixedDay" type="number" placeholder="15" min="1" max="31"></div>
+      <div><label class="flabel">지출처</label>
+        <select class="finput" id="fixedPayment">
+          <option value="신한 신용카드(오소리)">💳 신한(오소리)</option><option value="국민 신용카드(오소리)">💳 국민(오소리)</option><option value="삼성 신용카드(오소리)">💳 삼성(오소리)</option><option value="백채 신용카드">💳 백채</option><option value="현금(오소리)">💵 현금(오소리)</option><option value="현금(우리통장)">💵 우리통장</option><option value="현금(부엉이)">💵 현금(부엉이)</option><option value="휴대폰결제(부엉이)">📱 휴대폰(부엉이)</option>
         </select>
       </div>
-      <button class="submit-btn" onclick="exportExcel()" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);">📥 엑셀 다운로드</button>
     </div>
+    <div class="fgroup"><label class="flabel">금액</label><input class="finput" id="fixedAmt" type="number" placeholder="0"></div>
+    <button class="submit-btn" onclick="addFixed()" style="background:#7C3AED;">고정지출 추가</button>
   </div>
-
-  <!-- 예산 설정 -->
-  <div class="section-block" style="box-shadow:var(--shadow);margin-bottom:12px;">
-    <div class="section-block-header" onclick="toggleSection('budgetBlock')" style="background:linear-gradient(135deg,#0F766E,#14B8A6);color:#fff;">
-      <span>💸 카테고리별 예산 설정</span>
-      <span class="section-toggle" id="budgetBlockArrow">▲</span>
+</div>
+<div id="exportContent" style="display:none;">
+  <div style="font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:16px;">이번 달 가계부 내역을 CSV 파일로 다운로드해요.</div>
+  <button class="submit-btn" onclick="exportCSV()" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);">📥 CSV 다운로드</button>
+</div>
+<div id="acctContent" style="display:none;">
+  <div id="acctList" style="margin-bottom:10px;"></div>
+  <button onclick="document.getElementById('acctAddForm').style.display=document.getElementById('acctAddForm').style.display==='none'?'block':'none'" style="width:100%;padding:11px;background:#EFF6FF;color:#3182F6;border:1px dashed #3182F6;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">+ 계좌 추가</button>
+  <div id="acctAddForm" style="display:none;background:var(--surface2);border-radius:12px;padding:14px;margin-top:8px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div><label class="flabel">예금주</label><input class="finput" id="acctHolder" placeholder="예: 현석"></div>
+      <div><label class="flabel">은행명</label><input class="finput" id="acctBank" placeholder="예: 우리은행"></div>
     </div>
-    <div id="budgetBlock" style="padding:16px;background:var(--surface2);">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">카테고리별 월 예산을 설정하면 초과시 알려드려요!</div>
-      <div id="budgetList"></div>
-      <div style="display:flex;gap:8px;margin-top:12px;">
-        <select class="finput" id="budgetCategory" style="flex:1;">
-          <option value="식비">🍽 식비</option>
-          <option value="배달식비">🛵 배달식비</option>
-          <option value="조리식비">🍳 조리식비</option>
-          <option value="카페">☕ 카페</option>
-          <option value="담배">🚬 담배</option>
-          <option value="교통">🚌 교통</option>
-          <option value="쇼핑">🛍 쇼핑</option>
-          <option value="마트">🛒 마트</option>
-          <option value="생활용품">🧴 생활용품</option>
-          <option value="의료">🏥 의료</option>
-          <option value="영양제">💊 영양제</option>
-          <option value="문화">🎬 문화</option>
-          <option value="여행">✈ 여행</option>
-          <option value="통신">📱 통신</option>
-          <option value="주거">🏠 주거</option>
-          <option value="전기요금">⚡ 전기요금</option>
-          <option value="수도요금">💧 수도요금</option>
-          <option value="가스요금">🔥 가스요금</option>
-          <option value="관리비">🏢 관리비</option>
-          <option value="대출">🏦 대출</option>
-          <option value="보험">🛡 보험</option>
-          <option value="애견용품">🐾 애견용품</option>
-          <option value="애견 미용비">✂️ 애견 미용비</option>
-          <option value="애견 사료비">🦴 애견 사료비</option>
-          <option value="애견 영양제">💊 애견 영양제</option>
-          <option value="애견 병원비">🏥 애견 병원비</option>
-          <option value="기타">📦 기타</option>
-        </select>
-        <input class="finput" id="budgetAmount" type="number" placeholder="예산금액" style="flex:1;">
-        <button class="manual-notif-btn" onclick="addBudget()" style="background:#0F766E;">설정</button>
+    <div class="fgroup"><label class="flabel">계좌번호</label><input class="finput" id="acctNum" placeholder="예: 1002-123-456789"></div>
+    <button class="submit-btn" onclick="addAcct()" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);">저장</button>
+  </div>
+</div>
+<div id="foodContent" style="display:none;">
+  <div style="text-align:center;padding:8px 0 14px;">
+    <div id="foodResult" style="font-size:32px;font-weight:800;color:var(--text);margin-bottom:6px;">?</div>
+    <div id="foodResultName" style="font-size:12px;color:var(--sub);margin-bottom:16px;">버튼을 눌러 오늘 메뉴를 뽑아봐요!</div>
+    <button onclick="pickFood()" class="submit-btn" style="background:linear-gradient(135deg,#EA580C,#F97316);">🎲 메뉴 뽑기!</button>
+  </div>
+  <div id="foodList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+  <div style="display:flex;gap:8px;margin-top:12px;">
+    <input class="finput" id="foodInput" type="text" placeholder="메뉴 추가" style="flex:1;">
+    <button onclick="addFood()" style="padding:10px 14px;background:#EA580C;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">추가</button>
+  </div>
+</div>
+<div id="lottoContent" style="display:none;">
+  <div id="lottoStart"><div style="text-align:center;padding:8px 0 16px;"><div style="font-size:32px;margin-bottom:8px;">🍀</div><div style="font-size:12px;color:var(--sub);line-height:1.7;">AI가 통계를 분석해 행운번호를 추천해드려요!</div></div>
+  <button onclick="getLottoNumbers()" style="width:100%;padding:13px;background:linear-gradient(135deg,#7C3AED,#6D28D9);color:#fff;border:none;border-radius:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">✨ AI 번호 추천받기</button></div>
+  <div id="lottoLoading" style="display:none;text-align:center;padding:24px;color:var(--sub);font-size:12px;"><div style="font-size:24px;animation:spin 1s linear infinite;display:inline-block;">🔮</div><div style="margin-top:10px;">AI가 분석 중이에요...</div></div>
+  <div id="lottoResult" style="display:none;"><div id="lottoSets"></div><button onclick="getLottoNumbers()" style="width:100%;padding:12px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;">🔄 다시 추천받기</button></div>
+</div>
+<div id="fixContent" style="display:none;">
+  <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:12px;">기존 할부 내역 중 <b>2회차 이후</b> 항목을 <b>해당 월 20일</b>로 정리해요.</div>
+  <button class="submit-btn" onclick="fixInstallmentDates()" style="background:#F06595;">할부 날짜 20일로 정리하기</button>
+  <div id="installFixResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
+</div>
+<div id="notifContent" style="display:none;">
+  <div class="fgroup"><label class="flabel">메시지</label><input class="finput" id="manualNotifMsg" type="text" placeholder="메시지 입력" maxlength="50"></div>
+  <button class="submit-btn" onclick="sendManualNotif()" style="background:linear-gradient(135deg,#EA580C,#F97316);">📣 알림 전송</button>
+</div>
+<div id="ddayContent" style="display:none;">
+  <div id="ddayList" style="margin-bottom:14px;"></div>
+  <div style="background:var(--surface2);border-radius:12px;padding:14px;">
+    <div style="font-size:12px;font-weight:700;margin-bottom:10px;">+ 기념일 추가</div>
+    <div class="fgroup"><label class="flabel">이름</label><input class="finput" id="ddayName" placeholder="예: 사귀기 시작한 날 💑"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div><label class="flabel">날짜</label><input class="finput" id="ddayDate" type="date"></div>
+      <div><label class="flabel">반복</label><select class="finput" id="ddayRepeat"><option value="none">반복 없음</option><option value="yearly">매년 반복</option></select></div>
+    </div>
+    <button class="submit-btn" onclick="addDday()" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);">추가</button>
+  </div>
+</div>
+
+<!-- 더보기 바텀 시트 -->
+<div id="moreSheetBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeMoreSheet()">
+  <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding-bottom:32px;">
+    <div style="width:36px;height:4px;background:var(--border);border-radius:99px;margin:12px auto 0;"></div>
+    <div style="padding:14px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+      <div style="font-size:14px;font-weight:800;color:var(--text);" id="moreSheetTitle"></div>
+      <button onclick="closeMoreSheet()" style="background:var(--surface2);border:none;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div style="padding:16px 20px;" id="moreSheetBody"></div>
+  </div>
+</div>
+
+<!-- 납입 모달 (공동저축) -->
+<div id="goalPayModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeGoalModal()">
+  <div style="background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:440px;">
+    <div style="font-size:15px;font-weight:800;color:var(--text);text-align:center;margin-bottom:4px;" id="goalPayModalTitle">💰 납입하기</div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:18px;" id="goalPayModalSub">가계부에 지출(투자/저축)로 자동 기록돼요</div>
+    <div class="fgroup"><label class="flabel">금액</label><input class="finput" id="goalPayAmt" type="text" placeholder="0원" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
+    <div class="fgroup">
+      <label class="flabel">현금 보관 주체</label>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <div class="goal-cash-chip on" onclick="selGoalCash(this)" data-val="현석 우리은행" style="flex:1;padding:11px 6px;border:2px solid #059669;border-radius:12px;font-size:12px;font-weight:600;color:#059669;text-align:center;cursor:pointer;background:rgba(5,150,105,.08);line-height:1.4;">🏦 현석<br>우리은행</div>
+        <div class="goal-cash-chip" onclick="selGoalCash(this)" data-val="토스 우리통장" style="flex:1;padding:11px 6px;border:2px solid var(--border);border-radius:12px;font-size:12px;font-weight:600;color:var(--sub);text-align:center;cursor:pointer;line-height:1.4;">💙 토스<br>우리통장</div>
       </div>
     </div>
+    <button id="goalPayConfirmBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">납입 완료</button>
+    <button id="goalPayDeleteBtn" style="display:none;width:100%;padding:11px;background:#FFF1F2;color:#F04452;border:1px solid #FFD5DB;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;">🗑 이 내역 삭제 (가계부도 함께)</button>
   </div>
-
-  <!-- 고정지출 자동입력 -->
-  <div class="section-block" style="box-shadow:var(--shadow);margin-bottom:12px;">
-    <div class="section-block-header" onclick="toggleSection('fixedBlock')" style="background:linear-gradient(135deg,#7C3AED,#9F7AEA);color:#fff;">
-      <span>🔁 고정지출 관리</span>
-      <span class="section-toggle" id="fixedBlockArrow">▲</span>
-    </div>
-    <div id="fixedBlock" style="padding:16px;background:var(--surface2);">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">매월 반복되는 고정지출을 등록하면 자동으로 추가해드려요!</div>
-      <div id="fixedList"></div>
-      <div class="form-card show" style="margin-top:12px;margin-bottom:0;box-shadow:none;border:1px solid var(--border2);">
-        <div class="form-row">
-          <div class="fgroup" style="margin-bottom:0;">
-            <label class="flabel">금액</label>
-            <input class="finput" id="fixedAmount" type="number" placeholder="0">
-          </div>
-          <div class="fgroup" style="margin-bottom:0;">
-            <label class="flabel">카테고리</label>
-            <select class="finput" id="fixedCategory">
-              <optgroup label="🍽 식생활">
-                <option value="식비">🍽 식비</option>
-                <option value="배달식비">🛵 배달식비</option>
-                <option value="조리식비">🍳 조리식비</option>
-                <option value="카페">☕ 카페</option>
-                <option value="담배">🚬 담배</option>
-              </optgroup>
-              <optgroup label="🚗 교통/이동">
-                <option value="교통">🚌 교통</option>
-              </optgroup>
-              <optgroup label="🛍 쇼핑/생활">
-                <option value="쇼핑">🛍 쇼핑</option>
-                <option value="마트">🛒 마트</option>
-                <option value="생활용품">🧴 생활용품</option>
-              </optgroup>
-              <optgroup label="🏥 건강/의료">
-                <option value="의료">🏥 의료</option>
-                <option value="영양제">💊 영양제</option>
-              </optgroup>
-              <optgroup label="🐾 애견">
-                <option value="애견용품">🐾 애견용품</option>
-                <option value="애견 미용비">✂️ 애견 미용비</option>
-                <option value="애견 사료비">🦴 애견 사료비</option>
-                <option value="애견 영양제">💊 애견 영양제</option>
-                <option value="애견 병원비">🏥 애견 병원비</option>
-              </optgroup>
-              <optgroup label="🏠 주거/통신/신용">
-                <option value="주거">🏠 주거</option>
-                <option value="전기요금">⚡ 전기요금</option>
-                <option value="수도요금">💧 수도요금</option>
-                <option value="가스요금">🔥 가스요금</option>
-                <option value="관리비">🏢 관리비</option>
-                <option value="대출">🏦 대출</option>
-                <option value="보험">🛡 보험</option>
-                <option value="통신">📱 통신</option>
-                <option value="카드값납부">💳 카드값납부</option>
-              </optgroup>
-              <optgroup label="🎬 여가/문화">
-                <option value="문화">🎬 문화</option>
-                <option value="여행">✈ 여행</option>
-              </optgroup>
-              <optgroup label="📈 투자/저축">
-                <option value="주식 매수">📈 주식 매수</option>
-                <option value="코인 매수">🪙 코인 매수</option>
-                <option value="적금/예금">💰 적금/예금</option>
-              </optgroup>
-              <optgroup label="📦 기타">
-                <option value="오소리 용돈">🦡 오소리 용돈</option>
-                <option value="부엉이 용돈">🦉 부엉이 용돈</option>
-                <option value="기타">📦 기타</option>
-              </optgroup>
-            </select>
-          </div>
-        </div>
-        <div class="fgroup">
-          <label class="flabel">내용</label>
-          <input class="finput" id="fixedMemo" type="text" placeholder="예: 넷플릭스, 국민은행 대출">
-        </div>
-        <div class="form-row">
-          <div class="fgroup" style="margin-bottom:0;">
-            <label class="flabel">매월 몇 일</label>
-            <input class="finput" id="fixedDay" type="number" placeholder="15" min="1" max="31">
-          </div>
-          <div class="fgroup" style="margin-bottom:0;">
-            <label class="flabel">지출처</label>
-            <select class="finput" id="fixedPayment">
-              <option value="신한 신용카드(오소리)">💳 신한(오소리)</option>
-              <option value="국민 신용카드(오소리)">💳 국민(오소리)</option>
-              <option value="삼성 신용카드(오소리)">💳 삼성(오소리)</option>
-              <option value="백채 신용카드">💳 백채</option>
-              <option value="현금(오소리)">💵 현금(오소리)</option>
-              <option value="현금(우리통장)">💵 우리통장</option>
-              <option value="현금(부엉이)">💵 현금(부엉이)</option>
-              <option value="휴대폰결제(부엉이)">📱 휴대폰(부엉이)</option>
-            </select>
-          </div>
-        </div>
-        <button class="submit-btn" onclick="addFixed()" style="background:#7C3AED;">고정지출 추가</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 기념일 -->
-  <div class="section-block dday">
-    <div class="section-block-header" onclick="toggleSection('ddayBlock')">
-      <span>💑 기념일 & D-day</span>
-      <span class="section-toggle" id="ddayBlockArrow">▲</span>
-    </div>
-    <div id="ddayBlock" style="padding:16px;">
-      <div id="ddayList"></div>
-      <div class="dday-add-row">
-        <input class="finput" id="ddayName" placeholder="기념일 이름" style="flex:1;">
-        <input class="finput" id="ddayDate" type="date" style="width:140px;">
-        <button class="manual-notif-btn" onclick="addDday()">추가</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 오늘 뭐먹지? -->
-  <div class="section-block" style="box-shadow:var(--shadow);">
-    <div class="section-block-header" onclick="toggleSection('foodBlock')" style="background:linear-gradient(135deg,#EA580C,#F97316);color:#fff;">
-      <span>🍽 오늘 뭐먹지?</span>
-      <span class="section-toggle" id="foodBlockArrow">▲</span>
-    </div>
-    <div id="foodBlock" style="padding:16px;background:var(--surface2);">
-      <div id="foodResult" style="text-align:center;padding:16px 0;font-size:12px;font-weight:800;color:#EA580C;min-height:60px;"></div>
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <button onclick="pickFood()" style="flex:1;padding:12px;background:#EA580C;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🎲 랜덤 추천!</button>
-        <button onclick="toggleSection('foodAddBlock')" style="padding:12px 16px;background:var(--surface2);color:var(--p1);border:1.5px solid var(--p1);border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">+ 추가</button>
-      </div>
-      <div id="foodAddBlock" style="display:none;margin-bottom:12px;">
-        <div style="display:flex;gap:8px;">
-          <input class="finput" id="foodInput" placeholder="메뉴 추가 (예: 삼겹살)" style="flex:1;">
-          <button onclick="addFood()" style="background:#EA580C;color:#fff;border:none;border-radius:10px;padding:0 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">추가</button>
-        </div>
-      </div>
-      <div id="foodList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-    </div>
-  </div>
-
-
 </div>
 
 <!-- 바텀 네비게이션 -->
@@ -2759,7 +2630,49 @@ window.fixInstallmentDates = async function() {
   }
 };
 
-// ── AI 로또번호 추천 ──────────────────────────────
+// ── 더보기 바텀 시트 ──────────────────────────────
+var moreSheetTitles = {
+  goal:'🎯 공동 저축 목표', budget:'💸 카테고리별 예산', fixed:'📋 고정지출 관리',
+  export:'📊 데이터 내보내기', acct:'🏦 계좌번호 메모', food:'🍽 뭐 먹지?',
+  lotto:'🎰 AI 로또번호 추천', fix:'🔧 할부 날짜 정리',
+  notif:'📣 알림 보내기', dday:'📅 기념일 & D-day'
+};
+
+window.openMoreSheet = function(key) {
+  var title = moreSheetTitles[key] || key;
+  var contentEl = document.getElementById(key+'Content');
+  if(!contentEl) return;
+  document.getElementById('moreSheetTitle').textContent = title;
+  document.getElementById('moreSheetBody').innerHTML = '';
+  document.getElementById('moreSheetBody').appendChild(contentEl.cloneNode(true));
+  // 실제 컨텐츠 div를 시트 body에 이동 (live DOM)
+  document.getElementById('moreSheetBody').innerHTML = '';
+  var clone = contentEl;
+  clone.style.display = 'block';
+  document.getElementById('moreSheetBody').appendChild(clone);
+  document.getElementById('moreSheetBg').style.display = 'flex';
+  // 각 탭 진입 시 렌더링
+  if(key==='goal') renderGoalList();
+  if(key==='budget') { renderBudgetList(); renderBudgetStatus(); }
+  if(key==='fixed') renderFixed();
+  if(key==='acct') renderAcctList();
+  if(key==='food') renderFoodList();
+  if(key==='dday') renderDdays();
+};
+
+window.closeMoreSheet = function() {
+  var bg = document.getElementById('moreSheetBg');
+  var body = document.getElementById('moreSheetBody');
+  // 컨텐츠 돌려놓기
+  var child = body.firstElementChild;
+  if(child && child.id) {
+    child.style.display = 'none';
+    document.body.appendChild(child);
+  }
+  bg.style.display = 'none';
+};
+
+
 window.getLottoNumbers = async function() {
   document.getElementById('lottoStart').style.display = 'none';
   document.getElementById('lottoResult').style.display = 'none';
