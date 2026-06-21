@@ -1182,13 +1182,13 @@ var COLORS2 = ['#4DABF7','#3182F6','#7950F2','#E64980','#FF922B','#37B24D','#F04
 // ── 기간 계산 ─────────────────────────────────────
 function getPeriodKey(date) {
   var d=date||new Date(), y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
-  if(day<20){m-=1; if(m<1){m=12;y-=1;}}
+  if(day<22){m-=1; if(m<1){m=12;y-=1;}}
   return y+'-'+String(m).padStart(2,'0');
 }
 function getPeriodRange(key) {
   var parts=key.split('-'), y=parseInt(parts[0]), m=parseInt(parts[1]);
   var em=m+1, ey=y; if(em>12){em=1;ey+=1;}
-  return { start:y+'-'+String(m).padStart(2,'0')+'-20', end:ey+'-'+String(em).padStart(2,'0')+'-19' };
+  return { start:y+'-'+String(m).padStart(2,'0')+'-22', end:ey+'-'+String(em).padStart(2,'0')+'-21' };
 }
 function periodLabel(key) { var p=key.split('-'); return parseInt(p[0])+'년 '+parseInt(p[1])+'월분'; }
 function periodRangeLabel(key) { var r=getPeriodRange(key); return r.start.slice(5).replace('-','/')+' ~ '+r.end.slice(5).replace('-','/'); }
@@ -2613,7 +2613,7 @@ window.fixInstallmentDates = async function() {
         // 1회차 결제주기 + (회차-1) 달 → 그 달 20일
         var tY = baseY, tM = baseM + (idx - 1);
         while(tM > 12){ tM -= 12; tY += 1; }
-        var newDate = tY+'-'+String(tM).padStart(2,'0')+'-20';
+        var newDate = tY+'-'+String(tM).padStart(2,'0')+'-22';
         var newPeriod = tY+'-'+String(tM).padStart(2,'0');
         if(it.data.date !== newDate || it.data.period !== newPeriod){
           promises.push(updateDoc(doc(db,'records',it.id), { date:newDate, period:newPeriod }));
@@ -4073,7 +4073,7 @@ window.addExpense = async function(){
           period = getPeriodKey(now);
         } else {
           // 2회차부터: 한 달씩 뒤로 + 무조건 20일
-          var d = new Date(now.getFullYear(), now.getMonth() + i, 20);
+          var d = new Date(now.getFullYear(), now.getMonth() + i, 22);
           dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-20';
           period = getPeriodKey(d);
         }
