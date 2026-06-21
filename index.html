@@ -865,9 +865,16 @@
   <div id="lottoResult" style="display:none;"><div id="lottoSets"></div><button onclick="getLottoNumbers()" style="width:100%;padding:12px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;">🔄 다시 추천받기</button></div>
 </div>
 <div id="fixContent" style="display:none;">
-  <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:12px;">기존 할부 내역 중 <b>2회차 이후</b> 항목을 <b>해당 월 20일</b>로 정리해요.</div>
-  <button class="submit-btn" onclick="fixInstallmentDates()" style="background:#F06595;">할부 날짜 20일로 정리하기</button>
+  <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:12px;">기존 할부 내역 중 <b>2회차 이후</b> 항목을 <b>해당 월 22일</b>로 정리해요.</div>
+  <button class="submit-btn" onclick="fixInstallmentDates()" style="background:#F06595;">할부 날짜 22일로 정리하기</button>
   <div id="installFixResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
+
+  <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">📦 결제주기 이관 (22일 기준 전환)</div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px;">기존에 <b>20일·21일</b>에 입력된 내역을 <b>전월분</b>으로 이관해요.<br>예: 6/20 → 6월분에서 5월분으로</div>
+    <button class="submit-btn" onclick="migratePeriod2022()" style="background:#7C3AED;">20일·21일 데이터 전월로 이관</button>
+    <div id="migrateResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
+  </div>
 </div>
 <div id="notifContent" style="display:none;">
   <div class="fgroup"><label class="flabel">메시지</label><input class="finput" id="manualNotifMsg" type="text" placeholder="메시지 입력" maxlength="50"></div>
@@ -2631,7 +2638,42 @@ window.fixInstallmentDates = async function() {
   }
 };
 
-// ── 더보기 바텀 시트 ──────────────────────────────
+// ── 결제주기 이관 (20일/21일 → 전월분으로) ──────────
+window.migratePeriod2022 = async function() {
+  var resultEl = document.getElementById('migrateResult');
+  resultEl.textContent = '이관 중...';
+  try {
+    var snap = await getDocs(collection(db,'records'));
+    var fixCount = 0;
+    var promises = [];
+    snap.forEach(function(docSnap){
+      var r = docSnap.data();
+      if(!r.date || !r.period) return;
+      var parts = r.date.split('-');
+      var day = parseInt(parts[2]);
+      // 20일 또는 21일인데 period가 같은 달로 잘못 설정된 경우
+      if((day === 20 || day === 21)){
+        var dateYM = parts[0]+'-'+parts[1]; // 날짜의 연월
+        if(r.period === dateYM){
+          // 전월로 이관
+          var py = parseInt(parts[0]), pm = parseInt(parts[1])-1;
+          if(pm < 1){ pm = 12; py -= 1; }
+          var newPeriod = py+'-'+String(pm).padStart(2,'0');
+          promises.push(updateDoc(doc(db,'records',docSnap.id), {period: newPeriod}));
+          fixCount++;
+        }
+      }
+    });
+    await Promise.all(promises);
+    resultEl.textContent = fixCount>0 ? ('✅ '+fixCount+'건 이관 완료!') : '✅ 이관할 항목이 없어요';
+    toast(fixCount>0 ? (fixCount+'건 이관됐어요 📦') : '이미 정리되어 있어요');
+  } catch(e){
+    resultEl.textContent = '❌ 오류: '+e.message;
+    toast('이관 실패');
+  }
+};
+
+
 var moreSheetTitles = {
   goal:'🎯 공동 저축 목표', budget:'💸 카테고리별 예산', fixed:'📋 고정지출 관리',
   export:'📊 데이터 내보내기', acct:'🏦 계좌번호 메모', food:'🍽 뭐 먹지?',
