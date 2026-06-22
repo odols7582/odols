@@ -894,19 +894,39 @@
 </div>
 
 <div id="loanContent" style="display:none;">
-  <div id="loanList" style="margin-bottom:14px;"></div>
-  <div style="background:var(--surface2);border-radius:14px;padding:14px;border:1px dashed rgba(240,68,82,.4);">
-    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;">+ 대출 추가</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-      <div><label class="flabel">은행명</label><input class="finput" id="loanBank" placeholder="예: 국민은행"></div>
-      <div><label class="flabel">대출 종류</label><input class="finput" id="loanType" placeholder="예: 전세자금대출"></div>
+  <!-- 탭 -->
+  <div style="display:flex;gap:6px;margin-bottom:14px;">
+    <button onclick="switchLoanTab('list')" id="loanTabList" style="flex:1;padding:9px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--expense);color:#fff;">🏦 대출 목록</button>
+    <button onclick="switchLoanTab('report')" id="loanTabReport" style="flex:1;padding:9px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--surface2);color:var(--muted);">📊 레포트</button>
+  </div>
+
+  <!-- 대출 목록 -->
+  <div id="loanTabListView">
+    <div id="loanList" style="margin-bottom:14px;"></div>
+    <div style="background:var(--surface2);border-radius:14px;padding:14px;border:1px dashed rgba(240,68,82,.4);">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;">+ 대출 추가</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div><label class="flabel">은행명</label><input class="finput" id="loanBank" placeholder="예: 국민은행"></div>
+        <div><label class="flabel">대출 종류</label><input class="finput" id="loanType" placeholder="예: 전세자금대출"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div><label class="flabel">원금</label><input class="finput num-format" id="loanOriginal" type="text" placeholder="50,000,000"></div>
+        <div><label class="flabel">현재 잔액</label><input class="finput num-format" id="loanBalance" type="text" placeholder="42,500,000"></div>
+      </div>
+      <div class="fgroup"><label class="flabel">납입일 (매월)</label><input class="finput" id="loanPayDay" type="number" placeholder="22" min="1" max="31"></div>
+      <button class="submit-btn" onclick="addLoan()" style="background:linear-gradient(135deg,#F04452,#E8590C);">+ 대출 추가</button>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-      <div><label class="flabel">원금</label><input class="finput num-format" id="loanOriginal" type="text" placeholder="50,000,000"></div>
-      <div><label class="flabel">현재 잔액</label><input class="finput num-format" id="loanBalance" type="text" placeholder="42,500,000"></div>
+  </div>
+
+  <!-- 레포트 -->
+  <div id="loanTabReportView" style="display:none;">
+    <!-- 서브 탭 -->
+    <div style="display:flex;gap:6px;margin-bottom:12px;">
+      <button onclick="switchLoanReport('balance')" id="loanRpBalBtn" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--expense);color:#fff;">💰 잔액 현황</button>
+      <button onclick="switchLoanReport('monthly')" id="loanRpMonBtn" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--surface2);color:var(--muted);">📅 월별 납입</button>
     </div>
-    <div class="fgroup"><label class="flabel">납입일 (매월)</label><input class="finput" id="loanPayDay" type="number" placeholder="22" min="1" max="31"></div>
-    <button class="submit-btn" onclick="addLoan()" style="background:linear-gradient(135deg,#F04452,#E8590C);">+ 대출 추가</button>
+    <div id="loanRpBalance"></div>
+    <div id="loanRpMonthly" style="display:none;"></div>
   </div>
 </div>
 
@@ -2865,6 +2885,113 @@ document.addEventListener('DOMContentLoaded', function(){
     } catch(e){ toast('삭제 실패'); }
   });
 });
+
+window.switchLoanTab = function(tab) {
+  var isList = tab==='list';
+  document.getElementById('loanTabListView').style.display = isList?'block':'none';
+  document.getElementById('loanTabReportView').style.display = isList?'none':'block';
+  document.getElementById('loanTabList').style.background = isList?'var(--expense)':'var(--surface2)';
+  document.getElementById('loanTabList').style.color = isList?'#fff':'var(--muted)';
+  document.getElementById('loanTabReport').style.background = isList?'var(--surface2)':'var(--expense)';
+  document.getElementById('loanTabReport').style.color = isList?'var(--muted)':'#fff';
+  if(!isList){ renderLoanReport('balance'); }
+};
+
+window.switchLoanReport = function(type) {
+  var isBal = type==='balance';
+  document.getElementById('loanRpBalance').style.display = isBal?'block':'none';
+  document.getElementById('loanRpMonthly').style.display = isBal?'none':'block';
+  document.getElementById('loanRpBalBtn').style.background = isBal?'var(--expense)':'var(--surface2)';
+  document.getElementById('loanRpBalBtn').style.color = isBal?'#fff':'var(--muted)';
+  document.getElementById('loanRpMonBtn').style.background = isBal?'var(--surface2)':'var(--expense)';
+  document.getElementById('loanRpMonBtn').style.color = isBal?'var(--muted)':'#fff';
+  renderLoanReport(type);
+};
+
+function renderLoanReport(type) {
+  if(type==='balance') {
+    var totalBal = loans.reduce(function(a,l){return a+(l.balance||0);},0);
+    var totalOrig = loans.reduce(function(a,l){return a+(l.original||0);},0);
+    var totalPaid = totalOrig - totalBal;
+    var totalRatio = totalOrig>0?Math.round(totalBal/totalOrig*100):0;
+
+    var loanRows = loans.map(function(l){
+      var ratio = l.original>0?Math.round((l.balance||0)/l.original*100):0;
+      var barColor = ratio>50?'#F04452':ratio>20?'#F59E0B':'#10B981';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">'+
+        '<div style="flex:1;min-width:0;">'+
+          '<div style="font-size:12px;font-weight:700;">🏦 '+esc(l.bank)+'</div>'+
+          (l.type?'<div style="font-size:11px;color:var(--muted);">'+esc(l.type)+'</div>':'')+
+          '<div style="background:var(--surface2);border-radius:3px;height:5px;overflow:hidden;margin-top:5px;width:120px;">'+
+            '<div style="height:100%;width:'+ratio+'%;background:'+barColor+';border-radius:3px;"></div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="text-align:right;flex-shrink:0;">'+
+          '<div style="font-size:13px;font-weight:800;color:'+barColor+';">'+fmt(l.balance||0)+'원</div>'+
+          '<div style="font-size:10px;color:var(--muted);">잔여 '+ratio+'% · 원금 '+fmt(l.original||0)+'</div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+
+    document.getElementById('loanRpBalance').innerHTML =
+      '<div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:10px;">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;">총 대출 잔액</div>'+
+        '<div style="font-size:24px;font-weight:800;color:var(--expense);margin-bottom:4px;">'+fmt(totalBal)+'원</div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">원금 합계 '+fmt(totalOrig)+'원 · 납입 완료 '+fmt(totalPaid)+'원</div>'+
+        '<div style="background:var(--surface2);border-radius:6px;height:10px;overflow:hidden;margin-bottom:4px;">'+
+          '<div style="height:100%;width:'+totalRatio+'%;background:var(--expense);border-radius:6px;"></div>'+
+        '</div>'+
+        '<div style="font-size:11px;color:var(--muted);">잔여 '+totalRatio+'%</div>'+
+      '</div>'+
+      '<div style="background:var(--surface);border-radius:14px;padding:14px;">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;">대출별 잔액</div>'+
+        loanRows+
+      '</div>';
+
+  } else {
+    // 월별 납입 집계
+    var monthMap = {};
+    var totalPaidAmt = 0, totalCnt = 0;
+    loans.forEach(function(l){
+      (loanLogs[l.id]||[]).forEach(function(p){
+        if(!p.date) return;
+        var ym = p.date.slice(0,7); // YYYY-MM
+        if(!monthMap[ym]) monthMap[ym] = {total:0, items:[], cnt:0};
+        monthMap[ym].total += p.amount||0;
+        monthMap[ym].cnt++;
+        monthMap[ym].items.push({bank:l.bank, amount:p.amount||0});
+        totalPaidAmt += p.amount||0;
+        totalCnt++;
+      });
+    });
+
+    var months = Object.keys(monthMap).sort().reverse();
+    var monthRows = months.map(function(ym){
+      var m = monthMap[ym];
+      var parts = ym.split('-');
+      var label = parseInt(parts[0])+'년 '+parseInt(parts[1])+'월';
+      var detail = m.items.map(function(it){ return esc(it.bank)+' '+fmt(it.amount); }).join(' · ');
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">'+
+        '<div>'+
+          '<div style="font-size:12px;font-weight:700;">'+label+'</div>'+
+          '<div style="font-size:11px;color:var(--muted);">'+m.cnt+'건 · '+detail+'</div>'+
+        '</div>'+
+        '<div style="text-align:right;font-size:13px;font-weight:800;color:var(--expense);">-'+fmt(m.total)+'원</div>'+
+      '</div>';
+    }).join('') || '<div style="font-size:12px;color:var(--muted);">납입 내역이 없어요</div>';
+
+    document.getElementById('loanRpMonthly').innerHTML =
+      '<div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:10px;">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;">월별 납입 합계</div>'+
+        monthRows+
+      '</div>'+
+      '<div style="background:var(--surface);border-radius:14px;padding:14px;">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;">누적 납입 총액</div>'+
+        '<div style="font-size:22px;font-weight:800;color:var(--p1);margin-bottom:4px;">'+fmt(totalPaidAmt)+'원</div>'+
+        '<div style="font-size:11px;color:var(--muted);">전체 납입 횟수 '+totalCnt+'회</div>'+
+      '</div>';
+  }
+}
 
 function renderLoanList() {
   var el=document.getElementById('loanList');
