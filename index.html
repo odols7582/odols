@@ -757,6 +757,7 @@
     <div class="more-card" onclick="openMoreSheet('budget')"><div class="more-icon">💸</div><div class="more-name">카테고리별 예산</div><div class="more-desc">월 예산 설정 및 현황</div></div>
     <div class="more-card" onclick="openMoreSheet('fixed')"><div class="more-icon">📋</div><div class="more-name">고정지출 관리</div><div class="more-desc">매월 반복 지출 자동 입력</div></div>
     <div class="more-card" onclick="openMoreSheet('export')"><div class="more-icon">📊</div><div class="more-name">데이터 내보내기</div><div class="more-desc">CSV로 가계부 다운로드</div></div>
+    <div class="more-card" onclick="openMoreSheet('loan')"><div class="more-icon">🏦</div><div class="more-name">대출 관리</div><div class="more-desc">잔액·납입 회차별 관리</div></div>
   </div>
 
   <!-- 🛠 편의 기능 -->
@@ -795,7 +796,7 @@
   <div id="budgetList"></div>
   <div style="display:flex;gap:8px;margin-top:10px;">
     <select class="finput" id="budgetCat" style="flex:1.5;"></select>
-    <input class="finput" id="budgetAmt" type="number" placeholder="금액" style="flex:1;">
+    <input class="finput" id="budgetAmt" type="text" class="finput num-format" placeholder="금액" style="flex:1;">
     <button onclick="setBudget()" style="padding:10px 14px;background:linear-gradient(135deg,#0F766E,#14B8A6);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">설정</button>
   </div>
   <div id="budgetStatus" style="margin-top:14px;"></div>
@@ -826,7 +827,7 @@
         </select>
       </div>
     </div>
-    <div class="fgroup"><label class="flabel">금액</label><input class="finput" id="fixedAmt" type="number" placeholder="0"></div>
+    <div class="fgroup"><label class="flabel">금액</label><input class="finput" id="fixedAmt" type="text" class="finput num-format" placeholder="0"></div>
     <button class="submit-btn" onclick="addFixed()" style="background:#7C3AED;">고정지출 추가</button>
   </div>
 </div>
@@ -881,7 +882,6 @@
   <button class="submit-btn" onclick="sendManualNotif()" style="background:linear-gradient(135deg,#EA580C,#F97316);">📣 알림 전송</button>
 </div>
 <div id="ddayContent" style="display:none;">
-  <div id="ddayList" style="margin-bottom:14px;"></div>
   <div style="background:var(--surface2);border-radius:12px;padding:14px;">
     <div style="font-size:12px;font-weight:700;margin-bottom:10px;">+ 기념일 추가</div>
     <div class="fgroup"><label class="flabel">이름</label><input class="finput" id="ddayName" placeholder="예: 사귀기 시작한 날 💑"></div>
@@ -893,7 +893,44 @@
   </div>
 </div>
 
-<!-- 더보기 바텀 시트 -->
+<div id="loanContent" style="display:none;">
+  <div id="loanList" style="margin-bottom:14px;"></div>
+  <div style="background:var(--surface2);border-radius:14px;padding:14px;border:1px dashed rgba(240,68,82,.4);">
+    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;">+ 대출 추가</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div><label class="flabel">은행명</label><input class="finput" id="loanBank" placeholder="예: 국민은행"></div>
+      <div><label class="flabel">대출 종류</label><input class="finput" id="loanType" placeholder="예: 전세자금대출"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div><label class="flabel">원금</label><input class="finput num-format" id="loanOriginal" type="text" placeholder="50,000,000"></div>
+      <div><label class="flabel">현재 잔액</label><input class="finput num-format" id="loanBalance" type="text" placeholder="42,500,000"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div><label class="flabel">월 납입액</label><input class="finput num-format" id="loanMonthly" type="text" placeholder="550,000"></div>
+      <div><label class="flabel">납입일 (매월)</label><input class="finput" id="loanPayDay" type="number" placeholder="22" min="1" max="31"></div>
+    </div>
+    <button class="submit-btn" onclick="addLoan()" style="background:linear-gradient(135deg,#F04452,#E8590C);">+ 대출 추가</button>
+  </div>
+</div>
+
+<!-- 대출 납입 모달 -->
+<div id="loanPayModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeLoanPayModal()">
+  <div style="background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:440px;">
+    <div style="width:36px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 16px;"></div>
+    <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;" id="loanPayTitle">💳 납입하기</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:18px;">가계부에 지출(대출)으로 자동 기록돼요</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div><label class="flabel">납입 금액</label><input class="finput num-format" id="loanPayAmt" type="text" placeholder="0"></div>
+      <div><label class="flabel">회차</label><input class="finput" id="loanPayRound" type="number" placeholder="1" min="1"></div>
+    </div>
+    <div class="fgroup"><label class="flabel">납입일</label><input class="finput" id="loanPayDate" type="date"></div>
+    <div class="fgroup"><label class="flabel">메모 (선택)</label><input class="finput" id="loanPayMemo" placeholder="예: 7월 원리금"></div>
+    <button id="loanPayConfirmBtn" class="submit-btn" style="background:linear-gradient(135deg,#F04452,#E8590C);">납입 완료</button>
+    <button id="loanPayDeleteBtn" style="display:none;width:100%;padding:11px;background:#FFF1F2;color:#F04452;border:1px solid #FFD5DB;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;">🗑 이 납입 내역 삭제</button>
+  </div>
+</div>
+
+
 <div id="moreSheetBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeMoreSheet()">
   <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding-bottom:32px;">
     <div style="width:36px;height:4px;background:var(--border);border-radius:99px;margin:12px auto 0;"></div>
@@ -1309,6 +1346,7 @@ function showMain() {
   try { subscribeWishes(); } catch(e){ console.error('wish 오류:', e); }
   try { subscribeDiaries(); } catch(e){ console.error('diary 오류:', e); }
   try { subscribeGoals(); } catch(e){ console.error('goals 오류:', e); }
+  try { subscribeLoans(); } catch(e){ console.error('loans 오류:', e); }
   try { loadAccts(); } catch(e){ console.error('accts 오류:', e); }
   bindKeys();
   checkNotifStatus();
@@ -2674,11 +2712,190 @@ window.migratePeriod2022 = async function() {
 };
 
 
+// ── 천 단위 쉼표 입력 ────────────────────────────────
+function numFormatInput(el) {
+  var raw = el.value.replace(/[^0-9]/g,'');
+  el.value = raw ? parseInt(raw).toLocaleString('ko-KR') : '';
+}
+function initNumFormat() {
+  document.querySelectorAll('input.num-format').forEach(function(el){
+    if(el.dataset.numInited) return;
+    el.dataset.numInited='1';
+    el.addEventListener('input', function(){ numFormatInput(this); });
+  });
+}
+
+// ── 대출 관리 ─────────────────────────────────────────
+var loans = [];
+var loanLogs = {};
+var loanUnsub = null;
+var loanLogUnsubs = {};
+
+function subscribeLoans() {
+  if(loanUnsub) return;
+  var q = query(collection(db,'loans'), orderBy('createdAt','asc'));
+  loanUnsub = onSnapshot(q, function(snap){
+    loans = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    loans.forEach(function(l){
+      if(!loanLogUnsubs[l.id]){
+        var lq = query(collection(db,'loans',l.id,'payments'), orderBy('createdAt','desc'));
+        loanLogUnsubs[l.id] = onSnapshot(lq, function(ls){
+          loanLogs[l.id] = ls.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+          renderLoanList();
+        });
+      }
+    });
+    renderLoanList();
+  });
+}
+
+window.addLoan = async function() {
+  var bank = document.getElementById('loanBank').value.trim();
+  var type = document.getElementById('loanType').value.trim();
+  var orig = parseNum(document.getElementById('loanOriginal').value);
+  var bal  = parseNum(document.getElementById('loanBalance').value);
+  var mon  = parseNum(document.getElementById('loanMonthly').value);
+  var day  = parseInt(document.getElementById('loanPayDay').value)||22;
+  if(!bank||!orig||!bal){ toast('은행명, 원금, 잔액을 입력해주세요'); return; }
+  try {
+    await addDoc(collection(db,'loans'), {
+      bank:bank, type:type, original:orig, balance:bal, monthly:mon, payDay:day,
+      createdAt:Date.now(), addedBy:currentUser.id
+    });
+    ['loanBank','loanType','loanOriginal','loanBalance','loanMonthly','loanPayDay'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.value='';
+    });
+    toast('대출이 추가됐어요 🏦');
+  } catch(e){ toast('저장 실패'); }
+};
+
+window.deleteLoan = async function(id) {
+  if(!confirm('이 대출을 삭제할까요?')) return;
+  try { await deleteDoc(doc(db,'loans',id)); toast('삭제됐어요'); }
+  catch(e){ toast('삭제 실패'); }
+};
+
+window.openLoanPayModal = function(loanId, logId) {
+  window._loanPayId = loanId;
+  window._loanPayLogId = logId||null;
+  var loan = loans.find(function(l){return l.id===loanId;});
+  if(!loan) return;
+  document.getElementById('loanPayTitle').textContent = '💳 납입하기 · '+esc(loan.bank);
+  var today = new Date().toISOString().slice(0,10);
+  if(logId){
+    var log = (loanLogs[loanId]||[]).find(function(p){return p.id===logId;});
+    if(log){
+      document.getElementById('loanPayAmt').value = fmt(log.amount);
+      document.getElementById('loanPayRound').value = log.round||'';
+      document.getElementById('loanPayDate').value = log.date||today;
+      document.getElementById('loanPayMemo').value = log.memo||'';
+      document.getElementById('loanPayDeleteBtn').style.display='block';
+    }
+  } else {
+    document.getElementById('loanPayAmt').value = loan.monthly ? fmt(loan.monthly) : '';
+    document.getElementById('loanPayRound').value = (loanLogs[loanId]||[]).length+1;
+    document.getElementById('loanPayDate').value = today;
+    document.getElementById('loanPayMemo').value = '';
+    document.getElementById('loanPayDeleteBtn').style.display='none';
+  }
+  document.getElementById('loanPayModal').style.display='flex';
+};
+
+window.closeLoanPayModal = function() {
+  document.getElementById('loanPayModal').style.display='none';
+  window._loanPayId=null; window._loanPayLogId=null;
+};
+
+document.addEventListener('DOMContentLoaded', function(){
+  initNumFormat();
+  var loanConfirm = document.getElementById('loanPayConfirmBtn');
+  if(loanConfirm) loanConfirm.addEventListener('click', async function(){
+    var amt = parseNum(document.getElementById('loanPayAmt').value);
+    var round = parseInt(document.getElementById('loanPayRound').value)||1;
+    var date = document.getElementById('loanPayDate').value;
+    var memo = document.getElementById('loanPayMemo').value.trim();
+    if(!amt){ toast('금액을 입력해주세요'); return; }
+    var loanId = window._loanPayId;
+    var loan = loans.find(function(l){return l.id===loanId;});
+    if(!loan) return;
+    try {
+      if(window._loanPayLogId){
+        var oldLog=(loanLogs[loanId]||[]).find(function(p){return p.id===window._loanPayLogId;});
+        var balDiff=(oldLog?oldLog.amount:0)-amt;
+        await updateDoc(doc(db,'loans',loanId),{balance:Math.max(0,(loan.balance||0)+balDiff)});
+        await updateDoc(doc(db,'loans',loanId,'payments',window._loanPayLogId),{amount:amt,round:round,date:date,memo:memo});
+        if(oldLog&&oldLog.recordId) await updateDoc(doc(db,'records',oldLog.recordId),{amount:amt,memo:esc(loan.bank)+' '+round+'회차 납입'+(memo?' · '+memo:'')});
+        toast('수정됐어요 ✅');
+      } else {
+        var newBal=Math.max(0,(loan.balance||0)-amt);
+        await updateDoc(doc(db,'loans',loanId),{balance:newBal});
+        var recData={type:'expense',amount:amt,category:'대출',payment:'현금(오소리)',
+          memo:esc(loan.bank)+' '+round+'회차 납입'+(memo?' · '+memo:''),
+          person:currentUser.person,addedBy:currentUser.id,
+          date:date,period:getPeriodKey(new Date(date+'T12:00:00')),createdAt:Date.now()};
+        var recRef=await addDoc(collection(db,'records'),recData);
+        await addDoc(collection(db,'loans',loanId,'payments'),{amount:amt,round:round,date:date,memo:memo,recordId:recRef.id,createdAt:Date.now()});
+        toast('납입됐어요 💳');
+      }
+      closeLoanPayModal();
+    } catch(e){ console.error(e); toast('저장 실패'); }
+  });
+  var loanDelete=document.getElementById('loanPayDeleteBtn');
+  if(loanDelete) loanDelete.addEventListener('click', async function(){
+    if(!confirm('삭제할까요? 가계부 기록도 함께 삭제돼요.')) return;
+    var loanId=window._loanPayId, logId=window._loanPayLogId;
+    var loan=loans.find(function(l){return l.id===loanId;});
+    var log=(loanLogs[loanId]||[]).find(function(p){return p.id===logId;});
+    if(!loan||!log) return;
+    try {
+      await updateDoc(doc(db,'loans',loanId),{balance:(loan.balance||0)+log.amount});
+      await deleteDoc(doc(db,'loans',loanId,'payments',logId));
+      if(log.recordId) await deleteDoc(doc(db,'records',log.recordId));
+      toast('삭제됐어요 🗑'); closeLoanPayModal();
+    } catch(e){ toast('삭제 실패'); }
+  });
+});
+
+function renderLoanList() {
+  var el=document.getElementById('loanList');
+  if(!el) return;
+  if(!loans.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">등록된 대출이 없어요</div>'; return; }
+  el.innerHTML=loans.map(function(l){
+    var logs=loanLogs[l.id]||[];
+    var ratio=l.original>0?Math.round((l.balance||0)/l.original*100):0;
+    var paid=(l.original||0)-(l.balance||0);
+    var barColor=ratio>50?'#F04452':ratio>20?'#F59E0B':'#10B981';
+    var logHtml=logs.slice(0,3).map(function(p){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;">'+
+        '<span style="color:var(--muted);">'+p.round+'회차 · '+(p.date||'').replace(/-/g,'/')+'</span>'+
+        '<div style="display:flex;align-items:center;gap:8px;">'+
+          '<span style="font-weight:700;color:var(--expense);">-'+fmt(p.amount)+'원</span>'+
+          '<button onclick="openLoanPayModal(\''+l.id+'\',\''+p.id+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;">✏️</button>'+
+        '</div></div>';
+    }).join('');
+    return '<div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:10px;border-left:4px solid '+barColor+';box-shadow:0 1px 6px rgba(0,0,0,.05);">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">'+
+        '<div><div style="font-size:13px;font-weight:800;color:var(--text);">🏦 '+esc(l.bank)+'</div>'+
+        (l.type?'<div style="font-size:11px;color:var(--muted);">'+esc(l.type)+(l.monthly?' · 월 '+fmt(l.monthly)+'원':'')+'</div>':'')+'</div>'+
+        '<button onclick="deleteLoan(\''+l.id+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">×</button>'+
+      '</div>'+
+      '<div style="font-size:20px;font-weight:800;color:'+barColor+';margin:8px 0 2px;">잔액 '+fmt(l.balance||0)+'원</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">원금 '+fmt(l.original||0)+'원 · 납입 '+fmt(paid)+'원 완료</div>'+
+      '<div style="background:var(--surface2);border-radius:99px;height:8px;overflow:hidden;margin-bottom:4px;">'+
+        '<div style="height:100%;width:'+ratio+'%;background:'+barColor+';border-radius:99px;"></div>'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">잔여 '+ratio+'%</div>'+
+      (logHtml?'<div style="margin-bottom:10px;">'+logHtml+'</div>':'')+
+      '<button onclick="openLoanPayModal(\''+l.id+'\')" style="width:100%;padding:10px;background:linear-gradient(135deg,#F04452,#E8590C);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">💳 이번달 납입</button>'+
+    '</div>';
+  }).join('');
+}
+
 var moreSheetTitles = {
   goal:'🎯 공동 저축 목표', budget:'💸 카테고리별 예산', fixed:'📋 고정지출 관리',
   export:'📊 데이터 내보내기', acct:'🏦 계좌번호 메모', food:'🍽 뭐 먹지?',
   lotto:'🎰 AI 로또번호 추천', fix:'🔧 할부 날짜 정리',
-  notif:'📣 알림 보내기', dday:'📅 기념일 & D-day'
+  notif:'📣 알림 보내기', dday:'📅 기념일 & D-day', loan:'🏦 대출 관리'
 };
 
 window.openMoreSheet = function(key) {
@@ -2701,6 +2918,9 @@ window.openMoreSheet = function(key) {
   if(key==='acct') renderAcctList();
   if(key==='food') renderFoodList();
   if(key==='dday') renderDdays();
+  if(key==='loan') renderLoanList();
+  // 바텀시트 열릴 때 num-format 입력 적용
+  setTimeout(function(){ initNumFormat(); }, 100);
 };
 
 window.closeMoreSheet = function() {
