@@ -2754,13 +2754,16 @@ function subscribeLoans() {
 }
 
 window.addLoan = async function() {
-  var bank = document.getElementById('loanBank').value.trim();
-  var type = document.getElementById('loanType').value.trim();
-  var orig = parseNum(document.getElementById('loanOriginal').value);
-  var bal  = parseNum(document.getElementById('loanBalance').value);
+  var bank = (document.getElementById('loanBank')||{value:''}).value.trim();
+  var type = (document.getElementById('loanType')||{value:''}).value.trim();
+  var orig = parseNum((document.getElementById('loanOriginal')||{value:''}).value);
+  var bal  = parseNum((document.getElementById('loanBalance')||{value:''}).value);
   var mon  = 0;
-  var day  = parseInt(document.getElementById('loanPayDay').value)||22;
-  if(!bank||!orig||!bal){ toast('은행명, 원금, 잔액을 입력해주세요'); return; }
+  var day  = parseInt((document.getElementById('loanPayDay')||{value:'22'}).value)||22;
+  if(!bank){ toast('은행명을 입력해주세요'); return; }
+  if(!orig){ toast('원금을 입력해주세요'); return; }
+  if(!bal){ toast('현재 잔액을 입력해주세요'); return; }
+  if(!currentUser){ toast('로그인 후 이용해주세요'); return; }
   try {
     await addDoc(collection(db,'loans'), {
       bank:bank, type:type, original:orig, balance:bal, monthly:mon, payDay:day,
@@ -2770,7 +2773,7 @@ window.addLoan = async function() {
       var el=document.getElementById(id); if(el) el.value='';
     });
     toast('대출이 추가됐어요 🏦');
-  } catch(e){ toast('저장 실패'); }
+  } catch(e){ console.error('addLoan 오류:', e); toast('저장 실패: '+e.message); }
 };
 
 window.deleteLoan = async function(id) {
@@ -2909,14 +2912,17 @@ window.openMoreSheet = function(key) {
   var title = moreSheetTitles[key] || key;
   var contentEl = document.getElementById(key+'Content');
   if(!contentEl) return;
+  // 기존 시트 안 컨텐츠 먼저 복원
+  var body = document.getElementById('moreSheetBody');
+  var prevChild = body.firstElementChild;
+  if(prevChild && prevChild.id){
+    prevChild.style.display='none';
+    document.body.appendChild(prevChild);
+  }
+  body.innerHTML = '';
   document.getElementById('moreSheetTitle').textContent = title;
-  document.getElementById('moreSheetBody').innerHTML = '';
-  document.getElementById('moreSheetBody').appendChild(contentEl.cloneNode(true));
-  // 실제 컨텐츠 div를 시트 body에 이동 (live DOM)
-  document.getElementById('moreSheetBody').innerHTML = '';
-  var clone = contentEl;
-  clone.style.display = 'block';
-  document.getElementById('moreSheetBody').appendChild(clone);
+  contentEl.style.display = 'block';
+  body.appendChild(contentEl);
   document.getElementById('moreSheetBg').style.display = 'flex';
   // 각 탭 진입 시 렌더링
   if(key==='goal') renderGoalList();
