@@ -2621,7 +2621,10 @@ window.setupNotification = async function() {
       document.getElementById('notifBtn').textContent='🔕';
       toast('알림이 거부됐어요');
     }
-  } catch(e) { toast('알림 설정 실패'); }
+  } catch(e) {
+    console.error('알림 설정 오류:', e);
+    toast('알림 설정 실패: '+e.message);
+  }
 };
 
 // ── 수동 알림 전송 ────────────────────────────────
@@ -3226,18 +3229,26 @@ function renderAcctList() {
 async function saveFcmToken() {
   if(!messaging || !currentUser) return;
   try {
+    // SW 찾기: 경로별로 시도
     var swReg = await navigator.serviceWorker.getRegistration('/odols/');
-    var token = await getToken(messaging, {
-      vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: swReg
-    });
+    if(!swReg) swReg = await navigator.serviceWorker.getRegistration('/');
+    if(!swReg) {
+      // 등록된 SW 전체 조회
+      var regs = await navigator.serviceWorker.getRegistrations();
+      if(regs.length > 0) swReg = regs[0];
+    }
+    var tokenOpts = { vapidKey: VAPID_KEY };
+    if(swReg) tokenOpts.serviceWorkerRegistration = swReg;
+    var token = await getToken(messaging, tokenOpts);
     if(token) {
       await setDoc(doc(db,'fcmTokens',currentUser.id), {
         token: token, userId: currentUser.id, updatedAt: Date.now()
       });
       console.log('FCM 토큰 저장 완료');
+    } else {
+      console.warn('FCM 토큰이 비어있음 - 알림 권한 확인 필요');
     }
-  } catch(e) { console.log('FCM 토큰 저장 실패:', e); }
+  } catch(e) { console.error('FCM 토큰 저장 실패:', e); }
 }
 
 function setupForegroundMessage() {
