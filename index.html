@@ -2596,14 +2596,14 @@ window.addEventListener('appinstalled', function() {
 function checkNotifStatus() {
   if(!('Notification' in window)) return;
   if(Notification.permission==='default') {
-    document.getElementById('notifBanner').classList.add('show');
+    var _nb=document.getElementById('notifBanner'); if(_nb) _nb.classList.add('show');
   } else if(Notification.permission==='granted') {
-    document.getElementById('notifBtn').textContent='🔔';
-    document.getElementById('notifBanner').classList.remove('show');
-    document.getElementById('manualNotifCard').style.display='block';
+    var _nbb=document.getElementById('notifBtn'); if(_nbb) _nbb.textContent='🔔';
+    var _nb2=document.getElementById('notifBanner'); if(_nb2) _nb2.classList.remove('show');
+    var _mnc=document.getElementById('manualNotifCard'); if(_mnc) _mnc.style.display='block';
     saveFcmToken();
   } else {
-    document.getElementById('notifBtn').textContent='🔕';
+    var _nbb2=document.getElementById('notifBtn'); if(_nbb2) _nbb2.textContent='🔕';
   }
 }
 
@@ -2611,14 +2611,14 @@ window.setupNotification = async function() {
   if(!('Notification' in window)){toast('이 브라우저는 알림을 지원하지 않아요');return;}
   try {
     var perm = await Notification.requestPermission();
-    document.getElementById('notifBanner').classList.remove('show');
+    var _nb2=document.getElementById('notifBanner'); if(_nb2) _nb2.classList.remove('show');
     if(perm==='granted'){
-      document.getElementById('notifBtn').textContent='🔔';
-      document.getElementById('manualNotifCard').style.display='block';
+      var _nbb=document.getElementById('notifBtn'); if(_nbb) _nbb.textContent='🔔';
+      var _mnc=document.getElementById('manualNotifCard'); if(_mnc) _mnc.style.display='block';
       toast('알림 허용됐어요! 🔔');
       await saveFcmToken();
     } else {
-      document.getElementById('notifBtn').textContent='🔕';
+      var _nbb2=document.getElementById('notifBtn'); if(_nbb2) _nbb2.textContent='🔕';
       toast('알림이 거부됐어요');
     }
   } catch(e) {
