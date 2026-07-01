@@ -1108,6 +1108,10 @@
   <div style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:85vh;overflow-y:auto;">
     <div style="font-size:12px;font-weight:700;margin-bottom:20px;">✏️ 내역 수정</div>
     <div class="fgroup">
+      <label class="flabel">날짜</label>
+      <input class="finput" id="editDate" type="date">
+    </div>
+    <div class="fgroup">
       <label class="flabel">금액</label>
       <input class="finput" id="editAmount" type="number" placeholder="0">
     </div>
@@ -3392,7 +3396,7 @@ function renderSummary() {
 
 
 function renderRecords() {
-  window.renderRecords = renderRecords; // 전역 노출 (oninput에서 호출 가능하게)
+  var fr = filteredRecords(), list = document.getElementById('recordList');
   if(!fr.length){list.innerHTML='<div class="empty">이번 기간 내역이 없어요</div>';return;}
 
   // 이틀 전 날짜 계산
@@ -3505,6 +3509,7 @@ function renderRecords() {
 
   list.innerHTML = html;
 }
+window.renderRecords = renderRecords; // 전역 노출 (HTML oninput에서 호출)
 
 window.toggleDayMore = function(groupId) {
   var more = document.getElementById(groupId+'_more');
@@ -3535,6 +3540,7 @@ window.openEditModal = function(id) {
   var r = records.find(function(x){return x.id===id;});
   if(!r) return;
   document.getElementById('editRecordId').value = id;
+  document.getElementById('editDate').value = r.date || new Date().toISOString().slice(0,10);
   document.getElementById('editAmount').value = r.amount;
   document.getElementById('editCategory').value = r.category||'';
   document.getElementById('editMemo').value = r.memo||'';
@@ -3554,19 +3560,22 @@ window.closeEditModal = function() {
 
 window.saveEdit = async function() {
   var id = document.getElementById('editRecordId').value;
+  var date = document.getElementById('editDate').value;
   var amt = parseNum(document.getElementById('editAmount').value);
   var cat = document.getElementById('editCategory').value;
   var memo = document.getElementById('editMemo').value.trim();
   var payment = document.getElementById('editPayment').value;
   if(!amt){toast('금액을 입력해주세요');return;}
+  if(!date){toast('날짜를 입력해주세요');return;}
   try {
     var r = records.find(function(x){return x.id===id;});
-    var updateData = {amount:amt, category:cat, memo:memo};
+    var newPeriod = getPeriodKey(new Date(date+'T12:00:00'));
+    var updateData = {amount:amt, category:cat, memo:memo, date:date, period:newPeriod};
     if(r && r.type==='expense') updateData.payment = payment;
     await updateDoc(doc(db,'records',id), updateData);
     toast('수정됐어요 ✅');
     closeEditModal();
-  } catch(e){ toast('수정 실패'); }
+  } catch(e){ console.error(e); toast('수정 실패'); }
 };
 
 var investChart = null;
