@@ -521,12 +521,25 @@
       <div class="sec-title">📋 내역</div>
     </div>
     <!-- 검색창 -->
-    <div style="position:relative;margin-bottom:10px;">
-      <input class="finput" id="recordSearch" type="text" placeholder="🔍 내역 검색 (메모, 카테고리, 금액)"
-        oninput="renderRecords()"
+    <div style="position:relative;margin-bottom:8px;">
+      <input class="finput" id="recordSearch" type="text" placeholder="🔍 메모, 카테고리, 금액 검색"
+        oninput="window.renderRecords&&renderRecords()"
         style="padding-left:16px;padding-right:40px;">
       <button onclick="document.getElementById('recordSearch').value='';renderRecords();"
         style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;">✕</button>
+    </div>
+    <div style="margin-bottom:10px;">
+      <select id="recordPaymentFilter" class="finput" onchange="window.renderRecords&&renderRecords()" style="font-size:12px;padding:8px 12px;">
+        <option value="">💳 지출처 전체</option>
+        <option value="신한 신용카드(오소리)">신한 신용카드(오소리)</option>
+        <option value="국민 신용카드(오소리)">국민 신용카드(오소리)</option>
+        <option value="삼성 신용카드(오소리)">삼성 신용카드(오소리)</option>
+        <option value="백채 신용카드">백채 신용카드</option>
+        <option value="휴대폰결제(부엉이)">휴대폰결제(부엉이)</option>
+        <option value="현금(오소리)">현금(오소리)</option>
+        <option value="현금(우리통장)">현금(우리통장)</option>
+        <option value="현금(부엉이)">현금(부엉이)</option>
+      </select>
     </div>
     <div class="filter-row">
       <button class="fbtn active" onclick="setFilter('all',this)">전체</button>
@@ -2457,6 +2470,12 @@ function filteredRecords() {
              String(r.amount).includes(q);
     });
   }
+  // 지출처 필터
+  var payEl = document.getElementById('recordPaymentFilter');
+  var payFilter = payEl ? payEl.value : '';
+  if(payFilter) {
+    recs = recs.filter(function(r){ return r.payment === payFilter; });
+  }
   return recs;
 }
 
@@ -3373,7 +3392,7 @@ function renderSummary() {
 
 
 function renderRecords() {
-  var fr = filteredRecords(), list = document.getElementById('recordList');
+  window.renderRecords = renderRecords; // 전역 노출 (oninput에서 호출 가능하게)
   if(!fr.length){list.innerHTML='<div class="empty">이번 기간 내역이 없어요</div>';return;}
 
   // 이틀 전 날짜 계산
