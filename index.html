@@ -884,9 +884,9 @@
   <div id="installFixResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
 
   <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">📦 결제주기 이관 (22일 기준 전환)</div>
-    <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px;">기존에 <b>20일·21일</b>에 입력된 내역을 <b>전월분</b>으로 이관해요.<br>예: 6/20 → 6월분에서 5월분으로</div>
-    <button class="submit-btn" onclick="migratePeriod2022()" style="background:#7C3AED;">20일·21일 데이터 전월로 이관</button>
+    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">📦 결제주기 이관 (20일 기준 전환)</div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px;">22일 기준으로 <b>전월로 잘못 분류된 20일·21일</b> 데이터를 <b>당월</b>로 복구해요.<br>예: 6/20, 6/21 → 5월분에서 6월분으로</div>
+    <button class="submit-btn" onclick="migratePeriod2022()" style="background:#7C3AED;">20일·21일 데이터 당월로 복구</button>
     <div id="migrateResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
   </div>
 </div>
@@ -1267,13 +1267,13 @@ var COLORS2 = ['#4DABF7','#3182F6','#7950F2','#E64980','#FF922B','#37B24D','#F04
 // ── 기간 계산 ─────────────────────────────────────
 function getPeriodKey(date) {
   var d=date||new Date(), y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
-  if(day<22){m-=1; if(m<1){m=12;y-=1;}}
+  if(day<20){m-=1; if(m<1){m=12;y-=1;}}
   return y+'-'+String(m).padStart(2,'0');
 }
 function getPeriodRange(key) {
   var parts=key.split('-'), y=parseInt(parts[0]), m=parseInt(parts[1]);
   var em=m+1, ey=y; if(em>12){em=1;ey+=1;}
-  return { start:y+'-'+String(m).padStart(2,'0')+'-22', end:ey+'-'+String(em).padStart(2,'0')+'-21' };
+  return { start:y+'-'+String(m).padStart(2,'0')+'-20', end:ey+'-'+String(em).padStart(2,'0')+'-19' };
 }
 function periodLabel(key) { var p=key.split('-'); return parseInt(p[0])+'년 '+parseInt(p[1])+'월분'; }
 function periodRangeLabel(key) { var r=getPeriodRange(key); return r.start.slice(5).replace('-','/')+' ~ '+r.end.slice(5).replace('-','/'); }
@@ -2708,7 +2708,7 @@ window.fixInstallmentDates = async function() {
         // 1회차 결제주기 + (회차-1) 달 → 그 달 20일
         var tY = baseY, tM = baseM + (idx - 1);
         while(tM > 12){ tM -= 12; tY += 1; }
-        var newDate = tY+'-'+String(tM).padStart(2,'0')+'-22';
+        var newDate = tY+'-'+String(tM).padStart(2,'0')+'-20';
         var newPeriod = tY+'-'+String(tM).padStart(2,'0');
         if(it.data.date !== newDate || it.data.period !== newPeriod){
           promises.push(updateDoc(doc(db,'records',it.id), { date:newDate, period:newPeriod }));
@@ -2726,10 +2726,10 @@ window.fixInstallmentDates = async function() {
   }
 };
 
-// ── 결제주기 이관 (20일/21일 → 전월분으로) ──────────
+// ── 결제주기 이관 (20일/21일 → 당월로 복구) ──────────
 window.migratePeriod2022 = async function() {
   var resultEl = document.getElementById('migrateResult');
-  resultEl.textContent = '이관 중...';
+  resultEl.textContent = '복구 중...';
   try {
     var snap = await getDocs(collection(db,'records'));
     var fixCount = 0;
@@ -2739,25 +2739,26 @@ window.migratePeriod2022 = async function() {
       if(!r.date || !r.period) return;
       var parts = r.date.split('-');
       var day = parseInt(parts[2]);
-      // 20일 또는 21일인데 period가 같은 달로 잘못 설정된 경우
-      if((day === 20 || day === 21)){
+      // 20일 또는 21일인데 period가 전월로 잘못 설정된 경우 → 당월로 복구
+      if(day === 20 || day === 21){
         var dateYM = parts[0]+'-'+parts[1]; // 날짜의 연월
-        if(r.period === dateYM){
-          // 전월로 이관
-          var py = parseInt(parts[0]), pm = parseInt(parts[1])-1;
-          if(pm < 1){ pm = 12; py -= 1; }
-          var newPeriod = py+'-'+String(pm).padStart(2,'0');
-          promises.push(updateDoc(doc(db,'records',docSnap.id), {period: newPeriod}));
+        // 현재 period가 전월(날짜보다 한달 이전)로 잡혀있으면 복구
+        var py = parseInt(parts[0]), pm = parseInt(parts[1])-1;
+        if(pm < 1){ pm = 12; py -= 1; }
+        var prevYM = py+'-'+String(pm).padStart(2,'0');
+        if(r.period === prevYM){
+          // 당월로 복구
+          promises.push(updateDoc(doc(db,'records',docSnap.id), {period: dateYM}));
           fixCount++;
         }
       }
     });
     await Promise.all(promises);
-    resultEl.textContent = fixCount>0 ? ('✅ '+fixCount+'건 이관 완료!') : '✅ 이관할 항목이 없어요';
-    toast(fixCount>0 ? (fixCount+'건 이관됐어요 📦') : '이미 정리되어 있어요');
+    resultEl.textContent = fixCount>0 ? ('✅ '+fixCount+'건 복구 완료!') : '✅ 복구할 항목이 없어요';
+    toast(fixCount>0 ? (fixCount+'건 복구됐어요 📦') : '이미 정리되어 있어요');
   } catch(e){
     resultEl.textContent = '❌ 오류: '+e.message;
-    toast('이관 실패');
+    toast('복구 실패');
   }
 };
 
@@ -4515,7 +4516,7 @@ window.addExpense = async function(){
           period = getPeriodKey(now);
         } else {
           // 2회차부터: 한 달씩 뒤로 + 무조건 20일
-          var d = new Date(now.getFullYear(), now.getMonth() + i, 22);
+          var d = new Date(now.getFullYear(), now.getMonth() + i, 20);
           dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-20';
           period = getPeriodKey(d);
         }
