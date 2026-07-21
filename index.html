@@ -4508,8 +4508,10 @@ function loadSettleData() {
       settleData.rows = data.rows || [];
       settleAutoAmts = data.autoAmts || {};
     }
-    renderSettle();
-  }).catch(function(){ renderSettle(); });
+    // 정산 시트가 열려있을 때만 렌더 (초기화 시엔 렌더 안 함)
+    var sc = document.getElementById('settleContent');
+    if(sc && sc.parentElement && sc.parentElement.id==='moreSheetBody') renderSettle();
+  }).catch(function(e){ console.error('settle 로드 오류:', e); });
 }
 
 function saveSettleData() {
