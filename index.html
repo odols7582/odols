@@ -4650,7 +4650,9 @@ window.saveSettleDebounced = function() {
   settleSaveTimer = setTimeout(function(){ saveSettleData(); }, 800);
 };
 
-
+function loadCardData() {
+  getDoc(doc(db,'settings','cardAmounts_'+currentKey)).then(function(d){
+    cardDataCache = d.exists() ? (d.data()||{}) : {};
     var parts = currentKey.split('-');
     var py = parseInt(parts[0]), pm = parseInt(parts[1])-1;
     if(pm<1){pm=12;py-=1;}
