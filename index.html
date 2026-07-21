@@ -771,6 +771,7 @@
     <div class="more-card" onclick="openMoreSheet('fixed')"><div class="more-icon">📋</div><div class="more-name">고정지출 관리</div><div class="more-desc">매월 반복 지출 자동 입력</div></div>
     <div class="more-card" onclick="openMoreSheet('export')"><div class="more-icon">📊</div><div class="more-name">데이터 내보내기</div><div class="more-desc">CSV로 가계부 다운로드</div></div>
     <div class="more-card" onclick="openMoreSheet('loan')"><div class="more-icon">🏦</div><div class="more-name">대출 관리</div><div class="more-desc">잔액·납입 회차별 관리</div></div>
+    <div class="more-card" onclick="openMoreSheet('cardcycle')"><div class="more-icon">💳</div><div class="more-name">카드 결제기준</div><div class="more-desc">카드별 사용기간·결제일 설정</div></div>
   </div>
 
   <!-- 🛠 편의 기능 -->
@@ -779,7 +780,7 @@
     <div class="more-card" onclick="openMoreSheet('acct')"><div class="more-icon">🏦</div><div class="more-name">계좌번호 메모</div><div class="more-desc">복사 버튼으로 빠르게 공유</div></div>
     <div class="more-card" onclick="openMoreSheet('food')"><div class="more-icon">🍽</div><div class="more-name">뭐 먹지?</div><div class="more-desc">오늘 메뉴 랜덤 추천</div></div>
     <div class="more-card" onclick="openMoreSheet('lotto')"><div class="more-icon">🎰</div><div class="more-name">AI 로또추천</div><div class="more-desc">AI가 행운번호 3세트 추천</div></div>
-    <div class="more-card" onclick="openMoreSheet('fix')"><div class="more-icon">🔧</div><div class="more-name">할부 날짜 정리</div><div class="more-desc">2회차부터 20일 일괄 수정</div></div>
+    <div class="more-card" onclick="openMoreSheet('fix')"><div class="more-icon">🔧</div><div class="more-name">할부 날짜 정리</div><div class="more-desc">2회차부터 22일 일괄 수정</div></div>
   </div>
 
   <!-- 📣 알림 & 일정 -->
@@ -848,6 +849,10 @@
   <div style="font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:16px;">이번 달 가계부 내역을 CSV 파일로 다운로드해요.</div>
   <button class="submit-btn" onclick="exportCSV()" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);">📥 CSV 다운로드</button>
 </div>
+<div id="cardcycleContent" style="display:none;">
+  <div style="font-size:11px;color:var(--sub);margin-bottom:14px;">각 카드사의 사용기간과 결제일을 입력하세요. 카드 결제 예상금액에 표시돼요.</div>
+  <div id="cardCycleList"></div>
+</div>
 <div id="acctContent" style="display:none;">
   <div id="acctList" style="margin-bottom:10px;"></div>
   <button onclick="document.getElementById('acctAddForm').style.display=document.getElementById('acctAddForm').style.display==='none'?'block':'none'" style="width:100%;padding:11px;background:#EFF6FF;color:#3182F6;border:1px dashed #3182F6;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">+ 계좌 추가</button>
@@ -884,9 +889,9 @@
   <div id="installFixResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
 
   <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">📦 결제주기 이관 (20일 기준 전환)</div>
-    <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px;">22일 기준으로 <b>전월로 잘못 분류된 20일·21일</b> 데이터를 <b>당월</b>로 복구해요.<br>예: 6/20, 6/21 → 5월분에서 6월분으로</div>
-    <button class="submit-btn" onclick="migratePeriod2022()" style="background:#7C3AED;">20일·21일 데이터 당월로 복구</button>
+    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">📦 결제주기 이관 (22일 기준)</div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px;">22일 기준에서 <b>20일·21일</b> 데이터는 <b>전월분</b>이에요.<br>당월분으로 잘못 잡힌 걸 전월로 이관해요.</div>
+    <button class="submit-btn" onclick="migratePeriod2022()" style="background:#7C3AED;">20일·21일 데이터 전월로 이관</button>
     <div id="migrateResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
   </div>
 </div>
@@ -1267,13 +1272,13 @@ var COLORS2 = ['#4DABF7','#3182F6','#7950F2','#E64980','#FF922B','#37B24D','#F04
 // ── 기간 계산 ─────────────────────────────────────
 function getPeriodKey(date) {
   var d=date||new Date(), y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
-  if(day<20){m-=1; if(m<1){m=12;y-=1;}}
+  if(day<22){m-=1; if(m<1){m=12;y-=1;}}
   return y+'-'+String(m).padStart(2,'0');
 }
 function getPeriodRange(key) {
   var parts=key.split('-'), y=parseInt(parts[0]), m=parseInt(parts[1]);
   var em=m+1, ey=y; if(em>12){em=1;ey+=1;}
-  return { start:y+'-'+String(m).padStart(2,'0')+'-20', end:ey+'-'+String(em).padStart(2,'0')+'-19' };
+  return { start:y+'-'+String(m).padStart(2,'0')+'-22', end:ey+'-'+String(em).padStart(2,'0')+'-21' };
 }
 function periodLabel(key) { var p=key.split('-'); return parseInt(p[0])+'년 '+parseInt(p[1])+'월분'; }
 function periodRangeLabel(key) { var r=getPeriodRange(key); return r.start.slice(5).replace('-','/')+' ~ '+r.end.slice(5).replace('-','/'); }
@@ -1375,6 +1380,7 @@ function showMain() {
   try { loadBudgets(); } catch(e){ console.error('budget 오류:', e); }
   try { loadFixed(); } catch(e){ console.error('fixed 오류:', e); }
   try { loadCardData(); } catch(e){ console.error('card 오류:', e); }
+  try { loadCardCycles(); } catch(e){ console.error('cardCycles 오류:', e); }
   try { loadFoods(); } catch(e){ console.error('foods 오류:', e); }
   // 5월 기초금액 최초 세팅 (한번만)
   try {
@@ -1998,7 +2004,8 @@ function renderBudgetStatusHome() {
   });
 
   var html = '<div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:12px;">'+
-    '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;">💸 이번달 예산 현황</div>'+
+    '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">💸 이번달 예산 현황</div>'+
+    '<div style="font-size:11px;color:var(--p1);background:#EFF6FF;padding:7px 12px;border-radius:8px;margin-bottom:12px;">🔄 매월 22일에 예산이 초기화됩니다</div>'+
     keys.map(function(cat){
       var spent = catMap[cat]||0;
       var budget = budgets[cat];
@@ -2705,10 +2712,10 @@ window.fixInstallmentDates = async function() {
       items.forEach(function(it){
         var idx = it.data.installmentIndex;
         if(idx === 1) return; // 1회차는 입력일 유지
-        // 1회차 결제주기 + (회차-1) 달 → 그 달 20일
+        // 1회차 결제주기 + (회차-1) 달 → 그 달 22일 (결제주기 시작일)
         var tY = baseY, tM = baseM + (idx - 1);
         while(tM > 12){ tM -= 12; tY += 1; }
-        var newDate = tY+'-'+String(tM).padStart(2,'0')+'-20';
+        var newDate = tY+'-'+String(tM).padStart(2,'0')+'-22';
         var newPeriod = tY+'-'+String(tM).padStart(2,'0');
         if(it.data.date !== newDate || it.data.period !== newPeriod){
           promises.push(updateDoc(doc(db,'records',it.id), { date:newDate, period:newPeriod }));
@@ -2744,30 +2751,30 @@ window.migratePeriod2022 = async function() {
       var y = parseInt(parts[0]);
       var m = parseInt(parts[1]);
       var day = parseInt(parts[2]);
-      // 20일 또는 21일인 데이터
+      // 20일 또는 21일인 데이터 → 22일 기준에서는 전월분
       if(day !== 20 && day !== 21) return;
-      // 이 날짜가 20일 기준으로 속해야 할 올바른 period
-      var correctPeriod = y+'-'+String(m).padStart(2,'0');
-      // 현재 저장된 period가 전월인 경우 (패딩 유무 모두 체크)
+      // 22일 기준으로 이 날짜가 속해야 할 올바른 period = 전월
       var py = m===1 ? y-1 : y;
       var pm = m===1 ? 12 : m-1;
-      var prevPad = py+'-'+String(pm).padStart(2,'0'); // 2026-06
-      var prevRaw = py+'-'+pm;                          // 2026-6
+      var correctPeriod = py+'-'+String(pm).padStart(2,'0'); // 전월
+      // 현재 저장된 period가 당월이면 (잘못됨) → 전월로 이관
+      var curMonth = y+'-'+String(m).padStart(2,'0');
+      var curMonthRaw = y+'-'+m;
       var cur = (r.period||'').trim();
-      console.log('체크:', r.date, '현재period:', cur, '전월:', prevPad, '정상:', correctPeriod);
-      if(cur === prevPad || cur === prevRaw){
+      console.log('체크:', r.date, '현재period:', cur, '→ 정상(전월):', correctPeriod);
+      if(cur === curMonth || cur === curMonthRaw){
         promises.push(updateDoc(doc(db,'records',docSnap.id), {period: correctPeriod}));
         fixCount++;
-        console.log('→ 복구:', cur, '→', correctPeriod);
+        console.log('→ 이관:', cur, '→', correctPeriod);
       }
     });
-    console.log('전체:', checked, '건 확인, 복구 대상:', fixCount, '건');
+    console.log('전체:', checked, '건 확인, 이관 대상:', fixCount, '건');
     await Promise.all(promises);
-    var msg = fixCount>0 ? ('✅ '+fixCount+'건 복구! ('+checked+'건 조회)') : ('조회 '+checked+'건 · 복구 대상 없음');
+    var msg = fixCount>0 ? ('✅ '+fixCount+'건 이관! ('+checked+'건 조회)') : ('조회 '+checked+'건 · 이관 대상 없음');
     if(resultEl) resultEl.textContent = msg;
-    toast(fixCount>0 ? fixCount+'건 복구됐어요 📦' : '복구 대상이 없어요 (콘솔 확인)');
+    toast(fixCount>0 ? fixCount+'건 이관됐어요 📦' : '이관 대상이 없어요 (콘솔 확인)');
   } catch(e){
-    console.error('복구 오류:', e);
+    console.error('이관 오류:', e);
     if(resultEl) resultEl.textContent = '❌ '+e.message;
     toast('오류: '+e.message);
   }
@@ -3070,7 +3077,8 @@ var moreSheetTitles = {
   goal:'🎯 공동 저축 목표', budget:'💸 카테고리별 예산', fixed:'📋 고정지출 관리',
   export:'📊 데이터 내보내기', acct:'🏦 계좌번호 메모', food:'🍽 뭐 먹지?',
   lotto:'🎰 AI 로또번호 추천', fix:'🔧 할부 날짜 정리',
-  notif:'📣 알림 보내기', dday:'📅 기념일 & D-day', loan:'🏦 대출 관리'
+  notif:'📣 알림 보내기', dday:'📅 기념일 & D-day', loan:'🏦 대출 관리',
+  cardcycle:'💳 카드 결제기준 설정'
 };
 
 window.openMoreSheet = function(key) {
@@ -3097,6 +3105,7 @@ window.openMoreSheet = function(key) {
   if(key==='food') renderFoodList();
   if(key==='dday') renderDdays();
   if(key==='loan') renderLoanList();
+  if(key==='cardcycle') renderCardCycleSettings();
   // 바텀시트 열릴 때 num-format 입력 적용
   setTimeout(function(){ initNumFormat(); }, 100);
 };
@@ -4352,6 +4361,45 @@ var CARD_PAYMENTS = [
 
 var cardDataCache = {};
 var prevCardDataCache = {};
+var cardCycles = {};  // 카드별 결제기준 {key: {startDay, endDay, payMonth, payDay}}
+
+function loadCardCycles() {
+  getDoc(doc(db,'settings','cardCycles')).then(function(d){
+    cardCycles = d.exists() ? (d.data()||{}) : {};
+    renderCardSummary();
+    if(typeof renderCardCycleSettings === 'function') renderCardCycleSettings();
+  }).catch(function(){ cardCycles={}; });
+}
+
+window.saveCardCycle = function(key) {
+  var s = parseInt(document.getElementById('cyc_'+key+'_start').value)||22;
+  var e = parseInt(document.getElementById('cyc_'+key+'_end').value)||21;
+  var pm = parseInt(document.getElementById('cyc_'+key+'_paymonth').value)||8;
+  var pd = parseInt(document.getElementById('cyc_'+key+'_payday').value)||5;
+  cardCycles[key] = {startDay:s, endDay:e, payMonth:pm, payDay:pd};
+  setDoc(doc(db,'settings','cardCycles'), cardCycles, {merge:true});
+  renderCardSummary();
+  renderCardCycleSettings();
+  toast('결제기준 저장됐어요 ✅');
+};
+
+function renderCardCycleSettings() {
+  var el = document.getElementById('cardCycleList');
+  if(!el) return;
+  el.innerHTML = CARD_PAYMENTS.filter(function(c){return c.key!=='phone_b';}).map(function(c){
+    var cyc = cardCycles[c.key] || {startDay:22, endDay:21, payMonth:8, payDay:5};
+    return '<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:10px;">'+
+      '<div style="font-size:12px;font-weight:700;margin-bottom:8px;">'+esc(c.name)+'</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">'+
+        '<div><label class="flabel" style="font-size:11px;">사용 시작일</label><input class="finput" id="cyc_'+c.key+'_start" type="number" value="'+cyc.startDay+'" min="1" max="31" style="padding:8px;font-size:12px;"></div>'+
+        '<div><label class="flabel" style="font-size:11px;">사용 종료일</label><input class="finput" id="cyc_'+c.key+'_end" type="number" value="'+cyc.endDay+'" min="1" max="31" style="padding:8px;font-size:12px;"></div>'+
+        '<div><label class="flabel" style="font-size:11px;">결제일</label><input class="finput" id="cyc_'+c.key+'_payday" type="number" value="'+cyc.payDay+'" min="1" max="31" style="padding:8px;font-size:12px;"></div>'+
+      '</div>'+
+      '<div style="display:none;"><input id="cyc_'+c.key+'_paymonth" value="'+cyc.payMonth+'"></div>'+
+      '<button onclick="saveCardCycle(\''+c.key+'\')" style="width:100%;margin-top:8px;padding:8px;background:var(--p1);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">저장</button>'+
+    '</div>';
+  }).join('');
+}
 
 function loadCardData() {
   getDoc(doc(db,'settings','cardAmounts_'+currentKey)).then(function(d){
@@ -4428,6 +4476,8 @@ function renderCardSummary() {
     prevUnpaidHtml+
     rows.map(function(row){
       if(row.total===0&&!row.isPaid) return '';
+      var cyc = cardCycles[row.c.key];
+      var cycleBadge = cyc ? '<div style="font-size:11px;color:#8B95A1;background:#3D444A;padding:3px 8px;border-radius:6px;display:inline-block;margin-bottom:6px;">📅 '+cyc.startDay+'일~익월 '+cyc.endDay+'일 사용 · '+cyc.payMonth+'월 '+cyc.payDay+'일 결제</div>' : '';
       return '<div style="padding:10px 14px;border-top:1px solid #3D444A;">'+
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'+
           '<span style="font-size:12px;font-weight:700;color:#E8EAED;">'+esc(row.c.name)+'</span>'+
@@ -4436,6 +4486,7 @@ function renderCardSummary() {
             '<button onclick="toggleCardPaid(\''+row.c.key+'\')" style="background:'+(row.isPaid?'#3D444A':'#5DA8FF')+';color:'+(row.isPaid?'#A8AEB4':'#fff')+';border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">'+(row.isPaid?'취소':'납부완료')+'</button>'+
           '</div>'+
         '</div>'+
+        (cycleBadge?'<div>'+cycleBadge+'</div>':'')+
         '<div style="display:flex;gap:12px;font-size:12px;color:#A8AEB4;">'+
           (row.lump>0?'<span>일시불: '+fmt(row.lump)+'원</span>':'')+
           (row.inst>0?'<span>할부: '+fmt(row.inst)+'원</span>':'')+
@@ -4526,9 +4577,9 @@ window.addExpense = async function(){
           dateStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
           period = getPeriodKey(now);
         } else {
-          // 2회차부터: 한 달씩 뒤로 + 무조건 20일
-          var d = new Date(now.getFullYear(), now.getMonth() + i, 20);
-          dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-20';
+          // 2회차부터: 한 달씩 뒤로 + 무조건 22일 (결제주기 시작일)
+          var d = new Date(now.getFullYear(), now.getMonth() + i, 22);
+          dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-22';
           period = getPeriodKey(d);
         }
         var monthAmt = (i === months-1) ? last : perMonth;
