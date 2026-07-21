@@ -2729,36 +2729,47 @@ window.fixInstallmentDates = async function() {
 // ── 결제주기 이관 (20일/21일 → 당월로 복구) ──────────
 window.migratePeriod2022 = async function() {
   var resultEl = document.getElementById('migrateResult');
-  resultEl.textContent = '복구 중...';
+  if(resultEl) resultEl.textContent = '조회 중...';
+  toast('데이터 조회 중...');
   try {
     var snap = await getDocs(collection(db,'records'));
-    var fixCount = 0;
+    var fixCount = 0, checked = 0;
     var promises = [];
     snap.forEach(function(docSnap){
       var r = docSnap.data();
-      if(!r.date || !r.period) return;
+      if(!r.date) return;
       var parts = r.date.split('-');
+      if(parts.length < 3) return;
+      checked++;
+      var y = parseInt(parts[0]);
+      var m = parseInt(parts[1]);
       var day = parseInt(parts[2]);
-      // 20일 또는 21일인데 period가 전월로 잘못 설정된 경우 → 당월로 복구
-      if(day === 20 || day === 21){
-        var dateYM = parts[0]+'-'+parts[1]; // 날짜의 연월
-        // 현재 period가 전월(날짜보다 한달 이전)로 잡혀있으면 복구
-        var py = parseInt(parts[0]), pm = parseInt(parts[1])-1;
-        if(pm < 1){ pm = 12; py -= 1; }
-        var prevYM = py+'-'+String(pm).padStart(2,'0');
-        if(r.period === prevYM){
-          // 당월로 복구
-          promises.push(updateDoc(doc(db,'records',docSnap.id), {period: dateYM}));
-          fixCount++;
-        }
+      // 20일 또는 21일인 데이터
+      if(day !== 20 && day !== 21) return;
+      // 이 날짜가 20일 기준으로 속해야 할 올바른 period
+      var correctPeriod = y+'-'+String(m).padStart(2,'0');
+      // 현재 저장된 period가 전월인 경우 (패딩 유무 모두 체크)
+      var py = m===1 ? y-1 : y;
+      var pm = m===1 ? 12 : m-1;
+      var prevPad = py+'-'+String(pm).padStart(2,'0'); // 2026-06
+      var prevRaw = py+'-'+pm;                          // 2026-6
+      var cur = (r.period||'').trim();
+      console.log('체크:', r.date, '현재period:', cur, '전월:', prevPad, '정상:', correctPeriod);
+      if(cur === prevPad || cur === prevRaw){
+        promises.push(updateDoc(doc(db,'records',docSnap.id), {period: correctPeriod}));
+        fixCount++;
+        console.log('→ 복구:', cur, '→', correctPeriod);
       }
     });
+    console.log('전체:', checked, '건 확인, 복구 대상:', fixCount, '건');
     await Promise.all(promises);
-    resultEl.textContent = fixCount>0 ? ('✅ '+fixCount+'건 복구 완료!') : '✅ 복구할 항목이 없어요';
-    toast(fixCount>0 ? (fixCount+'건 복구됐어요 📦') : '이미 정리되어 있어요');
+    var msg = fixCount>0 ? ('✅ '+fixCount+'건 복구! ('+checked+'건 조회)') : ('조회 '+checked+'건 · 복구 대상 없음');
+    if(resultEl) resultEl.textContent = msg;
+    toast(fixCount>0 ? fixCount+'건 복구됐어요 📦' : '복구 대상이 없어요 (콘솔 확인)');
   } catch(e){
-    resultEl.textContent = '❌ 오류: '+e.message;
-    toast('복구 실패');
+    console.error('복구 오류:', e);
+    if(resultEl) resultEl.textContent = '❌ '+e.message;
+    toast('오류: '+e.message);
   }
 };
 
