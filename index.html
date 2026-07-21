@@ -4361,7 +4361,7 @@ var CARD_PAYMENTS = [
 
 var cardDataCache = {};
 var prevCardDataCache = {};
-var cardCycles = {};  // 카드별 결제기준 {key: {startDay, endDay, payMonth, payDay}}
+var cardCycles = {};  // 카드별 결제기준 {key: {startDay, endDay, payOffset, payDay}}
 
 function loadCardCycles() {
   getDoc(doc(db,'settings','cardCycles')).then(function(d){
@@ -4374,9 +4374,9 @@ function loadCardCycles() {
 window.saveCardCycle = function(key) {
   var s = parseInt(document.getElementById('cyc_'+key+'_start').value)||22;
   var e = parseInt(document.getElementById('cyc_'+key+'_end').value)||21;
-  var pm = parseInt(document.getElementById('cyc_'+key+'_paymonth').value)||8;
+  var off = parseInt(document.getElementById('cyc_'+key+'_offset').value)||1;
   var pd = parseInt(document.getElementById('cyc_'+key+'_payday').value)||5;
-  cardCycles[key] = {startDay:s, endDay:e, payMonth:pm, payDay:pd};
+  cardCycles[key] = {startDay:s, endDay:e, payOffset:off, payDay:pd};
   setDoc(doc(db,'settings','cardCycles'), cardCycles, {merge:true});
   renderCardSummary();
   renderCardCycleSettings();
@@ -4387,15 +4387,23 @@ function renderCardCycleSettings() {
   var el = document.getElementById('cardCycleList');
   if(!el) return;
   el.innerHTML = CARD_PAYMENTS.filter(function(c){return c.key!=='phone_b';}).map(function(c){
-    var cyc = cardCycles[c.key] || {startDay:22, endDay:21, payMonth:8, payDay:5};
+    var cyc = cardCycles[c.key] || {startDay:22, endDay:21, payOffset:1, payDay:5};
+    var off = (typeof cyc.payOffset==='number') ? cyc.payOffset : 1;
     return '<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:10px;">'+
       '<div style="font-size:12px;font-weight:700;margin-bottom:8px;">'+esc(c.name)+'</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">'+
         '<div><label class="flabel" style="font-size:11px;">사용 시작일</label><input class="finput" id="cyc_'+c.key+'_start" type="number" value="'+cyc.startDay+'" min="1" max="31" style="padding:8px;font-size:12px;"></div>'+
         '<div><label class="flabel" style="font-size:11px;">사용 종료일</label><input class="finput" id="cyc_'+c.key+'_end" type="number" value="'+cyc.endDay+'" min="1" max="31" style="padding:8px;font-size:12px;"></div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">'+
+        '<div><label class="flabel" style="font-size:11px;">결제 시차</label>'+
+          '<select class="finput" id="cyc_'+c.key+'_offset" style="padding:8px;font-size:12px;">'+
+            '<option value="1"'+(off===1?' selected':'')+'>익월 결제</option>'+
+            '<option value="2"'+(off===2?' selected':'')+'>익익월 결제</option>'+
+          '</select>'+
+        '</div>'+
         '<div><label class="flabel" style="font-size:11px;">결제일</label><input class="finput" id="cyc_'+c.key+'_payday" type="number" value="'+cyc.payDay+'" min="1" max="31" style="padding:8px;font-size:12px;"></div>'+
       '</div>'+
-      '<div style="display:none;"><input id="cyc_'+c.key+'_paymonth" value="'+cyc.payMonth+'"></div>'+
       '<button onclick="saveCardCycle(\''+c.key+'\')" style="width:100%;margin-top:8px;padding:8px;background:var(--p1);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">저장</button>'+
     '</div>';
   }).join('');
@@ -4477,7 +4485,20 @@ function renderCardSummary() {
     rows.map(function(row){
       if(row.total===0&&!row.isPaid) return '';
       var cyc = cardCycles[row.c.key];
-      var cycleBadge = cyc ? '<div style="font-size:11px;color:#8B95A1;background:#3D444A;padding:3px 8px;border-radius:6px;display:inline-block;margin-bottom:6px;">📅 '+cyc.startDay+'일~익월 '+cyc.endDay+'일 사용 · '+cyc.payMonth+'월 '+cyc.payDay+'일 결제</div>' : '';
+      var cycleBadge = '';
+      if(cyc) {
+        // 현재 보고 있는 월분(currentKey) 기준으로 실제 결제월 계산
+        // 사용 마감일(endDay)이 속한 달의 다음 시차만큼 뒤가 결제월
+        var ckParts = currentKey.split('-');
+        var ckY = parseInt(ckParts[0]), ckM = parseInt(ckParts[1]);
+        // 결제 시차: 보통 사용월 다음달(익월) 또는 익익월 결제
+        // payMonthOffset: 저장된 payMonth와 무관하게, 사용마감 후 몇 달 뒤 결제인지
+        var offset = (typeof cyc.payOffset === 'number') ? cyc.payOffset : 1;
+        var payM = ckM + offset;
+        var payY = ckY;
+        while(payM > 12){ payM -= 12; payY += 1; }
+        cycleBadge = '<div style="font-size:11px;color:#8B95A1;background:#3D444A;padding:3px 8px;border-radius:6px;display:inline-block;margin-bottom:6px;">📅 '+cyc.startDay+'일~익월 '+cyc.endDay+'일 사용 · '+payM+'월 '+cyc.payDay+'일 결제</div>';
+      }
       return '<div style="padding:10px 14px;border-top:1px solid #3D444A;">'+
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'+
           '<span style="font-size:12px;font-weight:700;color:#E8EAED;">'+esc(row.c.name)+'</span>'+
