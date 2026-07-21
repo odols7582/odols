@@ -771,6 +771,8 @@
     <div class="more-card" onclick="openMoreSheet('fixed')"><div class="more-icon">📋</div><div class="more-name">고정지출 관리</div><div class="more-desc">매월 반복 지출 자동 입력</div></div>
     <div class="more-card" onclick="openMoreSheet('export')"><div class="more-icon">📊</div><div class="more-name">데이터 내보내기</div><div class="more-desc">CSV로 가계부 다운로드</div></div>
     <div class="more-card" onclick="openMoreSheet('loan')"><div class="more-icon">🏦</div><div class="more-name">대출 관리</div><div class="more-desc">잔액·납입 회차별 관리</div></div>
+    <div class="more-card" onclick="openMoreSheet('cardcycle')"><div class="more-icon">💳</div><div class="more-name">카드 결제기준</div><div class="more-desc">카드별 사용기간·결제일 설정</div></div>
+    <div class="more-card" onclick="openMoreSheet('settle')"><div class="more-icon">🧮</div><div class="more-name">예상 정산</div><div class="more-desc">수입·지출 예상 잔여 현금 계산</div></div>
   </div>
 
   <!-- 🛠 편의 기능 -->
@@ -779,7 +781,7 @@
     <div class="more-card" onclick="openMoreSheet('acct')"><div class="more-icon">🏦</div><div class="more-name">계좌번호 메모</div><div class="more-desc">복사 버튼으로 빠르게 공유</div></div>
     <div class="more-card" onclick="openMoreSheet('food')"><div class="more-icon">🍽</div><div class="more-name">뭐 먹지?</div><div class="more-desc">오늘 메뉴 랜덤 추천</div></div>
     <div class="more-card" onclick="openMoreSheet('lotto')"><div class="more-icon">🎰</div><div class="more-name">AI 로또추천</div><div class="more-desc">AI가 행운번호 3세트 추천</div></div>
-    <div class="more-card" onclick="openMoreSheet('fix')"><div class="more-icon">🔧</div><div class="more-name">할부 날짜 정리</div><div class="more-desc">2회차부터 20일 일괄 수정</div></div>
+    <div class="more-card" onclick="openMoreSheet('fix')"><div class="more-icon">🔧</div><div class="more-name">할부 날짜 정리</div><div class="more-desc">2회차부터 22일 일괄 수정</div></div>
   </div>
 
   <!-- 📣 알림 & 일정 -->
@@ -842,6 +844,50 @@
     </div>
     <div class="fgroup"><label class="flabel">금액</label><input class="finput num-format" id="fixedAmount" type="text" placeholder="0"></div>
     <button class="submit-btn" onclick="addFixed()" style="background:#7C3AED;">고정지출 추가</button>
+  </div>
+</div>
+<div id="cardcycleContent" style="display:none;">
+  <div style="font-size:11px;color:var(--sub);margin-bottom:14px;">각 카드사의 사용기간과 결제일을 입력하세요. 카드 결제 예상금액에 표시돼요.</div>
+  <div id="cardCycleList"></div>
+</div>
+<div id="settleContent" style="display:none;">
+  <!-- 결과 카드 -->
+  <div style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);border-radius:16px;padding:20px;color:#fff;margin-bottom:14px;">
+    <div style="font-size:12px;opacity:.85;margin-bottom:4px;">💵 예상 잔여 현금</div>
+    <div style="font-size:26px;font-weight:800;margin-bottom:8px;" id="settleResult">0원</div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;opacity:.9;">
+      <span id="settleIncomeSum">수입 0</span>
+      <span id="settleExpenseSum">지출 0</span>
+    </div>
+  </div>
+
+  <!-- 자동집계 토글 -->
+  <div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,.05);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <span style="font-size:12px;font-weight:700;">💳 지출처별 자동집계</span>
+      <label style="position:relative;width:44px;height:24px;display:inline-block;">
+        <input type="checkbox" id="settleAutoToggle" checked onchange="toggleSettleAuto()" style="opacity:0;width:0;height:0;">
+        <span id="settleAutoSlider" style="position:absolute;cursor:pointer;inset:0;background:#3182F6;border-radius:24px;transition:.2s;"></span>
+        <span id="settleAutoKnob" style="position:absolute;height:18px;width:18px;left:23px;top:3px;background:#fff;border-radius:50%;transition:.2s;pointer-events:none;"></span>
+      </label>
+    </div>
+    <div style="font-size:11px;color:var(--muted);">이번 월분 지출을 지출처별로 끌어와 정산에 포함해요</div>
+    <div id="settleAutoList" style="margin-top:12px;"></div>
+  </div>
+
+  <!-- 엑셀형 직접 입력 -->
+  <div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,.05);">
+    <div style="font-size:12px;font-weight:700;margin-bottom:12px;">✍️ 직접 입력</div>
+    <div style="display:grid;grid-template-columns:56px 1fr 96px 24px;gap:6px;padding:0 2px 6px;font-size:10px;color:var(--muted);font-weight:700;">
+      <span>구분</span><span>항목명</span><span style="text-align:right;">금액</span><span></span>
+    </div>
+    <div id="settleRows"></div>
+    <button onclick="addSettleRow()" style="width:100%;padding:11px;background:var(--surface2);color:var(--sub);border:1px dashed var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px;">+ 항목 추가</button>
+  </div>
+
+  <div style="font-size:11px;color:var(--muted);text-align:center;line-height:1.6;">
+    * 자동집계 스위치를 끄면 지출처별 금액이 정산에서 빠져요<br>
+    * 직접 입력한 항목은 저장되어 유지돼요
   </div>
 </div>
 <div id="exportContent" style="display:none;">
@@ -1277,13 +1323,13 @@ var COLORS2 = ['#4DABF7','#3182F6','#7950F2','#E64980','#FF922B','#37B24D','#F04
 // ── 기간 계산 ─────────────────────────────────────
 function getPeriodKey(date) {
   var d=date||new Date(), y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
-  if(day<20){m-=1; if(m<1){m=12;y-=1;}}
+  if(day<22){m-=1; if(m<1){m=12;y-=1;}}
   return y+'-'+String(m).padStart(2,'0');
 }
 function getPeriodRange(key) {
   var parts=key.split('-'), y=parseInt(parts[0]), m=parseInt(parts[1]);
   var em=m+1, ey=y; if(em>12){em=1;ey+=1;}
-  return { start:y+'-'+String(m).padStart(2,'0')+'-20', end:ey+'-'+String(em).padStart(2,'0')+'-19' };
+  return { start:y+'-'+String(m).padStart(2,'0')+'-22', end:ey+'-'+String(em).padStart(2,'0')+'-21' };
 }
 function periodLabel(key) { var p=key.split('-'); return parseInt(p[0])+'년 '+parseInt(p[1])+'월분'; }
 function periodRangeLabel(key) { var r=getPeriodRange(key); return r.start.slice(5).replace('-','/')+' ~ '+r.end.slice(5).replace('-','/'); }
@@ -1385,6 +1431,8 @@ function showMain() {
   try { loadBudgets(); } catch(e){ console.error('budget 오류:', e); }
   try { loadFixed(); } catch(e){ console.error('fixed 오류:', e); }
   try { loadCardData(); } catch(e){ console.error('card 오류:', e); }
+  try { loadCardCycles(); } catch(e){ console.error('cardCycles 오류:', e); }
+  try { loadSettleData(); } catch(e){ console.error('settle 오류:', e); }
   try { loadFoods(); } catch(e){ console.error('foods 오류:', e); }
   // 5월 기초금액 최초 세팅 (한번만)
   try {
@@ -2008,7 +2056,8 @@ function renderBudgetStatusHome() {
   });
 
   var html = '<div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:12px;">'+
-    '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;">💸 이번달 예산 현황</div>'+
+    '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">💸 이번달 예산 현황</div>'+
+    '<div style="font-size:11px;color:var(--p1);background:#EFF6FF;padding:7px 12px;border-radius:8px;margin-bottom:12px;">🔄 매월 22일에 예산이 초기화됩니다</div>'+
     keys.map(function(cat){
       var spent = catMap[cat]||0;
       var budget = budgets[cat];
@@ -2682,7 +2731,7 @@ window.sendManualNotif = async function() {
   } catch(e){ toast('전송 실패'); }
 };
 
-// 기존 할부 2회차+ 날짜를 해당 월 20일로 일괄 정리
+// 기존 할부 2회차+ 날짜를 해당 월 22일로 일괄 정리
 window.fixInstallmentDates = async function() {
   var resultEl = document.getElementById('installFixResult');
   resultEl.textContent = '정리 중...';
@@ -2718,7 +2767,7 @@ window.fixInstallmentDates = async function() {
         // 1회차 결제주기 + (회차-1) 달 → 그 달 20일
         var tY = baseY, tM = baseM + (idx - 1);
         while(tM > 12){ tM -= 12; tY += 1; }
-        var newDate = tY+'-'+String(tM).padStart(2,'0')+'-20';
+        var newDate = tY+'-'+String(tM).padStart(2,'0')+'-22';
         var newPeriod = tY+'-'+String(tM).padStart(2,'0');
         if(it.data.date !== newDate || it.data.period !== newPeriod){
           promises.push(updateDoc(doc(db,'records',it.id), { date:newDate, period:newPeriod }));
@@ -3109,7 +3158,8 @@ var moreSheetTitles = {
   goal:'🎯 공동 저축 목표', budget:'💸 카테고리별 예산', fixed:'📋 고정지출 관리',
   export:'📊 데이터 내보내기', acct:'🏦 계좌번호 메모', food:'🍽 뭐 먹지?',
   lotto:'🎰 AI 로또번호 추천', fix:'🔧 할부 날짜 정리',
-  notif:'📣 알림 보내기', dday:'📅 기념일 & D-day', loan:'🏦 대출 관리'
+  notif:'📣 알림 보내기', dday:'📅 기념일 & D-day', loan:'🏦 대출 관리',
+  cardcycle:'💳 카드 결제기준 설정', settle:'🧮 예상 정산'
 };
 
 window.openMoreSheet = function(key) {
@@ -3136,6 +3186,8 @@ window.openMoreSheet = function(key) {
   if(key==='food') renderFoodList();
   if(key==='dday') renderDdays();
   if(key==='loan') renderLoanList();
+  if(key==='cardcycle') renderCardCycleSettings();
+  if(key==='settle') renderSettle();
   // 바텀시트 열릴 때 num-format 입력 적용
   setTimeout(function(){ initNumFormat(); }, 100);
 };
@@ -4396,10 +4448,207 @@ var CARD_PAYMENTS = [
 
 var cardDataCache = {};
 var prevCardDataCache = {};
+var cardCycles = {};  // 카드별 결제기준 {key: {startDay, endDay, payOffset, payDay}}
 
-function loadCardData() {
-  getDoc(doc(db,'settings','cardAmounts_'+currentKey)).then(function(d){
-    cardDataCache = d.exists() ? (d.data()||{}) : {};
+function loadCardCycles() {
+  getDoc(doc(db,'settings','cardCycles')).then(function(d){
+    cardCycles = d.exists() ? (d.data()||{}) : {};
+    renderCardSummary();
+    if(typeof renderCardCycleSettings === 'function') renderCardCycleSettings();
+  }).catch(function(){ cardCycles={}; });
+}
+
+window.saveCardCycle = function(key) {
+  var s = parseInt(document.getElementById('cyc_'+key+'_start').value)||22;
+  var e = parseInt(document.getElementById('cyc_'+key+'_end').value)||21;
+  var off = parseInt(document.getElementById('cyc_'+key+'_offset').value)||1;
+  var pd = parseInt(document.getElementById('cyc_'+key+'_payday').value)||5;
+  cardCycles[key] = {startDay:s, endDay:e, payOffset:off, payDay:pd};
+  setDoc(doc(db,'settings','cardCycles'), cardCycles, {merge:true});
+  renderCardSummary();
+  renderCardCycleSettings();
+  toast('결제기준 저장됐어요 ✅');
+};
+
+function renderCardCycleSettings() {
+  var el = document.getElementById('cardCycleList');
+  if(!el) return;
+  el.innerHTML = CARD_PAYMENTS.filter(function(c){return c.key!=='phone_b';}).map(function(c){
+    var cyc = cardCycles[c.key] || {startDay:22, endDay:21, payOffset:1, payDay:5};
+    var off = (typeof cyc.payOffset==='number') ? cyc.payOffset : 1;
+    return '<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:10px;">'+
+      '<div style="font-size:12px;font-weight:700;margin-bottom:8px;">'+esc(c.name)+'</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">'+
+        '<div><label class="flabel" style="font-size:11px;">사용 시작일</label><input class="finput" id="cyc_'+c.key+'_start" type="number" value="'+cyc.startDay+'" min="1" max="31" style="padding:8px;font-size:12px;"></div>'+
+        '<div><label class="flabel" style="font-size:11px;">사용 종료일</label><input class="finput" id="cyc_'+c.key+'_end" type="number" value="'+cyc.endDay+'" min="1" max="31" style="padding:8px;font-size:12px;"></div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">'+
+        '<div><label class="flabel" style="font-size:11px;">결제 시차</label>'+
+          '<select class="finput" id="cyc_'+c.key+'_offset" style="padding:8px;font-size:12px;">'+
+            '<option value="1"'+(off===1?' selected':'')+'>익월 결제</option>'+
+            '<option value="2"'+(off===2?' selected':'')+'>익익월 결제</option>'+
+          '</select>'+
+        '</div>'+
+        '<div><label class="flabel" style="font-size:11px;">결제일</label><input class="finput" id="cyc_'+c.key+'_payday" type="number" value="'+cyc.payDay+'" min="1" max="31" style="padding:8px;font-size:12px;"></div>'+
+      '</div>'+
+      '<button onclick="saveCardCycle(\''+c.key+'\')" style="width:100%;margin-top:8px;padding:8px;background:var(--p1);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">저장</button>'+
+    '</div>';
+  }).join('');
+}
+
+// ── 예상 정산 ─────────────────────────────────────
+var settleData = { autoOn:true, rows:[] };
+var settleAutoAmts = {}; // 지출처별 사용자 수정값 저장
+
+function loadSettleData() {
+  getDoc(doc(db,'settings','settle')).then(function(d){
+    if(d.exists()){
+      var data = d.data()||{};
+      settleData.autoOn = data.autoOn !== false;
+      settleData.rows = data.rows || [];
+      settleAutoAmts = data.autoAmts || {};
+    }
+    renderSettle();
+  }).catch(function(){ renderSettle(); });
+}
+
+function saveSettleData() {
+  // 현재 DOM에서 rows 수집
+  var rows = [];
+  document.querySelectorAll('#settleRows .settle-row').forEach(function(r){
+    var type = r.querySelector('.settle-type').dataset.type;
+    var name = r.querySelector('.settle-name').value.trim();
+    var amt = parseNum(r.querySelector('.settle-amt').value);
+    if(name || amt) rows.push({type:type, name:name, amt:amt});
+  });
+  settleData.rows = rows;
+  // 자동집계 수정값 수집
+  var autoAmts = {};
+  document.querySelectorAll('#settleAutoList .settle-auto-inp').forEach(function(inp){
+    autoAmts[inp.dataset.key] = parseNum(inp.value);
+  });
+  settleAutoAmts = autoAmts;
+  setDoc(doc(db,'settings','settle'), {autoOn:settleData.autoOn, rows:rows, autoAmts:autoAmts}, {merge:true});
+}
+
+function getSettleAutoData() {
+  // 지출처별 자동집계 (현금 제외)
+  var result = [];
+  CARD_PAYMENTS.forEach(function(c){
+    var sum = records.filter(function(r){
+      return r.type==='expense' && r.payment===c.payment;
+    }).reduce(function(a,r){return a+r.amount;},0);
+    if(sum>0) result.push({key:c.key, name:c.name, payment:c.payment, amount:sum});
+  });
+  return result;
+}
+
+function renderSettle() {
+  var autoList = document.getElementById('settleAutoList');
+  var rowsEl = document.getElementById('settleRows');
+  if(!autoList || !rowsEl) return;
+
+  // 자동집계 렌더
+  var autoData = getSettleAutoData();
+  autoList.innerHTML = autoData.map(function(a){
+    var val = (typeof settleAutoAmts[a.key]==='number') ? settleAutoAmts[a.key] : a.amount;
+    var emoji = a.key==='phone_b' ? '📱' : '💳';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">'+
+      '<span style="font-size:12px;color:var(--sub);">'+emoji+' '+esc(a.name)+'</span>'+
+      '<input class="settle-auto-inp num-format" data-key="'+a.key+'" value="'+fmt(val)+'" oninput="calcSettle()" style="width:110px;text-align:right;font-weight:700;color:var(--expense);background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;outline:none;">'+
+    '</div>';
+  }).join('') || '<div style="font-size:11px;color:var(--muted);padding:4px;">이번 월분 카드 지출이 없어요</div>';
+  autoList.style.display = settleData.autoOn ? 'block' : 'none';
+
+  // 자동집계 토글 UI
+  var slider = document.getElementById('settleAutoSlider');
+  var knob = document.getElementById('settleAutoKnob');
+  var toggle = document.getElementById('settleAutoToggle');
+  if(toggle) toggle.checked = settleData.autoOn;
+  if(slider) slider.style.background = settleData.autoOn ? '#3182F6' : '#CED4DA';
+  if(knob) knob.style.left = settleData.autoOn ? '23px' : '3px';
+
+  // 직접입력 rows 렌더
+  if(!settleData.rows.length){
+    settleData.rows = [{type:'income', name:'', amt:0}];
+  }
+  rowsEl.innerHTML = settleData.rows.map(function(r){ return settleRowHtml(r.type, r.name, r.amt); }).join('');
+
+  setTimeout(function(){ initNumFormat(); calcSettle(); }, 50);
+}
+
+function settleRowHtml(type, name, amt) {
+  var isInc = type==='income';
+  return '<div class="settle-row" style="display:grid;grid-template-columns:56px 1fr 96px 24px;gap:6px;align-items:center;margin-bottom:7px;">'+
+    '<button class="settle-type" data-type="'+type+'" onclick="toggleSettleType(this)" style="border:none;border-radius:7px;padding:8px 4px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;background:'+(isInc?'#E7F5FF':'#FFF0F6')+';color:'+(isInc?'#1971C2':'#C2255C')+';">'+(isInc?'수입':'지출')+'</button>'+
+    '<input class="settle-name" placeholder="항목명" value="'+esc(name||'')+'" oninput="saveSettleDebounced()" style="background:var(--surface2);border:1px solid transparent;border-radius:7px;padding:8px 9px;font-size:12px;font-family:inherit;outline:none;width:100%;">'+
+    '<input class="settle-amt num-format" placeholder="0" value="'+(amt?fmt(amt):'')+'" oninput="calcSettle();saveSettleDebounced()" style="background:var(--surface2);border:1px solid transparent;border-radius:7px;padding:8px 9px;font-size:12px;font-family:inherit;outline:none;width:100%;text-align:right;font-weight:700;color:'+(isInc?'#1971C2':'#F04452')+';">'+
+    '<button onclick="this.parentElement.remove();calcSettle();saveSettleDebounced();" style="background:none;border:none;color:#CED4DA;cursor:pointer;font-size:16px;">×</button>'+
+  '</div>';
+}
+
+window.addSettleRow = function() {
+  var rowsEl = document.getElementById('settleRows');
+  var div = document.createElement('div');
+  div.innerHTML = settleRowHtml('income','',0);
+  rowsEl.appendChild(div.firstChild);
+  initNumFormat();
+};
+
+window.toggleSettleType = function(btn) {
+  var isInc = btn.dataset.type==='income';
+  var newType = isInc ? 'expense' : 'income';
+  btn.dataset.type = newType;
+  btn.textContent = newType==='income' ? '수입' : '지출';
+  btn.style.background = newType==='income' ? '#E7F5FF' : '#FFF0F6';
+  btn.style.color = newType==='income' ? '#1971C2' : '#C2255C';
+  var amtInp = btn.parentElement.querySelector('.settle-amt');
+  if(amtInp) amtInp.style.color = newType==='income' ? '#1971C2' : '#F04452';
+  calcSettle();
+  saveSettleDebounced();
+};
+
+window.toggleSettleAuto = function() {
+  settleData.autoOn = document.getElementById('settleAutoToggle').checked;
+  document.getElementById('settleAutoList').style.display = settleData.autoOn ? 'block' : 'none';
+  var slider = document.getElementById('settleAutoSlider');
+  var knob = document.getElementById('settleAutoKnob');
+  if(slider) slider.style.background = settleData.autoOn ? '#3182F6' : '#CED4DA';
+  if(knob) knob.style.left = settleData.autoOn ? '23px' : '3px';
+  calcSettle();
+  saveSettleData();
+};
+
+window.calcSettle = function() {
+  var incSum = 0, expSum = 0;
+  // 자동집계
+  if(settleData.autoOn){
+    document.querySelectorAll('#settleAutoList .settle-auto-inp').forEach(function(inp){
+      expSum += parseNum(inp.value);
+    });
+  }
+  // 직접입력
+  document.querySelectorAll('#settleRows .settle-row').forEach(function(r){
+    var type = r.querySelector('.settle-type').dataset.type;
+    var amt = parseNum(r.querySelector('.settle-amt').value);
+    if(type==='income') incSum += amt; else expSum += amt;
+  });
+  var remain = incSum - expSum;
+  var resultEl = document.getElementById('settleResult');
+  var incEl = document.getElementById('settleIncomeSum');
+  var expEl = document.getElementById('settleExpenseSum');
+  if(resultEl) resultEl.textContent = fmt(remain)+'원';
+  if(incEl) incEl.textContent = '수입 '+fmt(incSum);
+  if(expEl) expEl.textContent = '지출 '+fmt(expSum);
+};
+
+var settleSaveTimer = null;
+window.saveSettleDebounced = function() {
+  if(settleSaveTimer) clearTimeout(settleSaveTimer);
+  settleSaveTimer = setTimeout(function(){ saveSettleData(); }, 800);
+};
+
+
     var parts = currentKey.split('-');
     var py = parseInt(parts[0]), pm = parseInt(parts[1])-1;
     if(pm<1){pm=12;py-=1;}
@@ -4472,6 +4721,16 @@ function renderCardSummary() {
     prevUnpaidHtml+
     rows.map(function(row){
       if(row.total===0&&!row.isPaid) return '';
+      var cyc = cardCycles[row.c.key];
+      var cycleBadge = '';
+      if(cyc) {
+        var ckParts = currentKey.split('-');
+        var ckM = parseInt(ckParts[1]);
+        var offset = (typeof cyc.payOffset === 'number') ? cyc.payOffset : 1;
+        var payM = ckM + offset;
+        while(payM > 12){ payM -= 12; }
+        cycleBadge = '<div style="font-size:11px;color:#8B95A1;background:#3D444A;padding:3px 8px;border-radius:6px;display:inline-block;margin-bottom:6px;">📅 '+cyc.startDay+'일~익월 '+cyc.endDay+'일 사용 · '+payM+'월 '+cyc.payDay+'일 결제</div>';
+      }
       return '<div style="padding:10px 14px;border-top:1px solid #3D444A;">'+
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'+
           '<span style="font-size:12px;font-weight:700;color:#E8EAED;">'+esc(row.c.name)+'</span>'+
@@ -4480,6 +4739,7 @@ function renderCardSummary() {
             '<button onclick="toggleCardPaid(\''+row.c.key+'\')" style="background:'+(row.isPaid?'#3D444A':'#5DA8FF')+';color:'+(row.isPaid?'#A8AEB4':'#fff')+';border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">'+(row.isPaid?'취소':'납부완료')+'</button>'+
           '</div>'+
         '</div>'+
+        (cycleBadge?'<div>'+cycleBadge+'</div>':'')+
         '<div style="display:flex;gap:12px;font-size:12px;color:#A8AEB4;">'+
           (row.lump>0?'<span>일시불: '+fmt(row.lump)+'원</span>':'')+
           (row.inst>0?'<span>할부: '+fmt(row.inst)+'원</span>':'')+
@@ -4571,8 +4831,8 @@ window.addExpense = async function(){
           period = getPeriodKey(now);
         } else {
           // 2회차부터: 한 달씩 뒤로 + 무조건 20일
-          var d = new Date(now.getFullYear(), now.getMonth() + i, 20);
-          dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-20';
+          var d = new Date(now.getFullYear(), now.getMonth() + i, 22);
+          dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-22';
           period = getPeriodKey(d);
         }
         var monthAmt = (i === months-1) ? last : perMonth;
