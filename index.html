@@ -391,6 +391,8 @@
   <!-- 지출 폼 -->
   <div class="form-card show" id="expenseForm">
     <div class="who-label">입력자: <span class="who-badge" id="expenseWho"></span></div>
+    <!-- 카드 알림으로 감지된 임시 지출 -->
+    <div id="pendingExpenseList"></div>
     <div class="form-row">
       <div class="fgroup" style="margin-bottom:0;">
         <label class="flabel">금액</label>
@@ -1438,7 +1440,7 @@ const firebaseConfig = {
 const VAPID_KEY = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
 
 // ── 앱 버전 정보 (배포할 때마다 갱신) ────────────────
-const APP_VERSION = 'v1.1.1';
+const APP_VERSION = 'v1.2.0';
 const APP_BUILD_DATE = '2026-07-24';
 window.APP_VERSION = APP_VERSION;
 window.APP_BUILD_DATE = APP_BUILD_DATE;
@@ -1567,6 +1569,7 @@ window.logout = function() {
   localStorage.removeItem('currentUser'); currentUser=null;
   if(unsub) unsub();
   if(splitReminderTimer){ clearInterval(splitReminderTimer); splitReminderTimer=null; }
+  if(pendingUnsub){ pendingUnsub(); pendingUnsub=null; }
   document.getElementById('mainApp').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   pinBuffer=''; selectedUserId=null;
@@ -1620,6 +1623,7 @@ function showMain() {
   try { subscribeGoals(); } catch(e){ console.error('goals 오류:', e); }
   try { subscribeLoans(); } catch(e){ console.error('loans 오류:', e); }
   try { loadAccts(); } catch(e){ console.error('accts 오류:', e); }
+  try { subscribePendingExpenses(); } catch(e){ console.error('pending 오류:', e); }
   bindKeys();
   checkNotifStatus();
   try { startSplitReminderTimer(); } catch(e){ console.error('splitReminder 오류:', e); }
@@ -6227,6 +6231,84 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 });
 
+// ── 카드 알림 감지 → 임시 지출 (pendingExpenses) ────────
+var pendingUnsub = null;
+window.pendingExpenses = [];
+
+function subscribePendingExpenses(){
+  if(pendingUnsub) return;
+  pendingUnsub = onSnapshot(collection(db,'pendingExpenses'), function(snap){
+    window.pendingExpenses = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .sort(function(a,b){ return (b.detectedAt||0) - (a.detectedAt||0); });
+    renderPendingExpenses();
+  }, function(e){ console.error('pending 구독 오류:', e); });
+}
+
+// 카드명/문구 → 지출처 매핑
+function mapCardToPayment(hint){
+  if(!hint) return null;
+  var s = String(hint);
+  for(var i=0;i<CARD_PAYMENTS.length;i++){
+    var kw = CARD_PAYMENTS[i].name.replace(/\s*신용카드.*/,'').replace(/\(.*/,'').trim();
+    if(kw && s.indexOf(kw) >= 0) return CARD_PAYMENTS[i].payment;
+  }
+  return null;
+}
+
+function renderPendingExpenses(){
+  var el = document.getElementById('pendingExpenseList');
+  if(!el) return;
+  var list = window.pendingExpenses || [];
+  if(!list.length){ el.innerHTML=''; return; }
+  el.innerHTML = '<div style="background:#FFF9DB;border:1px solid #FFE066;border-radius:12px;padding:12px;margin-bottom:12px;">'+
+    '<div style="font-size:12px;font-weight:800;color:#E67700;margin-bottom:8px;">🔔 감지된 지출 '+list.length+'건 · 확인 후 추가하세요</div>'+
+    list.map(function(p){
+      var pay = p.payment || mapCardToPayment(p.card||p.cardName||p.rawText||'') || '';
+      var when = (p.date||'') + (p.time?' '+p.time:'');
+      return '<div style="background:#fff;border-radius:8px;padding:10px;margin-bottom:8px;">'+
+        '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">'+
+          '<span style="font-size:14px;font-weight:800;color:#F04452;">'+fmt(parseNum(p.amount))+'원</span>'+
+          '<span style="font-size:11px;color:var(--muted);white-space:nowrap;">'+esc(when)+'</span>'+
+        '</div>'+
+        '<div style="font-size:11px;color:var(--sub);margin-top:3px;">🏪 '+esc(p.merchant||'가맹점 미상')+(pay?' · 💳 '+esc(pay):'')+'</div>'+
+        '<div style="display:flex;gap:6px;margin-top:8px;">'+
+          '<button onclick="writePendingToForm(\''+esc(p.id)+'\')" style="flex:1;background:#E67700;color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">작성하기</button>'+
+          '<button onclick="deletePending(\''+esc(p.id)+'\')" style="background:var(--surface3);color:var(--sub);border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">삭제</button>'+
+        '</div>'+
+      '</div>';
+    }).join('')+
+  '</div>';
+}
+
+window.writePendingToForm = function(id){
+  var p = (window.pendingExpenses||[]).find(function(x){ return x.id===id; });
+  if(!p){ toast('내역을 찾을 수 없어요'); return; }
+  if(typeof switchTab==='function') switchTab('expense');
+  var amtEl = document.getElementById('expenseAmount');
+  if(amtEl) amtEl.value = parseNum(p.amount) || '';
+  var memoEl = document.getElementById('expenseMemo');
+  if(memoEl) memoEl.value = p.merchant || '';
+  var payVal = p.payment || mapCardToPayment(p.card||p.cardName||p.rawText||'');
+  if(payVal){
+    var paySel = document.getElementById('expensePayment');
+    if(paySel){ for(var i=0;i<paySel.options.length;i++){ if(paySel.options[i].value===payVal){ paySel.value=payVal; break; } } }
+  }
+  var dateEl = document.getElementById('expenseDate');
+  if(dateEl){ dateEl.value = (p.date && /^\d{4}-\d{2}-\d{2}$/.test(p.date)) ? p.date : new Date().toISOString().slice(0,10); }
+  window._pendingBeingWritten = id;
+  var form = document.getElementById('expenseForm');
+  if(form) form.scrollIntoView({behavior:'smooth', block:'start'});
+  toast('불러왔어요. 확인 후 "지출 추가"를 눌러주세요 ✍️');
+};
+
+window.deletePending = async function(id){
+  try {
+    await deleteDoc(doc(db,'pendingExpenses', id));
+    if(window._pendingBeingWritten===id) window._pendingBeingWritten=null;
+    toast('감지 내역 삭제됨 🗑');
+  } catch(e){ console.error(e); toast('삭제 실패'); }
+};
+
 window.addExpense = async function(){
   if(window._addingExpense) return;   // 중복 등록 방지
   var amt = parseNum(document.getElementById('expenseAmount').value);
@@ -6329,6 +6411,11 @@ window.addExpense = async function(){
       document.getElementById('splitOptions').style.display = 'none';
       document.getElementById('splitCount').value = '2';
       document.getElementById('splitPreview').textContent = '';
+    }
+    // 감지내역에서 불러온 거면 해당 임시 데이터 삭제
+    if(window._pendingBeingWritten){
+      try { await deleteDoc(doc(db,'pendingExpenses', window._pendingBeingWritten)); } catch(e){}
+      window._pendingBeingWritten = null;
     }
   } catch(e){ toast('저장 실패'); console.error(e); }
   btn.disabled = false;
