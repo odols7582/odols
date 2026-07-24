@@ -821,7 +821,7 @@
   </div>
 </div>
 <div id="budgetContent" style="display:none;">
-  <div style="background:#EFF6FF;border-radius:10px;padding:10px 12px;font-size:11px;color:#1971C2;line-height:1.7;margin-bottom:12px;">💡 <b>전월 지출</b>을 참고해서 예산을 정해보세요. 금액을 탭하면 바로 입력돼요.</div>
+  <div style="background:#EFF6FF;border-radius:10px;padding:10px 12px;font-size:11px;color:#1971C2;line-height:1.7;margin-bottom:12px;">💡 <b>전월 지출</b>을 참고해서 예산을 정해보세요. 금액을 탭하면 바로 입력돼요. 설정한 예산은 <b>금액/✏️</b>을 눌러 바로 수정할 수 있고, 각 항목에 <b>전월 초과액</b>이 함께 표시돼요.</div>
   <div id="budgetPrevList" style="margin-bottom:14px;"></div>
   <div id="budgetList"></div>
   <div style="display:flex;gap:8px;margin-top:10px;">
@@ -1707,6 +1707,24 @@ function localAnalysis(catData, totalThis, totalPrev, hasPrevData) {
 
 // ── 예산 관리 ─────────────────────────────────────
 var budgets = {};
+var editingBudgetCat = null;
+
+// 전월(직전 기간) 카테고리별 지출 합계 (투자성 제외)
+function prevSpendMap() {
+  var map = {};
+  var investCats = ['주식 매수','코인 매수','적금/예금'];
+  (window.prevRecords||[]).forEach(function(r){
+    if(r.type!=='expense') return;
+    if(investCats.indexOf(r.category)>=0) return;
+    map[r.category] = (map[r.category]||0) + r.amount;
+  });
+  return map;
+}
+// 직전 기간 키 (currentKey 기준 한 달 전)
+function prevPeriodKey() {
+  var p=currentKey.split('-'); var y=parseInt(p[0]), m=parseInt(p[1])-1;
+  if(m<1){m=12;y-=1;} return y+'-'+String(m).padStart(2,'0');
+}
 
 function loadBudgets() {
   getDoc(doc(db,'settings','budgets')).then(function(d){
@@ -1780,22 +1798,83 @@ function renderBudgetList() {
   if(!list) return;
   var keys = Object.keys(budgets);
   if(!keys.length){ list.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0;">설정된 예산이 없어요</div>'; return; }
+  var pMap = prevSpendMap();
+  var pLabel = periodLabel(prevPeriodKey());
   list.innerHTML = keys.map(function(cat){
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #CCFBF1;">'+
-      '<span style="font-size:12px;font-weight:600;color:var(--text);">'+esc(cat)+'</span>'+
-      '<div style="display:flex;align-items:center;gap:10px;">'+
-        '<span style="font-size:12px;font-weight:700;color:#2DD4BF;">'+fmt(budgets[cat])+'원</span>'+
-        '<button onclick="delBudget(\''+esc(cat)+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;">×</button>'+
+    var cs = getCatStyle(cat);
+    var budget = budgets[cat];
+    var prev = pMap[cat]||0;
+    var diff = prev - budget; // 양수 = 전월에 예산 초과
+    // 전월 대비 안내 문구
+    var prevLine;
+    if(prev===0){
+      prevLine = '<span style="color:var(--muted);">'+pLabel+' 지출 없음</span>';
+    } else if(diff>0){
+      prevLine = '<span style="color:var(--muted);">'+pLabel+' '+fmt(prev)+'원</span> · <span style="color:#F04452;font-weight:700;">예산 +'+fmt(diff)+'원 초과</span>';
+    } else if(diff<0){
+      prevLine = '<span style="color:var(--muted);">'+pLabel+' '+fmt(prev)+'원</span> · <span style="color:#00B488;font-weight:700;">'+fmt(-diff)+'원 여유</span>';
+    } else {
+      prevLine = '<span style="color:var(--muted);">'+pLabel+' '+fmt(prev)+'원</span> · <span style="color:var(--sub);font-weight:700;">예산과 동일</span>';
+    }
+    var isEditing = editingBudgetCat===cat;
+    var rightSide = isEditing
+      ? '<div style="display:flex;align-items:center;gap:6px;">'+
+          '<input class="num-format" id="budgetEditInput" type="text" value="'+fmt(budget)+'" '+
+            'onkeydown="if(event.key===\'Enter\')saveBudgetEdit(\''+esc(cat)+'\')" '+
+            'style="width:88px;text-align:right;font-size:12px;font-weight:700;color:#0F766E;padding:6px 8px;border:1px solid #14B8A6;border-radius:8px;background:#F0FDFA;font-family:inherit;">'+
+          '<button onclick="saveBudgetEdit(\''+esc(cat)+'\')" style="background:#14B8A6;border:none;cursor:pointer;color:#fff;font-size:12px;font-weight:700;border-radius:8px;padding:6px 9px;font-family:inherit;">✓</button>'+
+          '<button onclick="cancelEditBudget()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;">×</button>'+
+        '</div>'
+      : '<div style="display:flex;align-items:center;gap:8px;">'+
+          '<span onclick="startEditBudget(\''+esc(cat)+'\')" style="font-size:12px;font-weight:700;color:#2DD4BF;cursor:pointer;">'+fmt(budget)+'원</span>'+
+          '<button onclick="startEditBudget(\''+esc(cat)+'\')" title="금액 수정" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;padding:2px;">✏️</button>'+
+          '<button onclick="delBudget(\''+esc(cat)+'\')" title="삭제" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px;">×</button>'+
+        '</div>';
+    return '<div style="padding:10px 0;border-bottom:1px solid #CCFBF1;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+        '<span style="font-size:12px;font-weight:600;color:var(--text);">'+cs.emoji+' '+esc(cat)+'</span>'+
+        rightSide+
       '</div>'+
+      '<div style="font-size:11px;margin-top:5px;">'+prevLine+'</div>'+
     '</div>';
   }).join('');
+  if(editingBudgetCat){
+    if(typeof initNumFormat==='function') initNumFormat();
+    var inp = document.getElementById('budgetEditInput');
+    if(inp){ inp.focus(); inp.select(); }
+  }
 }
 
-window.delBudget = function(cat) {
-  delete budgets[cat];
+window.startEditBudget = function(cat) {
+  editingBudgetCat = cat;
+  renderBudgetList();
+};
+
+window.cancelEditBudget = function() {
+  editingBudgetCat = null;
+  renderBudgetList();
+};
+
+window.saveBudgetEdit = function(cat) {
+  var inp = document.getElementById('budgetEditInput');
+  var amt = inp ? parseNum(inp.value) : 0;
+  if(!amt){ toast('금액을 입력해주세요'); return; }
+  budgets[cat] = amt;
+  editingBudgetCat = null;
   saveBudgets();
   renderBudgetList();
   renderBudgetStatus();
+  renderBudgetStatusHome();
+  toast('예산 수정됐어요 ✏️');
+};
+
+window.delBudget = function(cat) {
+  delete budgets[cat];
+  if(editingBudgetCat===cat) editingBudgetCat=null;
+  saveBudgets();
+  renderBudgetList();
+  renderBudgetStatus();
+  renderBudgetStatusHome();
   toast('예산 삭제됨');
 };
 
