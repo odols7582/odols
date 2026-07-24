@@ -319,6 +319,7 @@
       <button class="pin-key del" onclick="pinDelete()">⌫</button>
     </div>
     <div class="login-error" id="loginError"></div>
+    <div id="loginVersionInfo" style="font-size:10px;color:var(--muted);margin-top:18px;letter-spacing:-.2px;"></div>
   </div>
 </div>
 
@@ -326,7 +327,10 @@
 <div class="header">
   <div class="header-left">
     <div class="header-avatar" id="headerAvatar"></div>
-    <div class="header-name" id="headerName">가계부</div>
+    <div>
+      <div class="header-name" id="headerName">가계부</div>
+      <div id="appVersionInfo" style="font-size:9px;color:var(--muted);line-height:1.25;margin-top:1px;letter-spacing:-.2px;"></div>
+    </div>
   </div>
   <div class="header-right">
     <div class="sync-wrap">
@@ -1416,6 +1420,18 @@ const firebaseConfig = {
 
 const VAPID_KEY = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
 
+// ── 앱 버전 정보 (배포할 때마다 갱신) ────────────────
+const APP_VERSION = 'v1.0.0';
+const APP_BUILD_DATE = '2026-07-24';
+window.APP_VERSION = APP_VERSION;
+window.APP_BUILD_DATE = APP_BUILD_DATE;
+function renderAppVersion(){
+  var el = document.getElementById('appVersionInfo');
+  if(el) el.textContent = APP_VERSION + ' · ' + APP_BUILD_DATE + ' 업로드';
+  var lel = document.getElementById('loginVersionInfo');
+  if(lel) lel.textContent = APP_VERSION + ' · ' + APP_BUILD_DATE;
+}
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 let messaging = null;
@@ -1479,6 +1495,7 @@ function syncStatus(s) {
 
 // ── 초기화 ────────────────────────────────────────
 async function init() {
+  renderAppVersion();
   var saved = localStorage.getItem('currentUser');
   if (saved) {
     currentUser = JSON.parse(saved);
@@ -1547,6 +1564,7 @@ function showMain() {
   var av=document.getElementById('headerAvatar');
   av.textContent=currentUser.emoji; av.className='header-avatar '+currentUser.class;
   document.getElementById('headerName').textContent=currentUser.name+'으로 로그인';
+  renderAppVersion();
   document.getElementById('expenseWho').textContent=currentUser.emoji+' '+currentUser.name;
   document.getElementById('expenseWho').className='who-badge '+currentUser.class;
   document.getElementById('incomeWho').textContent=currentUser.emoji+' '+currentUser.name;
