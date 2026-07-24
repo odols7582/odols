@@ -393,7 +393,7 @@
             <option value="식비">🍽 식비</option>
             <option value="배달식비">🛵 배달식비</option>
             <option value="조리식비">🍳 조리식비</option>
-            <option value="카페">☕ 카페</option>
+            <option value="음료">🥤 음료</option>
             <option value="담배">🚬 담배</option>
           </optgroup>
           <optgroup label="🚗 교통/이동">
@@ -773,6 +773,8 @@
     <div class="more-card" onclick="openMoreSheet('loan')"><div class="more-icon">🏦</div><div class="more-name">대출 관리</div><div class="more-desc">잔액·납입 회차별 관리</div></div>
     <div class="more-card" onclick="openMoreSheet('cardcycle')"><div class="more-icon">💳</div><div class="more-name">카드 결제기준</div><div class="more-desc">카드별 사용기간·결제일 설정</div></div>
     <div class="more-card" onclick="openMoreSheet('settle')"><div class="more-icon">🧮</div><div class="more-name">예상 정산</div><div class="more-desc">수입·지출 예상 잔여 현금 계산</div></div>
+    <div class="more-card" onclick="openMoreSheet('catmanage')"><div class="more-icon">🏷</div><div class="more-name">카테고리 관리</div><div class="more-desc">추가·수정·삭제</div></div>
+    <div class="more-card" onclick="openMoreSheet('reperiod')"><div class="more-icon">📦</div><div class="more-name">월분 재분류</div><div class="more-desc">분석 기준 월분만 일괄 변경</div></div>
   </div>
 
   <!-- 🛠 편의 기능 -->
@@ -810,9 +812,18 @@
 <div id="budgetContent" style="display:none;">
   <div id="budgetList"></div>
   <div style="display:flex;gap:8px;margin-top:10px;">
-    <select class="finput" id="budgetCat" style="flex:1.5;"></select>
-    <input class="finput" id="budgetAmt" type="text" class="finput num-format" placeholder="금액" style="flex:1;">
-    <button onclick="setBudget()" style="padding:10px 14px;background:linear-gradient(135deg,#0F766E,#14B8A6);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">설정</button>
+    <select class="finput" id="budgetCategory" style="flex:1.5;">
+      <optgroup label="🍽 식생활"><option value="식비">🍽 식비</option><option value="배달식비">🛵 배달식비</option><option value="조리식비">🍳 조리식비</option><option value="음료">🥤 음료</option><option value="담배">🚬 담배</option></optgroup>
+      <optgroup label="🚗 교통/이동"><option value="교통">🚌 교통</option></optgroup>
+      <optgroup label="🛍 쇼핑/생활"><option value="쇼핑">🛍 쇼핑</option><option value="마트">🛒 마트</option><option value="생활용품">🧴 생활용품</option></optgroup>
+      <optgroup label="🏥 건강/의료"><option value="의료">🏥 의료</option><option value="영양제">💊 영양제</option></optgroup>
+      <optgroup label="🐾 애견"><option value="애견용품">🐾 애견용품</option><option value="애견 미용비">✂️ 애견 미용비</option><option value="애견 사료비">🦴 애견 사료비</option><option value="애견 영양제">💊 애견 영양제</option><option value="애견 병원비">🏥 애견 병원비</option></optgroup>
+      <optgroup label="🏠 주거/통신/신용"><option value="주거">🏠 주거</option><option value="전기요금">⚡ 전기요금</option><option value="수도요금">💧 수도요금</option><option value="가스요금">🔥 가스요금</option><option value="관리비">🏢 관리비</option><option value="대출">🏦 대출</option><option value="보험">🛡 보험</option><option value="통신">📱 통신</option><option value="카드값납부">💳 카드값납부</option></optgroup>
+      <optgroup label="🎬 여가/문화"><option value="문화">🎬 문화</option><option value="여행">✈ 여행</option><option value="구독">📺 구독</option></optgroup>
+      <optgroup label="📦 기타"><option value="오소리 용돈">🦡 오소리 용돈</option><option value="부엉이 용돈">🦉 부엉이 용돈</option><option value="기타">📦 기타</option></optgroup>
+    </select>
+    <input class="finput num-format" id="budgetAmount" type="text" placeholder="금액" style="flex:1;">
+    <button onclick="addBudget()" style="padding:10px 14px;background:linear-gradient(135deg,#0F766E,#14B8A6);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">설정</button>
   </div>
   <div id="budgetStatus" style="margin-top:14px;"></div>
 </div>
@@ -822,7 +833,7 @@
     <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;">+ 고정지출 추가</div>
     <div class="fgroup"><label class="flabel">카테고리</label>
       <select class="finput" id="fixedCategory">
-        <optgroup label="🍽 식생활"><option value="식비">🍽 식비</option><option value="배달식비">🛵 배달식비</option><option value="조리식비">🍳 조리식비</option><option value="카페">☕ 카페</option><option value="담배">🚬 담배</option></optgroup>
+        <optgroup label="🍽 식생활"><option value="식비">🍽 식비</option><option value="배달식비">🛵 배달식비</option><option value="조리식비">🍳 조리식비</option><option value="음료">🥤 음료</option><option value="담배">🚬 담배</option></optgroup>
         <optgroup label="🚗 교통/이동"><option value="교통">🚌 교통</option></optgroup>
         <optgroup label="🛍 쇼핑/생활"><option value="쇼핑">🛍 쇼핑</option><option value="마트">🛒 마트</option><option value="생활용품">🧴 생활용품</option></optgroup>
         <optgroup label="🏥 건강/의료"><option value="의료">🏥 의료</option><option value="영양제">💊 영양제</option></optgroup>
@@ -850,6 +861,71 @@
   <div style="font-size:11px;color:var(--sub);margin-bottom:14px;">각 카드사의 사용기간과 결제일을 입력하세요. 카드 결제 예상금액에 표시돼요.</div>
   <div id="cardCycleList"></div>
 </div>
+<div id="catmanageContent" style="display:none;">
+  <div style="font-size:11px;color:var(--sub);margin-bottom:12px;">카테고리를 추가·수정·삭제할 수 있어요. 이름을 바꾸면 기존 내역·예산도 함께 바뀌어요.</div>
+  <div id="catManageList"></div>
+  <div style="background:var(--surface);border-radius:14px;padding:14px;border:1px dashed rgba(15,118,110,.5);">
+    <div style="font-size:12px;font-weight:700;margin-bottom:10px;">+ 카테고리 추가</div>
+    <div style="display:grid;grid-template-columns:64px 1fr;gap:8px;margin-bottom:10px;">
+      <div><label class="flabel" style="font-size:11px;">이모지</label><input class="finput" id="newCatEmoji" value="📦" maxlength="4" style="text-align:center;"></div>
+      <div><label class="flabel" style="font-size:11px;">카테고리명</label><input class="finput" id="newCatName" placeholder="예: 야식"></div>
+    </div>
+    <div style="margin-bottom:12px;"><label class="flabel" style="font-size:11px;">대분류</label>
+      <select class="finput" id="newCatGroup"></select>
+    </div>
+    <button class="submit-btn" onclick="addCategory()" style="background:linear-gradient(135deg,#0F766E,#14B8A6);">+ 추가</button>
+  </div>
+</div>
+
+<!-- 카테고리 수정 모달 -->
+<div id="catEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeCatEdit()">
+  <div style="background:var(--surface);border-radius:20px 20px 0 0;padding:22px 20px 34px;width:100%;max-width:440px;">
+    <div style="width:36px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 16px;"></div>
+    <div style="font-size:14px;font-weight:800;margin-bottom:4px;">✏️ 카테고리 수정</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">이름을 바꾸면 기존 내역·예산도 함께 변경돼요</div>
+    <div style="display:grid;grid-template-columns:64px 1fr;gap:8px;margin-bottom:12px;">
+      <div><label class="flabel" style="font-size:11px;">이모지</label><input class="finput" id="catEditEmoji" maxlength="4" style="text-align:center;"></div>
+      <div><label class="flabel" style="font-size:11px;">카테고리명</label><input class="finput" id="catEditName"></div>
+    </div>
+    <div style="margin-bottom:14px;"><label class="flabel" style="font-size:11px;">대분류</label>
+      <select class="finput" id="catEditGroup"></select>
+    </div>
+    <button class="submit-btn" onclick="saveCatEdit()" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);">수정 완료</button>
+  </div>
+</div>
+
+<div id="reperiodContent" style="display:none;">
+  <div style="background:#FFF9DB;border-radius:8px;padding:9px 11px;font-size:11px;color:#8B7500;line-height:1.6;margin-bottom:12px;">💡 <b>날짜는 그대로 두고 월분만</b> 바꿔요. 급여처럼 실제 날짜와 분석 기준이 다른 항목을 정리할 때 쓰세요.</div>
+
+  <div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:12px;">
+    <div style="font-size:12px;font-weight:700;margin-bottom:10px;">📅 조회할 월분</div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;">
+      <button onclick="moveRepMonth(-1)" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--surface2);color:var(--sub);">‹ 이전</button>
+      <div id="repMonthLabel" style="flex:1.6;padding:8px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;background:var(--p1);color:#fff;">-</div>
+      <button onclick="moveRepMonth(1)" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--surface2);color:var(--sub);">다음 ›</button>
+    </div>
+    <div style="display:flex;gap:6px;" id="repFilterBar">
+      <button onclick="setRepFilter('all')" data-f="all" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">전체</button>
+      <button onclick="setRepFilter('income')" data-f="income" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">수입만</button>
+      <button onclick="setRepFilter('edge')" data-f="edge" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">20·21일</button>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span style="font-size:12px;font-weight:700;">내역 선택</span>
+      <button onclick="toggleRepSelectAll()" style="background:none;border:none;color:var(--p1);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">전체 선택</button>
+    </div>
+    <div id="repList"></div>
+  </div>
+
+  <div style="background:var(--surface);border-radius:14px;padding:14px;">
+    <div style="font-size:12px;font-weight:700;margin-bottom:8px;">📦 이동할 월분</div>
+    <select class="finput" id="repTarget" style="margin-bottom:12px;"></select>
+    <button class="submit-btn" onclick="applyReperiod()" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);" id="repApplyBtn">선택한 내역 이동</button>
+  </div>
+</div>
+
 <div id="settleContent" style="display:none;">
   <!-- 결과 카드 -->
   <div style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);border-radius:16px;padding:20px;color:#fff;margin-bottom:14px;">
@@ -934,6 +1010,13 @@
     <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px;">22일 기준으로 <b>전월로 잘못 분류된 20일·21일</b> 데이터를 <b>당월</b>로 복구해요.<br>예: 6/20, 6/21 → 5월분에서 6월분으로</div>
     <button class="submit-btn" onclick="migratePeriod2022()" style="background:#7C3AED;">20일·21일 데이터 당월로 복구</button>
     <div id="migrateResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
+  </div>
+
+  <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">🥤 카테고리명 변경 (카페 → 음료)</div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px;">기존에 <b>카페</b>로 입력된 내역과 예산을 <b>음료</b>로 일괄 변경해요.</div>
+    <button class="submit-btn" onclick="migrateCafeToDrink()" style="background:#0F766E;">카페 → 음료로 변경</button>
+    <div id="cafeMigrateResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
   </div>
 </div>
 <div id="notifContent" style="display:none;">
@@ -1178,7 +1261,7 @@
             <option value="식비">🍽 식비</option>
             <option value="배달식비">🛵 배달식비</option>
             <option value="조리식비">🍳 조리식비</option>
-            <option value="카페">☕ 카페</option>
+            <option value="음료">🥤 음료</option>
             <option value="담배">🚬 담배</option>
           </optgroup>
           <optgroup label="🚗 교통/이동">
@@ -1433,6 +1516,7 @@ function showMain() {
   try { loadCardData(); } catch(e){ console.error('card 오류:', e); }
   try { loadCardCycles(); } catch(e){ console.error('cardCycles 오류:', e); }
   try { loadSettleData(); } catch(e){ console.error('settle 오류:', e); }
+  try { loadCategories(); } catch(e){ console.error('categories 오류:', e); }
   try { loadFoods(); } catch(e){ console.error('foods 오류:', e); }
   // 5월 기초금액 최초 세팅 (한번만)
   try {
@@ -2085,8 +2169,9 @@ function renderBudgetStatusHome() {
 }
 
 // ── 카테고리 대분류 정의 ─────────────────────────
-var CAT_GROUPS = {
-  '🍽 식생활': ['식비','배달식비','조리식비','카페','담배'],
+// ── 카테고리 설정 (Firestore 기반) ──────────────────
+var CAT_DEFAULT_GROUPS = {
+  '🍽 식생활': ['식비','배달식비','조리식비','음료','담배'],
   '🚗 교통/이동': ['교통'],
   '🛍 쇼핑/생활': ['쇼핑','마트','생활용품'],
   '🏥 건강/의료': ['의료','영양제'],
@@ -2096,6 +2181,79 @@ var CAT_GROUPS = {
   '📈 투자/저축': ['주식 매수','코인 매수','적금/예금'],
   '📦 기타': ['오소리 용돈','부엉이 용돈','기타']
 };
+var CAT_DEFAULT_STYLE = {
+  '식비':['🍚','#FF922B'], '배달식비':['🛵','#FF6B35'], '조리식비':['🍳','#FFA94D'], '음료':['🥤','#A87C5F'], '담배':['🚬','#868E96'],
+  '교통':['🚗','#3182F6'],
+  '쇼핑':['🛍️','#E64980'], '마트':['🛒','#F06595'], '생활용품':['🧴','#CC5DE8'],
+  '의료':['🏥','#FA5252'], '영양제':['💊','#FF8787'],
+  '애견용품':['🦴','#94D82D'], '애견 미용비':['✂️','#82C91E'], '애견 사료비':['🐕','#A9E34B'], '애견 영양제':['💊','#51CF66'], '애견 병원비':['🏥','#69DB7C'],
+  '주거':['🏠','#7950F2'], '전기요금':['⚡','#FAB005'], '수도요금':['💧','#4DABF7'], '가스요금':['🔥','#FF6B35'], '관리비':['🏢','#7950F2'], '대출':['🏦','#5F3DC4'], '보험':['🛡️','#9775FA'], '통신':['📱','#845EF7'], '카드값납부':['💳','#5DA8FF'],
+  '문화':['🎬','#F783AC'], '구독':['📺','#FF6B6B'], '여행':['✈️','#4DABF7'],
+  '주식 매수':['📈','#37B24D'], '코인 매수':['🪙','#F59F00'], '적금/예금':['🏦','#1098AD'],
+  '오소리 용돈':['🦡','#4DABF7'], '부엉이 용돈':['🦉','#F783AC'], '기타':['📦','#868E96']
+};
+
+function buildDefaultCatConfig() {
+  var groups = [];
+  for(var g in CAT_DEFAULT_GROUPS){
+    groups.push({
+      name: g,
+      cats: CAT_DEFAULT_GROUPS[g].map(function(n){
+        var d = CAT_DEFAULT_STYLE[n] || ['💰','#868E96'];
+        return { name:n, emoji:d[0], color:d[1] };
+      })
+    });
+  }
+  return { groups: groups };
+}
+
+var catConfig = buildDefaultCatConfig();
+var CAT_GROUPS = {};
+
+function rebuildCatGroups() {
+  CAT_GROUPS = {};
+  if(!catConfig || !Array.isArray(catConfig.groups)) catConfig = buildDefaultCatConfig();
+  catConfig.groups.forEach(function(g){
+    if(!g || !g.name) return;
+    if(!Array.isArray(g.cats)) g.cats = [];
+    CAT_GROUPS[g.name] = g.cats.map(function(c){ return c.name; });
+  });
+}
+rebuildCatGroups();
+
+function loadCategories() {
+  return getDoc(doc(db,'settings','categories')).then(function(d){
+    if(d.exists() && d.data() && Array.isArray(d.data().groups) && d.data().groups.length){
+      catConfig = { groups: d.data().groups };
+    }
+    rebuildCatGroups();
+    buildCategorySelects();
+    if(typeof renderCatManage === 'function') renderCatManage();
+  }).catch(function(e){ console.error('categories 로드 오류:', e); rebuildCatGroups(); buildCategorySelects(); });
+}
+
+function saveCategories() {
+  return setDoc(doc(db,'settings','categories'), { groups: catConfig.groups });
+}
+
+// 모든 카테고리 select 채우기 (선택값 유지)
+function buildCategorySelects() {
+  var ids = ['expenseCategory','fixedCategory','budgetCategory','editCategory'];
+  var html = catConfig.groups.map(function(g){
+    return '<optgroup label="'+esc(g.name)+'">'+
+      g.cats.map(function(c){
+        return '<option value="'+esc(c.name)+'">'+c.emoji+' '+esc(c.name)+'</option>';
+      }).join('')+
+    '</optgroup>';
+  }).join('');
+  ids.forEach(function(id){
+    var el = document.getElementById(id);
+    if(!el) return;
+    var prev = el.value;
+    el.innerHTML = html;
+    if(prev) el.value = prev;
+  });
+}
 
 function getCatGroup(cat) {
   for(var g in CAT_GROUPS) {
@@ -3159,7 +3317,7 @@ var moreSheetTitles = {
   export:'📊 데이터 내보내기', acct:'🏦 계좌번호 메모', food:'🍽 뭐 먹지?',
   lotto:'🎰 AI 로또번호 추천', fix:'🔧 할부 날짜 정리',
   notif:'📣 알림 보내기', dday:'📅 기념일 & D-day', loan:'🏦 대출 관리',
-  cardcycle:'💳 카드 결제기준 설정', settle:'🧮 예상 정산'
+  cardcycle:'💳 카드 결제기준 설정', settle:'🧮 예상 정산', catmanage:'🏷 카테고리 관리', reperiod:'📦 월분 재분류'
 };
 
 window.openMoreSheet = function(key) {
@@ -3188,6 +3346,8 @@ window.openMoreSheet = function(key) {
   if(key==='loan') renderLoanList();
   if(key==='cardcycle') renderCardCycleSettings();
   if(key==='settle') renderSettle();
+  if(key==='catmanage') renderCatManage();
+  if(key==='reperiod') { repState.key = currentKey; renderReperiod(); }
   // 바텀시트 열릴 때 num-format 입력 적용
   setTimeout(function(){ initNumFormat(); }, 100);
 };
@@ -3449,18 +3609,13 @@ function renderAll() {
 
 // ── 카테고리 아이콘+컬러 매핑 ───────────────────
 function getCatStyle(cat) {
-  var map = {
-    '식비':['🍚','#FF922B'], '배달식비':['🛵','#FF6B35'], '조리식비':['🍳','#FFA94D'], '카페':['☕','#A87C5F'], '담배':['🚬','#868E96'],
-    '교통':['🚗','#3182F6'],
-    '쇼핑':['🛍️','#E64980'], '마트':['🛒','#F06595'], '생활용품':['🧴','#CC5DE8'],
-    '의료':['🏥','#FA5252'], '영양제':['💊','#FF8787'],
-    '애견용품':['🦴','#94D82D'], '애견미용비':['✂️','#82C91E'], '애견사료비':['🐕','#A9E34B'], '애견영양제':['💊','#51CF66'], '애견병원비':['🏥','#69DB7C'],
-    '주거':['🏠','#7950F2'], '전기요금':['⚡','#FAB005'], '수도요금':['💧','#4DABF7'], '가스요금':['🔥','#FF6B35'], '관리비':['🏢','#7950F2'], '대출':['🏦','#5F3DC4'], '보험':['🛡️','#9775FA'], '통신':['📱','#845EF7'], '카드값납부':['💳','#5DA8FF'],
-    '문화':['🎬','#F783AC'], '구독':['📺','#FF6B6B'], '여행':['✈️','#4DABF7'],
-    '주식 매수':['📈','#37B24D'], '코인 매수':['🪙','#F59F00'], '적금/예금':['🏦','#1098AD'],
-    '오소리 용돈':['🦡','#4DABF7'], '부엉이 용돈':['🦉','#F783AC'], '기타':['📦','#868E96']
-  };
-  var d = map[cat] || ['💰','#868E96'];
+  for(var i=0;i<catConfig.groups.length;i++){
+    var cats = catConfig.groups[i].cats;
+    for(var j=0;j<cats.length;j++){
+      if(cats[j].name === cat) return { emoji:cats[j].emoji||'💰', color:cats[j].color||'#868E96' };
+    }
+  }
+  var d = CAT_DEFAULT_STYLE[cat] || ['💰','#868E96'];
   return {emoji:d[0], color:d[1]};
 }
 
@@ -4496,7 +4651,299 @@ function renderCardCycleSettings() {
   }).join('');
 }
 
-// ── 예상 정산 ─────────────────────────────────────
+// ── 카테고리명 변경: 카페 → 음료 ──────────────────
+window.migrateCafeToDrink = async function() {
+  var el = document.getElementById('cafeMigrateResult');
+  if(el) el.textContent = '변경 중...';
+  try {
+    var snap = await getDocs(collection(db,'records'));
+    var cnt = 0, promises = [];
+    snap.forEach(function(d){
+      if((d.data().category||'') === '카페'){
+        promises.push(updateDoc(doc(db,'records',d.id), {category:'음료'}));
+        cnt++;
+      }
+    });
+    await Promise.all(promises);
+    // 예산 키도 변경
+    if(budgets && budgets['카페'] !== undefined){
+      budgets['음료'] = budgets['카페'];
+      delete budgets['카페'];
+      saveBudgets();
+      renderBudgetList();
+    }
+    if(el) el.textContent = '✅ '+cnt+'건 변경 완료!';
+    toast(cnt+'건 음료로 변경됐어요 🥤');
+  } catch(e){
+    console.error('카테고리 변경 오류:', e);
+    if(el) el.textContent = '❌ '+e.message;
+    toast('변경 실패');
+  }
+};
+
+
+// ── 카테고리 관리 ─────────────────────────────────
+function renderCatManage() {
+  var el = document.getElementById('catManageList');
+  if(!el) return;
+  el.innerHTML = catConfig.groups.map(function(g, gi){
+    return '<div style="background:var(--surface);border-radius:14px;padding:12px;margin-bottom:10px;box-shadow:0 1px 5px rgba(0,0,0,.04);">'+
+      '<div style="font-size:12px;font-weight:800;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">'+
+        '<span>'+esc(g.name)+'</span><span style="font-size:10px;color:var(--muted);font-weight:600;">'+g.cats.length+'개</span>'+
+      '</div>'+
+      (g.cats.length ? g.cats.map(function(c, ci){
+        return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">'+
+          '<span style="font-size:15px;width:24px;text-align:center;">'+c.emoji+'</span>'+
+          '<span style="flex:1;font-size:12px;font-weight:600;">'+esc(c.name)+'</span>'+
+          '<button onclick="openCatEdit('+gi+','+ci+')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px 4px;">✏️</button>'+
+          '<button onclick="deleteCategory('+gi+','+ci+')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px 4px;">🗑</button>'+
+        '</div>';
+      }).join('') : '<div style="font-size:11px;color:var(--muted);padding:4px;">카테고리가 없어요</div>')+
+    '</div>';
+  }).join('');
+  var opts = catConfig.groups.map(function(g){ return '<option value="'+esc(g.name)+'">'+esc(g.name)+'</option>'; }).join('');
+  var ng = document.getElementById('newCatGroup');
+  var eg = document.getElementById('catEditGroup');
+  if(ng){ var pv=ng.value; ng.innerHTML=opts; if(pv) ng.value=pv; }
+  if(eg){ var pv2=eg.value; eg.innerHTML=opts; if(pv2) eg.value=pv2; }
+}
+
+window.addCategory = async function() {
+  var emoji = document.getElementById('newCatEmoji').value.trim() || '📦';
+  var name = document.getElementById('newCatName').value.trim();
+  var grp = document.getElementById('newCatGroup').value;
+  if(!name){ toast('카테고리명을 입력해주세요'); return; }
+  var dup = false;
+  catConfig.groups.forEach(function(g){ g.cats.forEach(function(c){ if(c.name===name) dup=true; }); });
+  if(dup){ toast('이미 있는 카테고리예요'); return; }
+  var target = catConfig.groups.find(function(g){ return g.name===grp; });
+  if(!target){ toast('대분류를 선택해주세요'); return; }
+  target.cats.push({ name:name, emoji:emoji, color:'#868E96' });
+  try {
+    await saveCategories();
+    rebuildCatGroups(); buildCategorySelects(); renderCatManage();
+    document.getElementById('newCatName').value='';
+    document.getElementById('newCatEmoji').value='📦';
+    toast('추가됐어요 🏷');
+  } catch(e){ console.error(e); toast('저장 실패'); }
+};
+
+window.openCatEdit = function(gi, ci) {
+  var c = catConfig.groups[gi].cats[ci];
+  if(!c) return;
+  window._catEdit = { gi:gi, ci:ci, oldName:c.name };
+  renderCatManage();
+  document.getElementById('catEditEmoji').value = c.emoji;
+  document.getElementById('catEditName').value = c.name;
+  document.getElementById('catEditGroup').value = catConfig.groups[gi].name;
+  document.getElementById('catEditModal').style.display = 'flex';
+};
+
+window.closeCatEdit = function() {
+  document.getElementById('catEditModal').style.display = 'none';
+  window._catEdit = null;
+};
+
+window.saveCatEdit = async function() {
+  var ctx = window._catEdit;
+  if(!ctx) return;
+  var emoji = document.getElementById('catEditEmoji').value.trim() || '📦';
+  var name = document.getElementById('catEditName').value.trim();
+  var grp = document.getElementById('catEditGroup').value;
+  if(!name){ toast('카테고리명을 입력해주세요'); return; }
+  var dup = false;
+  catConfig.groups.forEach(function(g){ g.cats.forEach(function(c){ if(c.name===name && c.name!==ctx.oldName) dup=true; }); });
+  if(dup){ toast('이미 있는 카테고리예요'); return; }
+  try {
+    var cat = catConfig.groups[ctx.gi].cats[ctx.ci];
+    cat.name = name; cat.emoji = emoji;
+    if(catConfig.groups[ctx.gi].name !== grp){
+      catConfig.groups[ctx.gi].cats.splice(ctx.ci, 1);
+      var target = catConfig.groups.find(function(g){ return g.name===grp; });
+      if(target) target.cats.push(cat);
+    }
+    await saveCategories();
+    if(name !== ctx.oldName){
+      var snap = await getDocs(collection(db,'records'));
+      var promises = [], cnt = 0;
+      snap.forEach(function(d){
+        if((d.data().category||'') === ctx.oldName){
+          promises.push(updateDoc(doc(db,'records',d.id), {category:name}));
+          cnt++;
+        }
+      });
+      await Promise.all(promises);
+      if(budgets && budgets[ctx.oldName] !== undefined){
+        budgets[name] = budgets[ctx.oldName];
+        delete budgets[ctx.oldName];
+        saveBudgets();
+        if(typeof renderBudgetList === 'function') renderBudgetList();
+      }
+      toast('수정됐어요 · 내역 '+cnt+'건 반영 ✅');
+    } else {
+      toast('수정됐어요 ✅');
+    }
+    rebuildCatGroups(); buildCategorySelects(); renderCatManage();
+    closeCatEdit();
+  } catch(e){ console.error(e); toast('수정 실패'); }
+};
+
+window.deleteCategory = async function(gi, ci) {
+  var cat = catConfig.groups[gi].cats[ci];
+  if(!cat) return;
+  var used = records.filter(function(r){ return r.category === cat.name; }).length;
+  var msg = used>0
+    ? '"'+cat.name+'" 카테고리를 삭제할까요?\n\n이번 월분 내역 '+used+'건이 사용 중이에요.\n삭제하면 해당 내역은 "기타"로 옮겨져요.'
+    : '"'+cat.name+'" 카테고리를 삭제할까요?';
+  if(!confirm(msg)) return;
+  try {
+    catConfig.groups[gi].cats.splice(ci, 1);
+    await saveCategories();
+    var snap = await getDocs(collection(db,'records'));
+    var promises = [], cnt = 0;
+    snap.forEach(function(d){
+      if((d.data().category||'') === cat.name){
+        promises.push(updateDoc(doc(db,'records',d.id), {category:'기타'}));
+        cnt++;
+      }
+    });
+    await Promise.all(promises);
+    if(budgets && budgets[cat.name] !== undefined){
+      delete budgets[cat.name];
+      saveBudgets();
+      if(typeof renderBudgetList === 'function') renderBudgetList();
+    }
+    rebuildCatGroups(); buildCategorySelects(); renderCatManage();
+    toast(cnt>0 ? '삭제됐어요 · 내역 '+cnt+'건 기타로 이동' : '삭제됐어요 🗑');
+  } catch(e){ console.error(e); toast('삭제 실패'); }
+};
+
+// ── 월분 재분류 ───────────────────────────────────
+var repState = { key:null, filter:'all', recs:[], sel:{} };
+
+function shiftPeriodKey(key, delta) {
+  var p = key.split('-'), y = parseInt(p[0]), m = parseInt(p[1]) + delta;
+  while(m > 12){ m -= 12; y += 1; }
+  while(m < 1){ m += 12; y -= 1; }
+  return y+'-'+String(m).padStart(2,'0');
+}
+
+window.renderReperiod = function() {
+  if(!repState.key) repState.key = currentKey;
+  var lbl = document.getElementById('repMonthLabel');
+  if(lbl) lbl.textContent = periodLabel(repState.key);
+  // 필터 버튼 상태
+  document.querySelectorAll('#repFilterBar button').forEach(function(b){
+    var on = b.dataset.f === repState.filter;
+    b.style.background = on ? 'var(--p1)' : 'var(--surface2)';
+    b.style.color = on ? '#fff' : 'var(--sub)';
+  });
+  // 이동할 월분 옵션
+  var sel = document.getElementById('repTarget');
+  if(sel){
+    var prev = sel.value;
+    var opts = '';
+    for(var d=-2; d<=2; d++){
+      var k = shiftPeriodKey(repState.key, d);
+      opts += '<option value="'+k+'"'+(d===0?' disabled':'')+'>'+periodLabel(k)+(d===0?' (현재)':'')+'</option>';
+    }
+    sel.innerHTML = opts;
+    sel.value = prev && prev!==repState.key ? prev : shiftPeriodKey(repState.key, 1);
+  }
+  loadRepRecords();
+};
+
+function loadRepRecords() {
+  var list = document.getElementById('repList');
+  if(list) list.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:8px;">불러오는 중...</div>';
+  getDocs(query(collection(db,'records'), where('period','==',repState.key))).then(function(snap){
+    repState.recs = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    repState.recs.sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+    repState.sel = {};
+    renderRepList();
+  }).catch(function(e){
+    console.error('재분류 조회 오류:', e);
+    if(list) list.innerHTML = '<div style="font-size:11px;color:var(--expense);padding:8px;">조회 실패</div>';
+  });
+}
+
+function repFiltered() {
+  return repState.recs.filter(function(r){
+    if(repState.filter==='income') return r.type==='income';
+    if(repState.filter==='edge'){
+      var d = parseInt((r.date||'').split('-')[2]);
+      return d===20 || d===21;
+    }
+    return true;
+  });
+}
+
+function renderRepList() {
+  var list = document.getElementById('repList');
+  if(!list) return;
+  var fr = repFiltered();
+  if(!fr.length){ list.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:8px;">해당 내역이 없어요</div>'; updateRepBtn(); return; }
+  list.innerHTML = fr.map(function(r){
+    var on = !!repState.sel[r.id];
+    var isInc = r.type==='income';
+    var cs = isInc ? {emoji:'💰'} : getCatStyle(r.category);
+    return '<div onclick="toggleRepSel(\''+r.id+'\')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;background:'+(on?'#EFF6FF':'var(--surface2)')+';border-radius:8px;margin-bottom:6px;cursor:pointer;'+(on?'outline:1.5px solid var(--p1);':'')+'">'+
+      '<input type="checkbox" '+(on?'checked':'')+' onclick="event.stopPropagation();toggleRepSel(\''+r.id+'\')" style="width:18px;height:18px;accent-color:#3182F6;flex-shrink:0;">'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-size:12px;font-weight:600;">'+cs.emoji+' '+esc(r.memo||r.category||'-')+'</div>'+
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+(r.date||'').replace(/-/g,'/')+' · '+(isInc?'수입':'지출')+(r.payment?' · '+esc(r.payment):'')+'</div>'+
+      '</div>'+
+      '<div style="font-size:12px;font-weight:800;white-space:nowrap;color:'+(isInc?'#1971C2':'#F04452')+';">'+(isInc?'+':'-')+fmt(r.amount)+'</div>'+
+    '</div>';
+  }).join('');
+  updateRepBtn();
+}
+
+function updateRepBtn() {
+  var btn = document.getElementById('repApplyBtn');
+  if(!btn) return;
+  var n = Object.keys(repState.sel).filter(function(k){ return repState.sel[k]; }).length;
+  var sel = document.getElementById('repTarget');
+  var tLabel = sel && sel.value ? periodLabel(sel.value) : '';
+  btn.textContent = n>0 ? ('선택한 '+n+'건 → '+tLabel+'으로 이동') : '내역을 선택해주세요';
+  btn.style.opacity = n>0 ? '1' : '.55';
+}
+
+window.toggleRepSel = function(id) {
+  repState.sel[id] = !repState.sel[id];
+  renderRepList();
+};
+
+window.toggleRepSelectAll = function() {
+  var fr = repFiltered();
+  var allOn = fr.length && fr.every(function(r){ return repState.sel[r.id]; });
+  fr.forEach(function(r){ repState.sel[r.id] = !allOn; });
+  renderRepList();
+};
+
+window.setRepFilter = function(f) {
+  repState.filter = f;
+  renderReperiod();
+};
+
+window.moveRepMonth = function(delta) {
+  repState.key = shiftPeriodKey(repState.key || currentKey, delta);
+  renderReperiod();
+};
+
+window.applyReperiod = async function() {
+  var ids = Object.keys(repState.sel).filter(function(k){ return repState.sel[k]; });
+  if(!ids.length){ toast('내역을 선택해주세요'); return; }
+  var target = document.getElementById('repTarget').value;
+  if(!target || target===repState.key){ toast('다른 월분을 선택해주세요'); return; }
+  if(!confirm(ids.length+'건을 '+periodLabel(target)+'으로 옮길까요?\n\n날짜는 그대로 유지되고 분석 기준만 바뀌어요.')) return;
+  try {
+    await Promise.all(ids.map(function(id){ return updateDoc(doc(db,'records',id), {period:target}); }));
+    toast(ids.length+'건 이동됐어요 📦');
+    loadRepRecords();
+  } catch(e){ console.error(e); toast('이동 실패'); }
+};
+
 var settleData = { autoOn:true, rows:[] };
 var settleAutoAmts = {}; // 지출처별 사용자 수정값 저장
 
