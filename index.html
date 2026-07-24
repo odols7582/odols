@@ -4639,7 +4639,10 @@ window.calcSettle = function() {
   var resultEl = document.getElementById('settleResult');
   var incEl = document.getElementById('settleIncomeSum');
   var expEl = document.getElementById('settleExpenseSum');
-  if(resultEl) resultEl.textContent = fmt(remain)+'원';
+  if(resultEl){
+    resultEl.textContent = (remain<0?'-':'')+fmt(remain)+'원';
+    resultEl.style.color = remain<0 ? '#FFD5DB' : '#fff';
+  }
   if(incEl) incEl.textContent = '수입 '+fmt(incSum);
   if(expEl) expEl.textContent = '지출 '+fmt(expSum);
 };
