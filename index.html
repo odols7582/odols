@@ -84,7 +84,7 @@
   .btn-notif{background:none;border:none;font-size:12px;cursor:pointer;padding:4px;line-height:1;}
 
   /* 기간 네비 */
-  .period-nav{display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 16px 16px;background:var(--bg);}
+  .period-nav{display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 16px 16px;background:var(--bg);position:sticky;top:0;z-index:120;}
   .period-nav button{background:var(--surface);border:none;font-size:12px;cursor:pointer;color:var(--sub);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow2);}
   .period-nav button:active{background:var(--surface3);}
   .period-center{text-align:center;}
@@ -2798,6 +2798,7 @@ function renderSavingGoalsWidget() {
 // ── 2. 요일별 지출 패턴 ──────────────────────────
 var dowChartObj = null;
 
+window.renderDowChart = renderDowChart;
 function renderDowChart() {
   var canvas = document.getElementById('dowChart');
   if(!canvas) return;
