@@ -2460,18 +2460,25 @@ window.toggleCatRecords = function(boxId, catName) {
   if(!cur.length && !prv.length){
     box.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:6px;">내역이 없어요</div>';
   } else {
-    var line = function(r){
-      return '<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 4px;font-size:11px;border-bottom:1px solid var(--border);">'+
-        '<span style="color:var(--sub);flex:1;min-width:0;">'+(r.date||'').slice(5).replace('-','/')+' · '+esc(r.memo||r.category||'')+
+    var line = function(isPrev){ return function(r){
+      return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 8px;font-size:11px;">'+
+        '<span style="color:'+(isPrev?'var(--muted)':'var(--sub)')+';flex:1;min-width:0;">'+(r.date||'').slice(5).replace('-','/')+' · '+esc(r.memo||r.category||'')+
           (r.payment?' <span style="color:var(--muted);">'+esc(r.payment)+'</span>':'')+'</span>'+
-        '<span style="font-weight:700;color:var(--expense);white-space:nowrap;">'+fmt(r.amount)+'</span>'+
+        '<span style="font-weight:700;white-space:nowrap;color:'+(isPrev?'#B0B6BC':'var(--expense)')+';">'+fmt(r.amount)+'</span>'+
       '</div>';
-    };
+    }; };
+    var curSum = cur.reduce(function(a,r){return a+r.amount;},0);
+    var prvSum = prv.reduce(function(a,r){return a+r.amount;},0);
     box.innerHTML =
-      '<div style="font-size:10px;font-weight:700;color:var(--muted);margin:6px 0 2px;">현월 '+cur.length+'건</div>'+
-      (cur.length ? cur.map(line).join('') : '<div style="font-size:11px;color:var(--muted);padding:4px;">없음</div>')+
-      (prv.length ? '<div style="font-size:10px;font-weight:700;color:var(--muted);margin:8px 0 2px;">전월 '+prv.length+'건</div>'+
-        prv.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');}).map(line).join('') : '');
+      '<div style="background:#EFF6FF;border-radius:8px;padding:6px;margin:6px 0 8px;">'+
+        '<div style="font-size:10px;font-weight:800;color:var(--p1);padding:2px 8px 5px;">현월 '+cur.length+'건 · '+fmt(curSum)+'원</div>'+
+        (cur.length ? cur.map(line(false)).join('') : '<div style="font-size:11px;color:var(--muted);padding:4px 8px;">없음</div>')+
+      '</div>'+
+      (prv.length ?
+      '<div style="background:#F1F3F5;border-radius:8px;padding:6px;">'+
+        '<div style="font-size:10px;font-weight:800;color:#868E96;padding:2px 8px 5px;">전월 '+prv.length+'건 · '+fmt(prvSum)+'원</div>'+
+        prv.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');}).map(line(true)).join('')+
+      '</div>' : '');
   }
   box.style.display = 'block';
 };
@@ -2842,20 +2849,57 @@ function renderDowChart() {
       }
     }
   });
-  // 텍스트 요약
+  // 텍스트 요약 (평균 + 합계, 탭하면 세부내역)
+  window._dowFilter = f;
   var el = document.getElementById('dowText');
-  if(el && maxIdx>=0 && avg[maxIdx]>0) {
+  if(el) {
+    var total = dowData.reduce(function(a,b){return a+b;},0);
+    var cntAll = dowCount.reduce(function(a,b){return a+b;},0);
+    if(!total){ el.innerHTML = '<div style="font-size:12px;color:var(--muted);">해당 지출이 없어요</div>'; return; }
     el.innerHTML = '<div style="font-size:12px;color:var(--sub);">'+
-      '💡 <b>'+dowLabels[maxIdx]+'요일</b>에 가장 많이 써요 (평균 '+fmt(avg[maxIdx])+'원)'+
-    '</div>'+
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">'+
-    dowLabels.map(function(l,i){
-      if(avg[i]===0) return '';
-      return '<div style="font-size:12px;background:var(--p1-bg);color:var(--p1);padding:4px 10px;border-radius:20px;font-weight:600;">'+l+' '+fmt(avg[i])+'원</div>';
-    }).join('')+
-    '</div>';
+        '💡 <b>'+dowLabels[maxIdx]+'요일</b>에 가장 많이 써요 (평균 '+fmt(avg[maxIdx])+'원)'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:3px;">전체 합계 '+fmt(total)+'원 · '+cntAll+'건</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">'+
+      dowLabels.map(function(l,i){
+        if(dowData[i]===0) return '';
+        return '<div onclick="toggleDowRecords('+i+')" style="background:var(--p1-bg);border-radius:10px;padding:7px 10px;cursor:pointer;">'+
+          '<div style="font-size:12px;font-weight:700;color:var(--p1);">'+l+'요일 <span style="font-size:10px;color:var(--muted);font-weight:600;">'+dowCount[i]+'건 ▾</span></div>'+
+          '<div style="font-size:11px;color:var(--sub);margin-top:2px;">합계 <b>'+fmt(dowData[i])+'</b> · 평균 '+fmt(avg[i])+'</div>'+
+        '</div>';
+      }).join('')+
+      '</div>'+
+      '<div id="dowRecords" style="display:none;margin-top:8px;background:var(--surface2);border-radius:10px;padding:8px 10px;"></div>';
   }
 }
+
+window.toggleDowRecords = function(dow) {
+  var box = document.getElementById('dowRecords');
+  if(!box) return;
+  if(box.style.display !== 'none' && box.dataset.dow === String(dow)){ box.style.display='none'; return; }
+  box.dataset.dow = String(dow);
+  var f = window._dowFilter || '';
+  var labels = ['일','월','화','수','목','금','토'];
+  var list = records.filter(function(r){
+    if(r.type!=='expense' || !r.date) return false;
+    if(new Date(r.date).getDay() !== dow) return false;
+    if(f){
+      if(f.indexOf('group:')===0) return getCatGroup(r.category) === f.slice(6);
+      return r.category === f;
+    }
+    return ['주식 매수','코인 매수','적금/예금'].indexOf(r.category) < 0;
+  }).sort(function(a,b){ return b.amount - a.amount; });
+  var sum = list.reduce(function(a,r){return a+r.amount;},0);
+  box.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:6px;">'+labels[dow]+'요일 · '+list.length+'건 · 합계 '+fmt(sum)+'원</div>'+
+    (list.length ? list.map(function(r){
+      var cs = getCatStyle(r.category);
+      return '<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 2px;font-size:11px;border-bottom:1px solid var(--border);">'+
+        '<span style="color:var(--sub);flex:1;min-width:0;">'+(r.date||'').slice(5).replace('-','/')+' · '+cs.emoji+' '+esc(r.memo||r.category||'')+'</span>'+
+        '<span style="font-weight:700;color:var(--expense);white-space:nowrap;">'+fmt(r.amount)+'</span>'+
+      '</div>';
+    }).join('') : '<div style="font-size:11px;color:var(--muted);">내역이 없어요</div>');
+  box.style.display = 'block';
+};
 
 // ── 3. 내역 검색 ──────────────────────────────────
 function filteredRecords() {
