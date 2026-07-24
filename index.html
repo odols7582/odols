@@ -973,7 +973,10 @@
     <button onclick="addSettleRow()" style="width:100%;padding:11px;background:var(--surface2);color:var(--sub);border:1px dashed var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px;">+ 항목 추가</button>
   </div>
 
-  <button onclick="saveSettleNow()" class="submit-btn" style="background:linear-gradient(135deg,#0F766E,#14B8A6);margin-bottom:12px;">💾 이 월분 정산 저장</button>
+  <div style="display:flex;gap:6px;margin-bottom:12px;">
+    <button onclick="saveSettleNow()" class="submit-btn" style="background:linear-gradient(135deg,#0F766E,#14B8A6);">💾 정산 저장</button>
+    <button onclick="newSettle()" class="submit-btn" style="background:var(--surface2);color:var(--sub);flex:0 0 110px;">＋ 새 정산</button>
+  </div>
 
   <div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,.05);">
     <div style="font-size:12px;font-weight:700;margin-bottom:10px;">📚 저장된 정산 기록</div>
@@ -1534,7 +1537,7 @@ function showMain() {
   try { loadFixed(); } catch(e){ console.error('fixed 오류:', e); }
   try { loadCardData(); } catch(e){ console.error('card 오류:', e); }
   try { loadCardCycles(); } catch(e){ console.error('cardCycles 오류:', e); }
-  try { loadSettleData(); } catch(e){ console.error('settle 오류:', e); }
+  try { loadSettleHistory(); } catch(e){ console.error('settle 오류:', e); }
   try { loadCategories(); } catch(e){ console.error('categories 오류:', e); }
   try { loadFoods(); } catch(e){ console.error('foods 오류:', e); }
   // 5월 기초금액 최초 세팅 (한번만)
@@ -3390,7 +3393,7 @@ window.openMoreSheet = function(key) {
   if(key==='dday') renderDdays();
   if(key==='loan') renderLoanList();
   if(key==='cardcycle') renderCardCycleSettings();
-  if(key==='settle') { settleKey = settleKey || currentKey; loadSettleData(settleKey); loadSettleHistory(); }
+  if(key==='settle') { settleKey = settleKey || currentKey; loadSettleHistory().then(function(){ var l=settleDocsOf(settleKey); loadSettleData(l.length?l[0].id:(settleKey+'-1')); }); }
   if(key==='catmanage') renderCatManage();
   if(key==='reperiod') { repState.key = currentKey; renderReperiod(); }
   // 바텀시트 열릴 때 num-format 입력 적용
@@ -5057,13 +5060,28 @@ var settleData = { autoOn:true, rows:[] };
 var settleAutoAmts = {}; // 지출처별 사용자 수정값 저장
 
 var settleKey = null;      // 현재 편집 중인 월분
+var settleId = null;       // 현재 편집 중인 정산 문서 ID
 var settleHistory = [];    // 저장된 정산 목록
 
-function loadSettleData(key) {
-  settleKey = key || settleKey || currentKey;
-  return getDoc(doc(db,'settlements',settleKey)).then(function(d){
+function settleDocsOf(period) {
+  return settleHistory.filter(function(s){ return (s.period || s.id) === period; })
+    .sort(function(a,b){ return (a.seq||1) - (b.seq||1); });
+}
+
+function nextSettleSeq(period) {
+  var list = settleDocsOf(period);
+  var max = 0;
+  list.forEach(function(s){ if((s.seq||1) > max) max = (s.seq||1); });
+  return max + 1;
+}
+
+function loadSettleData(id) {
+  settleId = id || settleId;
+  if(!settleId){ settleKey = settleKey || currentKey; settleId = settleKey+'-1'; }
+  return getDoc(doc(db,'settlements',settleId)).then(function(d){
     if(d.exists()){
       var data = d.data()||{};
+      settleKey = data.period || settleId;
       settleData.autoOn = data.autoOn !== false;
       settleData.rows = data.rows || [];
       settleAutoAmts = data.autoAmts || {};
@@ -5079,10 +5097,22 @@ function loadSettleData(key) {
 
 function loadSettleHistory() {
   return getDocs(collection(db,'settlements')).then(function(snap){
-    settleHistory = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
-    settleHistory.sort(function(a,b){ return (b.id||'').localeCompare(a.id||''); });
+    settleHistory = snap.docs.map(function(d){
+      var data = d.data()||{};
+      return Object.assign({id:d.id, period:data.period||d.id, seq:data.seq||1}, data);
+    });
+    settleHistory.sort(function(a,b){
+      var c = (b.period||'').localeCompare(a.period||'');
+      return c !== 0 ? c : (a.seq||1)-(b.seq||1);
+    });
     renderSettleHistory();
   }).catch(function(e){ console.error('settle 이력 오류:', e); });
+}
+
+function settleTitle(s) {
+  var sameMonth = settleDocsOf(s.period);
+  var suffix = sameMonth.length > 1 ? ' ('+(s.seq||1)+')' : '';
+  return periodLabel(s.period) + suffix;
 }
 
 function renderSettleHistory() {
@@ -5090,27 +5120,70 @@ function renderSettleHistory() {
   if(!el) return;
   if(!settleHistory.length){ el.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:4px;">저장된 정산이 없어요</div>'; return; }
   el.innerHTML = settleHistory.map(function(s){
-    var on = s.id === settleKey;
+    var on = s.id === settleId;
     var remain = typeof s.remain==='number' ? s.remain : 0;
-    return '<div onclick="openSettleMonth(\''+s.id+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:'+(on?'#EFF6FF':'var(--surface2)')+';border-radius:8px;margin-bottom:6px;cursor:pointer;'+(on?'outline:1.5px solid var(--p1);':'')+'">'+
-      '<div><div style="font-size:12px;font-weight:700;">'+periodLabel(s.id)+'</div>'+
-      '<div style="font-size:10px;color:var(--muted);margin-top:2px;">수입 '+fmt(s.income||0)+' · 지출 '+fmt(s.expense||0)+'</div></div>'+
-      '<div style="font-size:13px;font-weight:800;color:'+(remain<0?'#F04452':'#1971C2')+';">'+(remain<0?'-':'')+fmt(remain)+'원</div>'+
+    return '<div style="display:flex;align-items:center;gap:6px;padding:9px 10px;background:'+(on?'#EFF6FF':'var(--surface2)')+';border-radius:8px;margin-bottom:6px;'+(on?'outline:1.5px solid var(--p1);':'')+'">'+
+      '<div onclick="openSettleDoc(\''+s.id+'\')" style="flex:1;min-width:0;cursor:pointer;">'+
+        '<div style="font-size:12px;font-weight:700;">'+settleTitle(s)+'</div>'+
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px;">수입 '+fmt(s.income||0)+' · 지출 '+fmt(s.expense||0)+'</div>'+
+      '</div>'+
+      '<div onclick="openSettleDoc(\''+s.id+'\')" style="font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;color:'+(remain<0?'#F04452':'#1971C2')+';">'+(remain<0?'-':'')+fmt(remain)+'원</div>'+
+      '<button onclick="openSettleDoc(\''+s.id+'\')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px 3px;">✏️</button>'+
+      '<button onclick="deleteSettle(\''+s.id+'\')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px 3px;">🗑</button>'+
     '</div>';
   }).join('');
 }
 
-window.openSettleMonth = function(key) {
-  loadSettleData(key).then(function(){ renderSettle(); renderSettleHistory(); });
+window.openSettleDoc = function(id) {
+  loadSettleData(id).then(function(){ renderSettle(); renderSettleHistory(); });
+};
+
+window.deleteSettle = async function(id) {
+  var s = settleHistory.find(function(x){ return x.id===id; });
+  if(!s) return;
+  if(!confirm('"'+settleTitle(s)+'" 정산을 삭제할까요?')) return;
+  try {
+    await deleteDoc(doc(db,'settlements',id));
+    if(settleId === id){
+      settleId = null;
+      settleData.rows = []; settleAutoAmts = {}; settleData.autoOn = true;
+      settleKey = settleKey || currentKey;
+      settleId = settleKey+'-'+Date.now();
+      renderSettle();
+    }
+    await loadSettleHistory();
+    toast('삭제됐어요 🗑');
+  } catch(e){ console.error(e); toast('삭제 실패'); }
+};
+
+window.newSettle = function() {
+  settleKey = settleKey || currentKey;
+  var seq = nextSettleSeq(settleKey);
+  settleId = settleKey+'-'+seq;
+  settleData.autoOn = true;
+  settleData.rows = [];
+  settleAutoAmts = {};
+  renderSettle();
+  renderSettleHistory();
+  toast(periodLabel(settleKey)+' 새 정산 ('+seq+')');
 };
 
 window.moveSettleMonth = function(delta) {
-  var k = shiftPeriodKey(settleKey || currentKey, delta);
-  openSettleMonth(k);
+  settleKey = shiftPeriodKey(settleKey || currentKey, delta);
+  var list = settleDocsOf(settleKey);
+  if(list.length){
+    openSettleDoc(list[0].id);
+  } else {
+    settleId = settleKey+'-1';
+    settleData.autoOn = true; settleData.rows = []; settleAutoAmts = {};
+    renderSettle(); renderSettleHistory();
+  }
 };
 
 function saveSettleData() {
   if(!settleKey) settleKey = currentKey;
+  if(!settleId) settleId = settleKey+'-1';
+  var seq = parseInt((settleId.split('-')[2]||'1')) || 1;
   var rows = [];
   document.querySelectorAll('#settleRows .settle-row').forEach(function(r){
     var type = r.querySelector('.settle-type').dataset.type;
@@ -5130,8 +5203,8 @@ function saveSettleData() {
     for(var k in autoAmts) expSum += autoAmts[k]||0;
   }
   rows.forEach(function(r){ if(r.type==='income') incSum += r.amt; else expSum += r.amt; });
-  return setDoc(doc(db,'settlements',settleKey), {
-    period: settleKey, autoOn: settleData.autoOn, rows: rows, autoAmts: autoAmts,
+  return setDoc(doc(db,'settlements',settleId), {
+    period: settleKey, seq: seq, autoOn: settleData.autoOn, rows: rows, autoAmts: autoAmts,
     income: incSum, expense: expSum, remain: incSum-expSum, updatedAt: Date.now()
   }).then(function(){ loadSettleHistory(); });
 }
@@ -5154,7 +5227,7 @@ function renderSettle() {
   if(!autoList || !rowsEl) return;
   if(!settleKey) settleKey = currentKey;
   var lbl = document.getElementById('settleMonthLabel');
-  if(lbl) lbl.textContent = periodLabel(settleKey);
+  if(lbl){ var _sq=parseInt((settleId||'').split('-')[2]||'1')||1; var _multi=settleDocsOf(settleKey).length>1; lbl.textContent = periodLabel(settleKey)+(_multi?' ('+_sq+')':''); }
 
   // 자동집계 렌더
   var autoData = getSettleAutoData();
