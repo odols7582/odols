@@ -626,15 +626,20 @@
       <div class="chart-title">📂 대분류별 지출 (전월 비교)</div>
       <div id="groupExpenseChart"></div>
     </div>
+    <div class="chart-box" style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+        <div class="chart-title" style="margin:0;">📆 요일별 지출 패턴</div>
+      </div>
+      <select id="dowCatFilter" class="finput" onchange="renderDowChart()" style="font-size:12px;padding:8px 10px;margin-bottom:10px;">
+        <option value="">🏷 전체 카테고리</option>
+      </select>
+      <div class="chart-wrap" style="height:180px;"><canvas id="dowChart"></canvas></div>
+      <div id="dowText" style="margin-top:10px;"></div>
+    </div>
     <div class="chart-box">
       <div class="chart-title">카테고리별 지출 (전월 비교)</div>
       <div class="chart-wrap" style="height:240px;"><canvas id="catChart"></canvas></div>
       <div class="legend" id="catLegend"></div>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title">📆 요일별 지출 패턴</div>
-      <div class="chart-wrap" style="height:180px;"><canvas id="dowChart"></canvas></div>
-      <div id="dowText" style="margin-top:10px;"></div>
     </div>
     <div style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow2);padding:16px;margin-bottom:12px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -2315,6 +2320,19 @@ function buildCategorySelects() {
     cf.innerHTML = '<option value="">🏷 카테고리 전체</option>' + filterHtml;
     cf.value = pv || '';
   }
+  // 요일별 차트 카테고리 필터
+  var df = document.getElementById('dowCatFilter');
+  if(df){
+    var dv = df.value;
+    var dHtml = catConfig.groups.map(function(g){
+      return '<optgroup label="'+esc(g.name)+'">'+
+        '<option value="group:'+esc(g.name)+'">'+esc(g.name)+' 전체</option>'+
+        g.cats.map(function(c){ return '<option value="'+esc(c.name)+'">　'+c.emoji+' '+esc(c.name)+'</option>'; }).join('')+
+      '</optgroup>';
+    }).join('');
+    df.innerHTML = '<option value="">🏷 전체 카테고리</option>' + dHtml;
+    df.value = dv || '';
+  }
 }
 
 function getCatGroup(cat) {
@@ -2392,12 +2410,16 @@ function renderGroupExpense() {
       return {name:c, cur:ct, prev:cp};
     }).sort(function(a,b){return b.cur-a.cur;});
 
-    var subHtml = subCats.map(function(sc){
+    var subHtml = subCats.map(function(sc, si){
       var cs = getCatStyle(sc.name);
-      return '<div style="display:grid;grid-template-columns:1.2fr 0.95fr 1.15fr;gap:4px;padding:8px 10px;font-size:12px;align-items:center;border-top:1px solid var(--border);">'+
-        '<span style="color:var(--sub);font-weight:600;display:flex;align-items:center;gap:4px;">'+cs.emoji+' '+esc(sc.name)+'</span>'+
-        '<span style="text-align:right;line-height:1.5;"><span style="color:var(--muted);font-size:12px;">전월 '+fmt(sc.prev)+'</span><br><b style="color:var(--text);">현월 '+fmt(sc.cur)+'</b></span>'+
-        '<span style="text-align:right;font-size:12px;line-height:1.5;">'+diffAmtHtml(sc.cur,sc.prev)+'<br>'+diffPctHtml(sc.cur,sc.prev)+'</span>'+
+      var recId = 'gdrec_'+i+'_'+si;
+      return '<div style="border-top:1px solid var(--border);">'+
+        '<div style="display:grid;grid-template-columns:1.2fr 0.95fr 1.15fr;gap:4px;padding:8px 10px;font-size:12px;align-items:center;cursor:pointer;" onclick="toggleCatRecords(\''+recId+'\',\''+esc(sc.name)+'\')">'+
+          '<span style="color:var(--sub);font-weight:600;display:flex;align-items:center;gap:4px;">'+cs.emoji+' '+esc(sc.name)+' <span style="font-size:10px;color:var(--muted);">▾</span></span>'+
+          '<span style="text-align:right;line-height:1.5;"><span style="color:var(--muted);font-size:12px;">전월 '+fmt(sc.prev)+'</span><br><b style="color:var(--text);">현월 '+fmt(sc.cur)+'</b></span>'+
+          '<span style="text-align:right;font-size:12px;line-height:1.5;">'+diffAmtHtml(sc.cur,sc.prev)+'<br>'+diffPctHtml(sc.cur,sc.prev)+'</span>'+
+        '</div>'+
+        '<div id="'+recId+'" style="display:none;background:var(--surface2);padding:4px 10px 8px;"></div>'+
       '</div>';
     }).join('');
 
@@ -2422,7 +2444,99 @@ function renderGroupExpense() {
     '</span>'+
   '</div>';
 
+  html += '<button onclick="runSpendAnalysis()" style="width:100%;margin-top:10px;padding:11px;background:linear-gradient(135deg,#7C3AED,#6D28D9);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🤖 AI 지출 분석</button>'+
+    '<div id="spendAiResult" style="display:none;background:var(--surface2);border-radius:12px;padding:12px;margin-top:8px;"></div>';
+
   el.innerHTML = html;
+}
+
+window.toggleCatRecords = function(boxId, catName) {
+  var box = document.getElementById(boxId);
+  if(!box) return;
+  if(box.style.display !== 'none'){ box.style.display = 'none'; return; }
+  var cur = records.filter(function(r){ return r.type==='expense' && r.category===catName; })
+                   .sort(function(a,b){ return (b.date||'').localeCompare(a.date||'') ; });
+  var prv = (window.prevRecords||[]).filter(function(r){ return r.type==='expense' && r.category===catName; });
+  if(!cur.length && !prv.length){
+    box.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:6px;">내역이 없어요</div>';
+  } else {
+    var line = function(r){
+      return '<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 4px;font-size:11px;border-bottom:1px solid var(--border);">'+
+        '<span style="color:var(--sub);flex:1;min-width:0;">'+(r.date||'').slice(5).replace('-','/')+' · '+esc(r.memo||r.category||'')+
+          (r.payment?' <span style="color:var(--muted);">'+esc(r.payment)+'</span>':'')+'</span>'+
+        '<span style="font-weight:700;color:var(--expense);white-space:nowrap;">'+fmt(r.amount)+'</span>'+
+      '</div>';
+    };
+    box.innerHTML =
+      '<div style="font-size:10px;font-weight:700;color:var(--muted);margin:6px 0 2px;">현월 '+cur.length+'건</div>'+
+      (cur.length ? cur.map(line).join('') : '<div style="font-size:11px;color:var(--muted);padding:4px;">없음</div>')+
+      (prv.length ? '<div style="font-size:10px;font-weight:700;color:var(--muted);margin:8px 0 2px;">전월 '+prv.length+'건</div>'+
+        prv.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');}).map(line).join('') : '');
+  }
+  box.style.display = 'block';
+};
+
+// ── AI 지출 분석 ──────────────────────────────────
+window.runSpendAnalysis = async function() {
+  var box = document.getElementById('spendAiResult');
+  if(!box) return;
+  box.style.display = 'block';
+  box.innerHTML = '<div style="font-size:11px;color:var(--muted);">🤖 지출 패턴을 분석하는 중...</div>';
+
+  // 대분류/카테고리 집계
+  var curMap = {}, prevMap = {};
+  records.forEach(function(r){ if(r.type==='expense') curMap[r.category]=(curMap[r.category]||0)+r.amount; });
+  (window.prevRecords||[]).forEach(function(r){ if(r.type==='expense') prevMap[r.category]=(prevMap[r.category]||0)+r.amount; });
+  var lines = Object.keys(curMap).concat(Object.keys(prevMap))
+    .filter(function(v,i,a){ return a.indexOf(v)===i; })
+    .map(function(k){ return k+': 전월 '+(prevMap[k]||0)+'원, 현월 '+(curMap[k]||0)+'원'; });
+  var curTotal = Object.keys(curMap).reduce(function(a,k){return a+curMap[k];},0);
+  var prevTotal = Object.keys(prevMap).reduce(function(a,k){return a+prevMap[k];},0);
+
+  var localSummary = buildLocalSpendSummary(curMap, prevMap, curTotal, prevTotal);
+
+  try {
+    var prompt = '너는 커플 가계부 앱의 지출 분석가야. 아래는 카테고리별 전월/현월 지출이야.\n\n'+
+      '총액: 전월 '+prevTotal+'원 → 현월 '+curTotal+'원\n'+ lines.join('\n') +
+      '\n\n한국어로 존댓말 없이 친근한 반말체로, 아래 형식의 순수 JSON만 출력해. 마크다운이나 설명 금지.\n'+
+      '{"summary":"한 줄 총평","points":["눈에 띄는 변화 3개, 각 40자 이내"],"advice":["실천 가능한 조언 2개, 각 40자 이내"]}';
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:800, messages:[{role:'user',content:prompt}] })
+    });
+    if(!res.ok) throw new Error('api');
+    var data = await res.json();
+    var text = (data.content||[]).map(function(x){return x.text||'';}).join('').replace(/```json|```/g,'').trim();
+    var j = JSON.parse(text);
+    box.innerHTML =
+      '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">🤖 '+esc(j.summary||'')+'</div>'+
+      (j.points||[]).map(function(p){ return '<div style="font-size:11px;color:var(--sub);line-height:1.7;">• '+esc(p)+'</div>'; }).join('')+
+      ((j.advice||[]).length?'<div style="font-size:11px;font-weight:700;color:var(--p1);margin:8px 0 4px;">💡 이렇게 해볼까?</div>':'')+
+      (j.advice||[]).map(function(p){ return '<div style="font-size:11px;color:var(--sub);line-height:1.7;">• '+esc(p)+'</div>'; }).join('');
+  } catch(e){
+    console.warn('AI 분석 실패, 자체 분석으로 대체:', e);
+    box.innerHTML = localSummary;
+  }
+};
+
+function buildLocalSpendSummary(curMap, prevMap, curTotal, prevTotal) {
+  var diffs = Object.keys(curMap).concat(Object.keys(prevMap))
+    .filter(function(v,i,a){ return a.indexOf(v)===i; })
+    .map(function(k){ return { name:k, diff:(curMap[k]||0)-(prevMap[k]||0), cur:curMap[k]||0 }; })
+    .sort(function(a,b){ return Math.abs(b.diff)-Math.abs(a.diff); });
+  var totalDiff = curTotal - prevTotal;
+  var head = totalDiff===0 ? '전월과 총 지출이 같아' :
+    (totalDiff>0 ? '전월보다 '+fmt(totalDiff)+'원 더 썼어' : '전월보다 '+fmt(Math.abs(totalDiff))+'원 아꼈어');
+  var top = diffs.slice(0,3).map(function(d){
+    if(d.diff===0) return null;
+    var cs = getCatStyle(d.name);
+    return '<div style="font-size:11px;color:var(--sub);line-height:1.7;">• '+cs.emoji+' '+esc(d.name)+' '+
+      (d.diff>0?'<span style="color:var(--expense);font-weight:700;">+'+fmt(d.diff)+'</span>':'<span style="color:var(--p1);font-weight:700;">-'+fmt(Math.abs(d.diff))+'</span>')+'원</div>';
+  }).filter(Boolean).join('');
+  var biggest = diffs.slice().sort(function(a,b){ return b.cur-a.cur; })[0];
+  return '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">📊 '+head+'</div>'+top+
+    (biggest && biggest.cur>0 ? '<div style="font-size:11px;color:var(--muted);margin-top:8px;">가장 많이 쓴 곳은 '+esc(biggest.name)+' ('+fmt(biggest.cur)+'원)</div>' : '');
 }
 
 window.toggleGroupDetail = function(id) {
@@ -2690,10 +2804,18 @@ function renderDowChart() {
   var dowLabels = ['일','월','화','수','목','금','토'];
   var dowData = [0,0,0,0,0,0,0];
   var dowCount = [0,0,0,0,0,0,0];
-  var investCats = ['주식 매수','코인 매수','적금/예금'];
+  var fEl = document.getElementById('dowCatFilter');
+  var f = fEl ? fEl.value : '';
   records.forEach(function(r){
-    if(r.type!=='expense'||investCats.indexOf(r.category)>=0) return;
+    if(r.type!=='expense') return;
     if(!r.date) return;
+    if(f){
+      if(f.indexOf('group:')===0){
+        if(getCatGroup(r.category) !== f.slice(6)) return;
+      } else if(r.category !== f) return;
+    } else {
+      if(['주식 매수','코인 매수','적금/예금'].indexOf(r.category)>=0) return;
+    }
     var d = new Date(r.date).getDay();
     dowData[d] += r.amount;
     dowCount[d]++;
