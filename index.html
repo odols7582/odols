@@ -821,6 +821,8 @@
   </div>
 </div>
 <div id="budgetContent" style="display:none;">
+  <div style="background:#EFF6FF;border-radius:10px;padding:10px 12px;font-size:11px;color:#1971C2;line-height:1.7;margin-bottom:12px;">💡 <b>전월 지출</b>을 참고해서 예산을 정해보세요. 금액을 탭하면 바로 입력돼요.</div>
+  <div id="budgetPrevList" style="margin-bottom:14px;"></div>
   <div id="budgetList"></div>
   <div style="display:flex;gap:8px;margin-top:10px;">
     <select class="finput" id="budgetCategory" style="flex:1.5;">
@@ -1719,6 +1721,47 @@ function loadBudgets() {
 function saveBudgets() {
   setDoc(doc(db,'settings','budgets'), {data: budgets});
 }
+
+function renderBudgetPrev() {
+  var el = document.getElementById('budgetPrevList');
+  if(!el) return;
+  var map = {};
+  (window.prevRecords||[]).forEach(function(r){
+    if(r.type!=='expense') return;
+    if(['주식 매수','코인 매수','적금/예금'].indexOf(r.category)>=0) return;
+    map[r.category] = (map[r.category]||0) + r.amount;
+  });
+  var list = Object.keys(map).map(function(k){ return {name:k, amt:map[k]}; })
+    .sort(function(a,b){ return b.amt - a.amt; });
+  var pk = (function(){ var p=currentKey.split('-'); var y=parseInt(p[0]), m=parseInt(p[1])-1; if(m<1){m=12;y-=1;} return y+'-'+String(m).padStart(2,'0'); })();
+  if(!list.length){
+    el.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:4px;">'+periodLabel(pk)+' 지출 내역이 없어요</div>';
+    return;
+  }
+  var total = list.reduce(function(a,x){return a+x.amt;},0);
+  el.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">'+
+      '<span style="font-size:12px;font-weight:700;color:var(--text);">📊 '+periodLabel(pk)+' 지출</span>'+
+      '<span style="font-size:11px;color:var(--muted);">합계 '+fmt(total)+'원</span>'+
+    '</div>'+
+    list.map(function(x){
+      var cs = getCatStyle(x.name);
+      var cur = budgets[x.name];
+      return '<div onclick="pickBudgetFromPrev(\''+esc(x.name)+'\','+x.amt+')" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;cursor:pointer;">'+
+        '<span style="font-size:12px;font-weight:600;color:var(--sub);flex:1;min-width:0;">'+cs.emoji+' '+esc(x.name)+
+          (typeof cur==='number'?' <span style="font-size:10px;color:var(--p1);">예산 '+fmt(cur)+'</span>':'')+'</span>'+
+        '<span style="font-size:12px;font-weight:800;color:var(--expense);white-space:nowrap;">'+fmt(x.amt)+'원</span>'+
+      '</div>';
+    }).join('');
+}
+
+window.pickBudgetFromPrev = function(cat, amt) {
+  var sel = document.getElementById('budgetCategory');
+  var inp = document.getElementById('budgetAmount');
+  if(sel) sel.value = cat;
+  if(inp){ inp.value = fmt(amt); inp.focus(); }
+  toast(cat+' · '+fmt(amt)+'원 입력됨');
+};
 
 window.addBudget = function() {
   var cat = document.getElementById('budgetCategory').value;
@@ -3580,7 +3623,7 @@ window.openMoreSheet = function(key) {
   document.getElementById('moreSheetBg').style.display = 'flex';
   // 각 탭 진입 시 렌더링
   if(key==='goal') renderGoalList();
-  if(key==='budget') { renderBudgetList(); renderBudgetStatus(); }
+  if(key==='budget') { renderBudgetPrev(); renderBudgetList(); renderBudgetStatus(); }
   if(key==='fixed') renderFixedList();
   if(key==='acct') renderAcctList();
   if(key==='food') renderFoodList();
