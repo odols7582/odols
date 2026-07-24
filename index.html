@@ -5452,6 +5452,7 @@ var settleAutoAmts = {}; // 지출처별 사용자 수정값 저장
 var settleKey = null;      // 현재 편집 중인 월분
 var settleId = null;       // 현재 편집 중인 정산 문서 ID
 var settleHistory = [];    // 저장된 정산 목록
+var settleUnsub = null;    // 정산 실시간 구독 (2명 공유 반영용)
 
 function settleDocsOf(period) {
   return settleHistory.filter(function(s){ return (s.period || s.id) === period; })
@@ -5488,19 +5489,28 @@ function loadSettleData(id) {
   }).catch(function(e){ console.error('settle 로드 오류:', e); });
 }
 
+// 정산 이력을 실시간 구독(onSnapshot)으로 로드 — 2명이 공유해도 양쪽 화면 즉시 반영
 function loadSettleHistory() {
-  return getDocs(collection(db,'settlements')).then(function(snap){
-    settleHistory = snap.docs.map(function(d){
-      var data = d.data()||{};
-      return Object.assign({id:d.id, period:data.period||d.id, seq:data.seq||1}, data);
-    });
-    settleHistory.sort(function(a,b){
-      var c = (b.period||'').localeCompare(a.period||'');
-      return c !== 0 ? c : (a.seq||1)-(b.seq||1);
-    });
-    renderSettleHistory();
-    renderSettleSummaryHome();
-  }).catch(function(e){ console.error('settle 이력 오류:', e); });
+  return new Promise(function(resolve){
+    var applySnap = function(snap){
+      settleHistory = snap.docs.map(function(d){
+        var data = d.data()||{};
+        return Object.assign({id:d.id, period:data.period||d.id, seq:data.seq||1}, data);
+      });
+      settleHistory.sort(function(a,b){
+        var c = (b.period||'').localeCompare(a.period||'');
+        return c !== 0 ? c : (a.seq||1)-(b.seq||1);
+      });
+      renderSettleHistory();
+      renderSettleSummaryHome();
+    };
+    if(settleUnsub){ resolve(); return; } // 이미 구독 중 — 데이터는 실시간으로 계속 갱신됨
+    var settled = false;
+    settleUnsub = onSnapshot(collection(db,'settlements'), function(snap){
+      applySnap(snap);
+      if(!settled){ settled = true; resolve(); }
+    }, function(e){ console.error('settle 이력 구독 오류:', e); if(!settled){ settled = true; resolve(); } });
+  });
 }
 
 function settleTitle(s) {
@@ -5756,6 +5766,34 @@ window.calcSettle = function() {
   if(expEl) expEl.textContent = '지출 '+fmt(expSum);
 };
 
+// 마지막 갱신 시각을 사람이 읽기 쉬운 형태로 ("오늘 21:30" / "어제 09:15" / "7/24 18:00")
+function settleTimeLabel(ts){
+  if(!ts) return '';
+  var d = new Date(ts), now = new Date();
+  var t = String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  var sameDay = d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
+  var yst = new Date(now.getTime()); yst.setDate(now.getDate()-1);
+  var isYst = d.getFullYear()===yst.getFullYear() && d.getMonth()===yst.getMonth() && d.getDate()===yst.getDate();
+  if(sameDay) return '오늘 '+t;
+  if(isYst) return '어제 '+t;
+  return (d.getMonth()+1)+'/'+d.getDate()+' '+t;
+}
+
+// 현재 거래(records) 기준으로 정산 잔여를 실시간 재계산 (저장은 안 함) — refreshSettleSummary와 동일 로직
+function computeSettleLive(s){
+  var incSum = 0, expSum = 0;
+  if(s.autoOn !== false){
+    CARD_PAYMENTS.forEach(function(cp){
+      var ov = s.autoAmts && typeof s.autoAmts[cp.key]==='number' ? s.autoAmts[cp.key] : null;
+      if(ov !== null){ expSum += ov; return; }
+      expSum += records.filter(function(r){ return r.type==='expense' && r.payment===cp.payment; })
+                       .reduce(function(a,r){ return a+r.amount; },0);
+    });
+  }
+  (s.rows||[]).forEach(function(r){ if(r.type==='income') incSum += r.amt; else expSum += r.amt; });
+  return { income: incSum, expense: expSum, remain: incSum-expSum };
+}
+
 function renderSettleSummaryHome() {
   var el = document.getElementById('settleSummaryHome');
   if(!el) return;
@@ -5770,6 +5808,16 @@ function renderSettleSummaryHome() {
   }
   var s = list[0];
   var remain = typeof s.remain==='number' ? s.remain : 0;
+  // 실시간 재계산값과 저장값 비교 → 최근 내역이 아직 반영 안 됐는지 판단
+  var live = computeSettleLive(s);
+  var stale = (live.income !== (s.income||0)) || (live.expense !== (s.expense||0));
+  var updLabel = settleTimeLabel(s.updatedAt);
+  var footer = '<div style="margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;">'+
+    '<span style="opacity:.85;white-space:nowrap;">🕒 '+(updLabel?updLabel+' 갱신':'갱신 기록 없음')+'</span>'+
+    (stale
+      ? '<span onclick="event.stopPropagation();refreshSettleSummary()" style="background:rgba(255,255,255,.24);padding:4px 9px;border-radius:99px;font-weight:800;cursor:pointer;white-space:nowrap;">⚠️ 실시간 '+(live.remain<0?'-':'')+fmt(live.remain)+'원 · ↻ 반영</span>'
+      : '<span style="opacity:.85;white-space:nowrap;">✓ 최신 상태</span>')+
+  '</div>';
   el.innerHTML =
     '<div style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);border-radius:16px;padding:16px 18px;color:#fff;box-shadow:var(--shadow);">'+
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'+
@@ -5783,6 +5831,7 @@ function renderSettleSummaryHome() {
         '</div>'+
         (s.memo?'<div style="font-size:11px;opacity:.85;margin-top:6px;">📝 '+esc(s.memo)+'</div>':'')+
       '</div>'+
+      footer+
     '</div>';
 }
 
@@ -5792,22 +5841,11 @@ window.refreshSettleSummary = async function() {
   var s = list[0];
   try {
     // 최신 지출로 자동집계 재계산 (직접 수정한 항목은 유지)
-    var src = records;
-    var incSum = 0, expSum = 0;
-    if(s.autoOn !== false){
-      CARD_PAYMENTS.forEach(function(cp){
-        var ov = s.autoAmts && typeof s.autoAmts[cp.key]==='number' ? s.autoAmts[cp.key] : null;
-        if(ov !== null){ expSum += ov; return; }
-        var sum = src.filter(function(r){ return r.type==='expense' && r.payment===cp.payment; })
-                     .reduce(function(a,r){ return a+r.amount; },0);
-        expSum += sum;
-      });
-    }
-    (s.rows||[]).forEach(function(r){ if(r.type==='income') incSum += r.amt; else expSum += r.amt; });
+    var live = computeSettleLive(s);
     await setDoc(doc(db,'settlements',s.id), {
-      income: incSum, expense: expSum, remain: incSum-expSum, updatedAt: Date.now()
+      income: live.income, expense: live.expense, remain: live.remain, updatedAt: Date.now()
     }, {merge:true});
-    await loadSettleHistory();
+    // 실시간 구독(onSnapshot)이 켜져 있으면 양쪽 화면 자동 반영됨. 구독 전이면 여기서 갱신.
     renderSettleSummaryHome();
     toast('최신 지출로 갱신됐어요 ↻');
   } catch(e){ console.error(e); toast('갱신 실패'); }
