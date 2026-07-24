@@ -1438,7 +1438,7 @@ const firebaseConfig = {
 const VAPID_KEY = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
 
 // ── 앱 버전 정보 (배포할 때마다 갱신) ────────────────
-const APP_VERSION = 'v1.1.0';
+const APP_VERSION = 'v1.1.1';
 const APP_BUILD_DATE = '2026-07-24';
 window.APP_VERSION = APP_VERSION;
 window.APP_BUILD_DATE = APP_BUILD_DATE;
@@ -6072,7 +6072,10 @@ function renderCardSummary() {
   var rows = CARD_PAYMENTS.map(function(c){
     var split = getAutoCardSplit(c.payment, records);
     var isPaid = cardDataCache['paid_'+c.key] === true;
-    return {c:c, lump:split.lump, inst:split.inst, total:split.total, isPaid:isPaid};
+    // N빵 수금현금: 이 카드로 결제한 지출 중 입금 완료된 '받을 돈' 합계
+    var collected = records.filter(function(r){ return r.split && r.splitReceived && r.payment===c.payment; })
+                           .reduce(function(a,r){ return a + (r.splitCollect||0); }, 0);
+    return {c:c, lump:split.lump, inst:split.inst, total:split.total, isPaid:isPaid, collected:collected};
   });
 
   // 전월 미납 카드 계산 (자동집계 기준)
@@ -6083,6 +6086,7 @@ function renderCardSummary() {
   }).filter(function(row){ return row.total > 0 && !row.paid; });
 
   var grandTotal = rows.reduce(function(a,r){return a+r.total;},0);
+  var grandCollected = rows.reduce(function(a,r){return a+r.collected;},0);
 
   var prevUnpaidHtml = prevUnpaid.length ?
     '<div style="background:#3D1F1F;border-radius:10px;margin:0 14px 10px;padding:10px 12px;">'+
@@ -6135,12 +6139,19 @@ function renderCardSummary() {
           (row.inst>0?'<span>할부: '+fmt(row.inst)+'원</span>':'')+
           (row.isPaid?'<span style="color:#5DA8FF;">✅ 납부완료</span>':'')+
         '</div>'+
+        (row.collected>0?'<div style="font-size:11px;color:#37B24D;font-weight:600;margin-top:4px;">💵 수금현금 −'+fmt(row.collected)+'원 · 실부담 <b>'+fmt(Math.max(0,row.total-row.collected))+'원</b></div>':'')+
       '</div>';
     }).join('')+
     (grandTotal>0?
-      '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#3D444A;border-top:1px solid #4D545A;">'+
-        '<span style="font-size:12px;font-weight:700;color:#E8EAED;">이번달 총 예상</span>'+
-        '<span style="font-size:12px;font-weight:800;color:#5DA8FF;">'+fmt(grandTotal)+'원</span>'+
+      '<div style="padding:12px 14px;background:#3D444A;border-top:1px solid #4D545A;">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+          '<span style="font-size:12px;font-weight:700;color:#E8EAED;">이번달 총 예상</span>'+
+          '<span style="font-size:12px;font-weight:800;color:#5DA8FF;">'+fmt(grandTotal)+'원</span>'+
+        '</div>'+
+        (grandCollected>0?'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">'+
+          '<span style="font-size:11px;color:#37B24D;">💵 수금현금 차감 후 실부담</span>'+
+          '<span style="font-size:12px;font-weight:800;color:#37B24D;">'+fmt(Math.max(0,grandTotal-grandCollected))+'원</span>'+
+        '</div>':'')+
       '</div>':
       '<div style="padding:12px 14px;font-size:12px;color:#A8AEB4;">아직 카드 지출 내역이 없어요</div>')+
   '</div>';
