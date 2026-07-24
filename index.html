@@ -869,10 +869,11 @@
   <div id="catManageList"></div>
   <div style="background:var(--surface);border-radius:14px;padding:14px;border:1px dashed rgba(15,118,110,.5);">
     <div style="font-size:12px;font-weight:700;margin-bottom:10px;">+ 카테고리 추가</div>
-    <div style="display:grid;grid-template-columns:64px 1fr;gap:8px;margin-bottom:10px;">
+    <div style="display:grid;grid-template-columns:64px 1fr;gap:8px;margin-bottom:8px;">
       <div><label class="flabel" style="font-size:11px;">이모지</label><input class="finput" id="newCatEmoji" value="📦" maxlength="4" style="text-align:center;"></div>
       <div><label class="flabel" style="font-size:11px;">카테고리명</label><input class="finput" id="newCatName" placeholder="예: 야식"></div>
     </div>
+    <div id="newCatEmojiPad" style="margin-bottom:12px;"></div>
     <div style="margin-bottom:12px;"><label class="flabel" style="font-size:11px;">대분류</label>
       <select class="finput" id="newCatGroup"></select>
     </div>
@@ -886,10 +887,11 @@
     <div style="width:36px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 16px;"></div>
     <div style="font-size:14px;font-weight:800;margin-bottom:4px;">✏️ 카테고리 수정</div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">이름을 바꾸면 기존 내역·예산도 함께 변경돼요</div>
-    <div style="display:grid;grid-template-columns:64px 1fr;gap:8px;margin-bottom:12px;">
+    <div style="display:grid;grid-template-columns:64px 1fr;gap:8px;margin-bottom:8px;">
       <div><label class="flabel" style="font-size:11px;">이모지</label><input class="finput" id="catEditEmoji" maxlength="4" style="text-align:center;"></div>
       <div><label class="flabel" style="font-size:11px;">카테고리명</label><input class="finput" id="catEditName"></div>
     </div>
+    <div id="catEditEmojiPad" style="margin-bottom:12px;"></div>
     <div style="margin-bottom:14px;"><label class="flabel" style="font-size:11px;">대분류</label>
       <select class="finput" id="catEditGroup"></select>
     </div>
@@ -930,6 +932,13 @@
 </div>
 
 <div id="settleContent" style="display:none;">
+  <!-- 월분 선택 -->
+  <div style="display:flex;gap:6px;margin-bottom:12px;">
+    <button onclick="moveSettleMonth(-1)" style="flex:1;padding:9px;border:none;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--surface2);color:var(--sub);">‹ 이전</button>
+    <div id="settleMonthLabel" style="flex:1.6;padding:9px;border-radius:9px;font-size:12px;font-weight:800;text-align:center;background:var(--p1);color:#fff;">-</div>
+    <button onclick="moveSettleMonth(1)" style="flex:1;padding:9px;border:none;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--surface2);color:var(--sub);">다음 ›</button>
+  </div>
+
   <!-- 결과 카드 -->
   <div style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);border-radius:16px;padding:20px;color:#fff;margin-bottom:14px;">
     <div style="font-size:12px;opacity:.85;margin-bottom:4px;">💵 예상 잔여 현금</div>
@@ -964,9 +973,16 @@
     <button onclick="addSettleRow()" style="width:100%;padding:11px;background:var(--surface2);color:var(--sub);border:1px dashed var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px;">+ 항목 추가</button>
   </div>
 
+  <button onclick="saveSettleNow()" class="submit-btn" style="background:linear-gradient(135deg,#0F766E,#14B8A6);margin-bottom:12px;">💾 이 월분 정산 저장</button>
+
+  <div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,.05);">
+    <div style="font-size:12px;font-weight:700;margin-bottom:10px;">📚 저장된 정산 기록</div>
+    <div id="settleHistory"></div>
+  </div>
+
   <div style="font-size:11px;color:var(--muted);text-align:center;line-height:1.6;">
     * 자동집계 스위치를 끄면 지출처별 금액이 정산에서 빠져요<br>
-    * 직접 입력한 항목은 저장되어 유지돼요
+    * 월분마다 따로 저장되고 기록에서 다시 열어볼 수 있어요
   </div>
 </div>
 <div id="exportContent" style="display:none;">
@@ -2256,11 +2272,19 @@ function buildCategorySelects() {
     el.innerHTML = html;
     if(prev) el.value = prev;
   });
-  // 검색용 카테고리 필터 (전체 옵션 포함)
+  // 검색용 카테고리 필터 (전체 + 대분류 + 세부 카테고리)
   var cf = document.getElementById('recordCategoryFilter');
   if(cf){
     var pv = cf.value;
-    cf.innerHTML = '<option value="">🏷 카테고리 전체</option>' + html;
+    var filterHtml = catConfig.groups.map(function(g){
+      return '<optgroup label="'+esc(g.name)+'">'+
+        '<option value="group:'+esc(g.name)+'">'+esc(g.name)+' 전체</option>'+
+        g.cats.map(function(c){
+          return '<option value="'+esc(c.name)+'">　'+c.emoji+' '+esc(c.name)+'</option>';
+        }).join('')+
+      '</optgroup>';
+    }).join('');
+    cf.innerHTML = '<option value="">🏷 카테고리 전체</option>' + filterHtml;
     cf.value = pv || '';
   }
 }
@@ -2707,11 +2731,16 @@ function filteredRecords() {
   if(payFilter) {
     recs = recs.filter(function(r){ return r.payment === payFilter; });
   }
-  // 카테고리 필터
+  // 카테고리 필터 (대분류 또는 세부 카테고리)
   var catEl = document.getElementById('recordCategoryFilter');
   var catFilter = catEl ? catEl.value : '';
   if(catFilter) {
-    recs = recs.filter(function(r){ return r.category === catFilter; });
+    if(catFilter.indexOf('group:') === 0){
+      var gName = catFilter.slice(6);
+      recs = recs.filter(function(r){ return getCatGroup(r.category) === gName; });
+    } else {
+      recs = recs.filter(function(r){ return r.category === catFilter; });
+    }
   }
   return recs;
 }
@@ -3361,7 +3390,7 @@ window.openMoreSheet = function(key) {
   if(key==='dday') renderDdays();
   if(key==='loan') renderLoanList();
   if(key==='cardcycle') renderCardCycleSettings();
-  if(key==='settle') renderSettle();
+  if(key==='settle') { settleKey = settleKey || currentKey; loadSettleData(settleKey); loadSettleHistory(); }
   if(key==='catmanage') renderCatManage();
   if(key==='reperiod') { repState.key = currentKey; renderReperiod(); }
   // 바텀시트 열릴 때 num-format 입력 적용
@@ -4703,16 +4732,23 @@ function renderCatManage() {
   var el = document.getElementById('catManageList');
   if(!el) return;
   el.innerHTML = catConfig.groups.map(function(g, gi){
+    var lastG = catConfig.groups.length - 1;
     return '<div style="background:var(--surface);border-radius:14px;padding:12px;margin-bottom:10px;box-shadow:0 1px 5px rgba(0,0,0,.04);">'+
-      '<div style="font-size:12px;font-weight:800;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">'+
-        '<span>'+esc(g.name)+'</span><span style="font-size:10px;color:var(--muted);font-weight:600;">'+g.cats.length+'개</span>'+
+      '<div style="font-size:12px;font-weight:800;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px;">'+
+        '<span style="flex:1;">'+esc(g.name)+'</span>'+
+        '<span style="font-size:10px;color:var(--muted);font-weight:600;">'+g.cats.length+'개</span>'+
+        '<button onclick="moveGroup('+gi+',-1)" '+(gi===0?'disabled':'')+' style="background:none;border:none;cursor:pointer;font-size:12px;color:'+(gi===0?'#E0E3E6':'var(--muted)')+';padding:2px 3px;">▲</button>'+
+        '<button onclick="moveGroup('+gi+',1)" '+(gi===lastG?'disabled':'')+' style="background:none;border:none;cursor:pointer;font-size:12px;color:'+(gi===lastG?'#E0E3E6':'var(--muted)')+';padding:2px 3px;">▼</button>'+
       '</div>'+
       (g.cats.length ? g.cats.map(function(c, ci){
-        return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">'+
+        var lastC = g.cats.length - 1;
+        return '<div style="display:flex;align-items:center;gap:4px;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">'+
           '<span style="font-size:15px;width:24px;text-align:center;">'+c.emoji+'</span>'+
-          '<span style="flex:1;font-size:12px;font-weight:600;">'+esc(c.name)+'</span>'+
-          '<button onclick="openCatEdit('+gi+','+ci+')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px 4px;">✏️</button>'+
-          '<button onclick="deleteCategory('+gi+','+ci+')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px 4px;">🗑</button>'+
+          '<span style="flex:1;font-size:12px;font-weight:600;min-width:0;">'+esc(c.name)+'</span>'+
+          '<button onclick="moveCat('+gi+','+ci+',-1)" '+(ci===0?'disabled':'')+' style="background:none;border:none;cursor:pointer;font-size:11px;color:'+(ci===0?'#DEE2E6':'var(--muted)')+';padding:2px 3px;">▲</button>'+
+          '<button onclick="moveCat('+gi+','+ci+',1)" '+(ci===lastC?'disabled':'')+' style="background:none;border:none;cursor:pointer;font-size:11px;color:'+(ci===lastC?'#DEE2E6':'var(--muted)')+';padding:2px 3px;">▼</button>'+
+          '<button onclick="openCatEdit('+gi+','+ci+')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px 3px;">✏️</button>'+
+          '<button onclick="deleteCategory('+gi+','+ci+')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px 3px;">🗑</button>'+
         '</div>';
       }).join('') : '<div style="font-size:11px;color:var(--muted);padding:4px;">카테고리가 없어요</div>')+
     '</div>';
@@ -4722,7 +4758,63 @@ function renderCatManage() {
   var eg = document.getElementById('catEditGroup');
   if(ng){ var pv=ng.value; ng.innerHTML=opts; if(pv) ng.value=pv; }
   if(eg){ var pv2=eg.value; eg.innerHTML=opts; if(pv2) eg.value=pv2; }
+  renderEmojiPad('newCatEmojiPad','newCatEmoji');
 }
+
+// 이모지 샘플 팔레트
+var EMOJI_SAMPLES = [
+  ['🍽 음식', ['🍚','🍜','🍕','🍔','🍗','🍱','🍞','🥗','🍳','🛵','🥤','☕','🍺','🍰','🍫','🚬']],
+  ['🛍 생활', ['🛒','🛍️','🧴','🧻','🧺','🪑','🔧','💡','🧹','🎁','📦','✂️']],
+  ['🚗 이동', ['🚗','🚌','🚇','🚕','⛽','🅿️','✈️','🚲']],
+  ['🏠 주거', ['🏠','🏢','⚡','💧','🔥','📱','🌐','🛡️','🏦','💳','📄']],
+  ['🏥 건강', ['🏥','💊','🩺','💉','🦷','🏋️','🧘','🛌']],
+  ['🐾 반려', ['🐶','🐱','🦴','🐕','🐾','🧼']],
+  ['🎬 여가', ['🎬','🎮','📺','🎵','📚','⚽','🎣','🏕️','🎤','🎨']],
+  ['💰 금융', ['💰','📈','📉','🪙','💵','💸','🧾','🏧']],
+  ['👤 기타', ['🦡','🦉','👶','🎓','💼','🎂','❤️','⭐','📌','🔔']]
+];
+
+function renderEmojiPad(padId, targetId) {
+  var pad = document.getElementById(padId);
+  if(!pad) return;
+  pad.innerHTML =
+    '<div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:5px;">이모지 선택</div>'+
+    '<div style="max-height:132px;overflow-y:auto;background:var(--surface2);border-radius:8px;padding:8px;">'+
+      EMOJI_SAMPLES.map(function(sec){
+        return '<div style="font-size:10px;color:var(--muted);margin:2px 0 4px;">'+sec[0]+'</div>'+
+          '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">'+
+            sec[1].map(function(e){
+              return '<button type="button" onclick="pickEmoji(\''+targetId+'\',\''+e+'\')" style="width:30px;height:30px;border:none;border-radius:7px;background:#fff;font-size:15px;cursor:pointer;line-height:1;">'+e+'</button>';
+            }).join('')+
+          '</div>';
+      }).join('')+
+    '</div>';
+}
+
+window.pickEmoji = function(targetId, e) {
+  var el = document.getElementById(targetId);
+  if(el) el.value = e;
+};
+
+window.moveCat = async function(gi, ci, dir) {
+  var cats = catConfig.groups[gi].cats;
+  var ni = ci + dir;
+  if(ni < 0 || ni >= cats.length) return;
+  var tmp = cats[ci]; cats[ci] = cats[ni]; cats[ni] = tmp;
+  renderCatManage();
+  try { await saveCategories(); rebuildCatGroups(); buildCategorySelects(); }
+  catch(e){ console.error(e); toast('순서 저장 실패'); }
+};
+
+window.moveGroup = async function(gi, dir) {
+  var gs = catConfig.groups;
+  var ni = gi + dir;
+  if(ni < 0 || ni >= gs.length) return;
+  var tmp = gs[gi]; gs[gi] = gs[ni]; gs[ni] = tmp;
+  renderCatManage();
+  try { await saveCategories(); rebuildCatGroups(); buildCategorySelects(); }
+  catch(e){ console.error(e); toast('순서 저장 실패'); }
+};
 
 window.addCategory = async function() {
   var emoji = document.getElementById('newCatEmoji').value.trim() || '📦';
@@ -4752,6 +4844,7 @@ window.openCatEdit = function(gi, ci) {
   document.getElementById('catEditEmoji').value = c.emoji;
   document.getElementById('catEditName').value = c.name;
   document.getElementById('catEditGroup').value = catConfig.groups[gi].name;
+  renderEmojiPad('catEditEmojiPad','catEditEmoji');
   document.getElementById('catEditModal').style.display = 'flex';
 };
 
@@ -4963,22 +5056,61 @@ window.applyReperiod = async function() {
 var settleData = { autoOn:true, rows:[] };
 var settleAutoAmts = {}; // 지출처별 사용자 수정값 저장
 
-function loadSettleData() {
-  getDoc(doc(db,'settings','settle')).then(function(d){
+var settleKey = null;      // 현재 편집 중인 월분
+var settleHistory = [];    // 저장된 정산 목록
+
+function loadSettleData(key) {
+  settleKey = key || settleKey || currentKey;
+  return getDoc(doc(db,'settlements',settleKey)).then(function(d){
     if(d.exists()){
       var data = d.data()||{};
       settleData.autoOn = data.autoOn !== false;
       settleData.rows = data.rows || [];
       settleAutoAmts = data.autoAmts || {};
+    } else {
+      settleData.autoOn = true;
+      settleData.rows = [];
+      settleAutoAmts = {};
     }
-    // 정산 시트가 열려있을 때만 렌더 (초기화 시엔 렌더 안 함)
     var sc = document.getElementById('settleContent');
     if(sc && sc.parentElement && sc.parentElement.id==='moreSheetBody') renderSettle();
   }).catch(function(e){ console.error('settle 로드 오류:', e); });
 }
 
+function loadSettleHistory() {
+  return getDocs(collection(db,'settlements')).then(function(snap){
+    settleHistory = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    settleHistory.sort(function(a,b){ return (b.id||'').localeCompare(a.id||''); });
+    renderSettleHistory();
+  }).catch(function(e){ console.error('settle 이력 오류:', e); });
+}
+
+function renderSettleHistory() {
+  var el = document.getElementById('settleHistory');
+  if(!el) return;
+  if(!settleHistory.length){ el.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:4px;">저장된 정산이 없어요</div>'; return; }
+  el.innerHTML = settleHistory.map(function(s){
+    var on = s.id === settleKey;
+    var remain = typeof s.remain==='number' ? s.remain : 0;
+    return '<div onclick="openSettleMonth(\''+s.id+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:'+(on?'#EFF6FF':'var(--surface2)')+';border-radius:8px;margin-bottom:6px;cursor:pointer;'+(on?'outline:1.5px solid var(--p1);':'')+'">'+
+      '<div><div style="font-size:12px;font-weight:700;">'+periodLabel(s.id)+'</div>'+
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px;">수입 '+fmt(s.income||0)+' · 지출 '+fmt(s.expense||0)+'</div></div>'+
+      '<div style="font-size:13px;font-weight:800;color:'+(remain<0?'#F04452':'#1971C2')+';">'+(remain<0?'-':'')+fmt(remain)+'원</div>'+
+    '</div>';
+  }).join('');
+}
+
+window.openSettleMonth = function(key) {
+  loadSettleData(key).then(function(){ renderSettle(); renderSettleHistory(); });
+};
+
+window.moveSettleMonth = function(delta) {
+  var k = shiftPeriodKey(settleKey || currentKey, delta);
+  openSettleMonth(k);
+};
+
 function saveSettleData() {
-  // 현재 DOM에서 rows 수집
+  if(!settleKey) settleKey = currentKey;
   var rows = [];
   document.querySelectorAll('#settleRows .settle-row').forEach(function(r){
     var type = r.querySelector('.settle-type').dataset.type;
@@ -4987,13 +5119,21 @@ function saveSettleData() {
     if(name || amt) rows.push({type:type, name:name, amt:amt});
   });
   settleData.rows = rows;
-  // 자동집계 수정값 수집
   var autoAmts = {};
   document.querySelectorAll('#settleAutoList .settle-auto-inp').forEach(function(inp){
     autoAmts[inp.dataset.key] = parseNum(inp.value);
   });
   settleAutoAmts = autoAmts;
-  setDoc(doc(db,'settings','settle'), {autoOn:settleData.autoOn, rows:rows, autoAmts:autoAmts}, {merge:true});
+  // 합계 계산해서 함께 저장
+  var incSum = 0, expSum = 0;
+  if(settleData.autoOn){
+    for(var k in autoAmts) expSum += autoAmts[k]||0;
+  }
+  rows.forEach(function(r){ if(r.type==='income') incSum += r.amt; else expSum += r.amt; });
+  return setDoc(doc(db,'settlements',settleKey), {
+    period: settleKey, autoOn: settleData.autoOn, rows: rows, autoAmts: autoAmts,
+    income: incSum, expense: expSum, remain: incSum-expSum, updatedAt: Date.now()
+  }).then(function(){ loadSettleHistory(); });
 }
 
 function getSettleAutoData() {
@@ -5012,6 +5152,9 @@ function renderSettle() {
   var autoList = document.getElementById('settleAutoList');
   var rowsEl = document.getElementById('settleRows');
   if(!autoList || !rowsEl) return;
+  if(!settleKey) settleKey = currentKey;
+  var lbl = document.getElementById('settleMonthLabel');
+  if(lbl) lbl.textContent = periodLabel(settleKey);
 
   // 자동집계 렌더
   var autoData = getSettleAutoData();
@@ -5108,6 +5251,12 @@ window.calcSettle = function() {
   }
   if(incEl) incEl.textContent = '수입 '+fmt(incSum);
   if(expEl) expEl.textContent = '지출 '+fmt(expSum);
+};
+
+window.saveSettleNow = function() {
+  saveSettleData().then(function(){
+    toast(periodLabel(settleKey)+' 정산 저장됐어요 💾');
+  }).catch(function(e){ console.error(e); toast('저장 실패'); });
 };
 
 var settleSaveTimer = null;
