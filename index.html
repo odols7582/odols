@@ -366,6 +366,9 @@
     <button onclick="document.getElementById('debugBox').style.display='none'" style="margin-top:8px;background:#D85A30;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;">닫기</button>
   </div>
 
+  <!-- 예상 정산 요약 -->
+  <div id="settleSummaryHome" style="margin-bottom:10px;"></div>
+
   <!-- 카드 결제 예상금액 -->
   <div id="cardSummaryWrap" style="margin-bottom:10px;"></div>
 
@@ -1704,6 +1707,7 @@ function loadBudgets() {
     renderBudgetList();
     renderBudgetStatus();
     renderBudgetStatusHome();
+  if(typeof renderSettleSummaryHome==='function') renderSettleSummaryHome();
   }).catch(function(){ budgets={}; });
 }
 
@@ -3670,6 +3674,7 @@ function renderAll() {
   renderSummary();
   renderRecords();
   renderBudgetStatusHome();
+  if(typeof renderSettleSummaryHome==='function') renderSettleSummaryHome();
   renderCardSummary();
   if(currentPage==='chart') {
     switchChartTab(currentChartTab, document.getElementById('csub-'+currentChartTab));
@@ -5203,6 +5208,7 @@ function loadSettleHistory() {
       return c !== 0 ? c : (a.seq||1)-(b.seq||1);
     });
     renderSettleHistory();
+    renderSettleSummaryHome();
   }).catch(function(e){ console.error('settle 이력 오류:', e); });
 }
 
@@ -5457,6 +5463,63 @@ window.calcSettle = function() {
   }
   if(incEl) incEl.textContent = '수입 '+fmt(incSum);
   if(expEl) expEl.textContent = '지출 '+fmt(expSum);
+};
+
+function renderSettleSummaryHome() {
+  var el = document.getElementById('settleSummaryHome');
+  if(!el) return;
+  var list = settleDocsOf(currentKey);
+  if(!list.length){
+    el.innerHTML = '<div onclick="openMoreSheet(\'settle\')" style="background:var(--surface);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;cursor:pointer;">'+
+      '<span style="font-size:18px;">🧮</span>'+
+      '<div style="flex:1;"><div style="font-size:12px;font-weight:700;color:var(--text);">예상 정산</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+periodLabel(currentKey)+' 정산이 없어요 · 탭해서 작성</div></div>'+
+      '<span style="color:var(--muted);font-size:16px;">›</span></div>';
+    return;
+  }
+  var s = list[0];
+  var remain = typeof s.remain==='number' ? s.remain : 0;
+  el.innerHTML =
+    '<div style="background:linear-gradient(135deg,#1D4ED8,#3B82F6);border-radius:16px;padding:16px 18px;color:#fff;box-shadow:var(--shadow);">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'+
+        '<span onclick="openMoreSheet(\'settle\')" style="font-size:12px;opacity:.9;cursor:pointer;">💵 예상 잔여 현금 · '+periodLabel(s.period)+'</span>'+
+        '<button onclick="event.stopPropagation();refreshSettleSummary()" title="새로고침" style="background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:8px;padding:4px 9px;font-size:12px;cursor:pointer;font-family:inherit;">↻</button>'+
+      '</div>'+
+      '<div onclick="openMoreSheet(\'settle\')" style="cursor:pointer;">'+
+        '<div style="font-size:24px;font-weight:800;margin-bottom:6px;color:'+(remain<0?'#FFD5DB':'#fff')+';">'+(remain<0?'-':'')+fmt(remain)+'원</div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:12px;opacity:.9;">'+
+          '<span>수입 '+fmt(s.income||0)+'</span><span>지출 '+fmt(s.expense||0)+'</span>'+
+        '</div>'+
+        (s.memo?'<div style="font-size:11px;opacity:.85;margin-top:6px;">📝 '+esc(s.memo)+'</div>':'')+
+      '</div>'+
+    '</div>';
+}
+
+window.refreshSettleSummary = async function() {
+  var list = settleDocsOf(currentKey);
+  if(!list.length){ toast('저장된 정산이 없어요'); return; }
+  var s = list[0];
+  try {
+    // 최신 지출로 자동집계 재계산 (직접 수정한 항목은 유지)
+    var src = records;
+    var incSum = 0, expSum = 0;
+    if(s.autoOn !== false){
+      CARD_PAYMENTS.forEach(function(cp){
+        var ov = s.autoAmts && typeof s.autoAmts[cp.key]==='number' ? s.autoAmts[cp.key] : null;
+        if(ov !== null){ expSum += ov; return; }
+        var sum = src.filter(function(r){ return r.type==='expense' && r.payment===cp.payment; })
+                     .reduce(function(a,r){ return a+r.amount; },0);
+        expSum += sum;
+      });
+    }
+    (s.rows||[]).forEach(function(r){ if(r.type==='income') incSum += r.amt; else expSum += r.amt; });
+    await setDoc(doc(db,'settlements',s.id), {
+      income: incSum, expense: expSum, remain: incSum-expSum, updatedAt: Date.now()
+    }, {merge:true});
+    await loadSettleHistory();
+    renderSettleSummaryHome();
+    toast('최신 지출로 갱신됐어요 ↻');
+  } catch(e){ console.error(e); toast('갱신 실패'); }
 };
 
 window.toggleSettleMoveBox = function() {
