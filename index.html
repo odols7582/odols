@@ -370,6 +370,9 @@
     <button onclick="document.getElementById('debugBox').style.display='none'" style="margin-top:8px;background:#D85A30;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;">닫기</button>
   </div>
 
+  <!-- N빵 미수금 배너 -->
+  <div id="splitDueBanner"></div>
+
   <!-- 예상 정산 요약 -->
   <div id="settleSummaryHome" style="margin-bottom:10px;"></div>
 
@@ -483,6 +486,20 @@
         <input class="finput" id="installmentMonths" type="number" placeholder="개월" min="2" max="60" style="width:80px;padding:8px 10px;font-size:12px;">
         <span style="font-size:12px;color:var(--muted);white-space:nowrap;">개월 할부</span>
         <span id="installmentPerMonth" style="font-size:12px;color:var(--p1);font-weight:700;white-space:nowrap;"></span>
+      </div>
+    </div>
+
+    <!-- N빵 (나눠받기) -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--sub);">
+        <input type="checkbox" id="splitCheck" onchange="toggleSplit(this)" style="width:18px;height:18px;accent-color:#00B488;cursor:pointer;">
+        🧾 N빵 (나눠서 받기)
+      </label>
+      <div id="splitOptions" style="display:none;flex-wrap:wrap;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:var(--muted);">인원</span>
+        <input class="finput" id="splitCount" type="number" value="2" min="2" max="30" oninput="updateSplitPreview()" style="width:66px;padding:8px 10px;font-size:12px;">
+        <span style="font-size:12px;color:var(--muted);">명</span>
+        <span id="splitPreview" style="font-size:12px;color:#00B488;font-weight:700;white-space:nowrap;"></span>
       </div>
     </div>
 
@@ -1421,7 +1438,7 @@ const firebaseConfig = {
 const VAPID_KEY = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
 
 // ── 앱 버전 정보 (배포할 때마다 갱신) ────────────────
-const APP_VERSION = 'v1.0.0';
+const APP_VERSION = 'v1.1.0';
 const APP_BUILD_DATE = '2026-07-24';
 window.APP_VERSION = APP_VERSION;
 window.APP_BUILD_DATE = APP_BUILD_DATE;
@@ -1549,6 +1566,7 @@ function loginSuccess() {
 window.logout = function() {
   localStorage.removeItem('currentUser'); currentUser=null;
   if(unsub) unsub();
+  if(splitReminderTimer){ clearInterval(splitReminderTimer); splitReminderTimer=null; }
   document.getElementById('mainApp').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   pinBuffer=''; selectedUserId=null;
@@ -1604,6 +1622,7 @@ function showMain() {
   try { loadAccts(); } catch(e){ console.error('accts 오류:', e); }
   bindKeys();
   checkNotifStatus();
+  try { startSplitReminderTimer(); } catch(e){ console.error('splitReminder 오류:', e); }
   if(deferredPrompt) document.getElementById('pwaBanner').style.display = 'flex';
 }
 
@@ -3985,6 +4004,8 @@ function renderAll() {
   renderBudgetStatusHome();
   if(typeof renderSettleSummaryHome==='function') renderSettleSummaryHome();
   renderCardSummary();
+  if(typeof renderSplitDue==='function') renderSplitDue();
+  if(typeof checkSplitReminders==='function') checkSplitReminders();
   if(currentPage==='chart') {
     switchChartTab(currentChartTab, document.getElementById('csub-'+currentChartTab));
   }
@@ -4093,6 +4114,18 @@ function renderRecords() {
           instInfo = '<div style="font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">총 '+fmt(r.installmentTotal)+'원 · <span style="color:#F06595;font-weight:600;">잔여 '+fmt(remain)+'원 ('+remainCnt+'회)</span></div>';
         }
       }
+      // N빵 (나눠받기) 정보
+      var splitInfo = '';
+      if(r.split && r.splitCount){
+        if(r.splitReceived){
+          splitInfo = '<div style="font-size:10px;margin-top:3px;"><span onclick="toggleSplitReceived(\''+r.id+'\')" style="color:#37B24D;font-weight:700;cursor:pointer;">🧾 '+r.splitCount+'빵 · 입금완료 ✓ (탭하면 취소)</span></div>';
+        } else {
+          splitInfo = '<div style="font-size:10px;margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'+
+            '<span style="color:#F04452;font-weight:700;">🧾 '+r.splitCount+'빵 · 받을 돈 '+fmt(r.splitCollect||0)+'원</span>'+
+            '<button onclick="toggleSplitReceived(\''+r.id+'\')" style="background:#00B488;color:#fff;border:none;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">입금받음 ✓</button>'+
+            '</div>';
+        }
+      }
       // 카드명 짧게
       function shortCard(p){
         if(!p) return '';
@@ -4112,7 +4145,7 @@ function renderRecords() {
             '<span style="font-size:13px;font-weight:800;color:'+amtColor+';white-space:nowrap;flex-shrink:0;">'+sign+fmt(r.amount)+'원</span>'+
           '</div>'+
           '<div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+metaText+'</div>'+
-          instInfo+lastMsg+
+          instInfo+lastMsg+splitInfo+
         '</div>'+
         '<button class="rec-del" style="color:var(--p1);flex-shrink:0;margin-top:1px;" onclick="openEditModal(\''+r.id+'\')">✏️</button>'+
         '<button class="rec-del" style="color:#F04452;flex-shrink:0;margin-top:1px;" onclick="openDeleteModal(\''+r.id+'\')">🗑</button>'+
@@ -4175,6 +4208,83 @@ window.toggleOldRecords = function(btn) {
     btn.textContent = btn.textContent.replace('접기 ▲', '더보기 ▼');
   }
 };
+
+// ── N빵 미수금 (입금 받음 체크 + 알림) ─────────────────
+window.toggleSplitReceived = async function(id){
+  var r = records.find(function(x){ return x.id===id; });
+  if(!r) return;
+  var newVal = !r.splitReceived;
+  try {
+    await updateDoc(doc(db,'records',id), {
+      splitReceived: newVal,
+      splitReceivedAt: newVal ? Date.now() : null,
+      splitReceivedBy: newVal ? currentUser.id : null
+    });
+    toast(newVal ? '입금 확인 완료 ✅' : '입금 확인 취소됨');
+    // records onSnapshot → renderAll 자동 반영
+  } catch(e){ console.error(e); toast('처리 실패'); }
+};
+
+// 아직 못 받은 N빵 목록
+function dueSplits(){
+  return records.filter(function(r){ return r.split && !r.splitReceived; });
+}
+
+// 홈 미수금 배너
+function renderSplitDue(){
+  var el = document.getElementById('splitDueBanner');
+  if(!el) return;
+  var due = dueSplits();
+  if(!due.length){ el.innerHTML = ''; return; }
+  var totalDue = due.reduce(function(a,r){ return a + (r.splitCollect||0); }, 0);
+  el.innerHTML = '<div style="background:linear-gradient(135deg,#E8590C,#F76707);border-radius:16px;padding:14px 16px;color:#fff;box-shadow:var(--shadow);margin-bottom:12px;">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">'+
+      '<span style="font-size:12px;font-weight:800;">💰 아직 못 받은 돈 '+due.length+'건</span>'+
+      '<span style="font-size:16px;font-weight:800;">'+fmt(totalDue)+'원</span>'+
+    '</div>'+
+    due.map(function(r){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(255,255,255,.16);border-radius:8px;padding:7px 10px;margin-top:6px;">'+
+        '<span style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;">🧾 '+esc(r.memo||r.category)+' · '+r.splitCount+'빵</span>'+
+        '<span style="display:flex;align-items:center;gap:6px;flex-shrink:0;">'+
+          '<span style="font-size:11px;font-weight:800;white-space:nowrap;">'+fmt(r.splitCollect||0)+'원</span>'+
+          '<button onclick="toggleSplitReceived(\''+r.id+'\')" style="background:#fff;color:#E8590C;border:none;border-radius:6px;padding:3px 9px;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">받음✓</button>'+
+        '</span>'+
+      '</div>';
+    }).join('')+
+  '</div>';
+}
+
+// 미수금 알림 (실용형: 1시간 쿨다운, 앱 열림/열려있는 동안)
+var splitReminderTimer = null;
+function checkSplitReminders(){
+  var due = dueSplits();
+  if(!due.length) return;
+  var last = parseInt(localStorage.getItem('splitReminderAt')||'0');
+  var now = Date.now();
+  if(now - last < 60*60*1000) return; // 마지막 알림 후 1시간 안 지났으면 skip
+  localStorage.setItem('splitReminderAt', String(now));
+  var totalDue = due.reduce(function(a,r){ return a + (r.splitCollect||0); }, 0);
+  var body = '아직 못 받은 돈 '+due.length+'건 · '+fmt(totalDue)+'원. 입금 확인하고 체크하세요.';
+  if(('Notification' in window) && Notification.permission==='granted'){
+    try {
+      navigator.serviceWorker.getRegistration('/odols/').then(function(reg){
+        if(reg) reg.showNotification('💰 미수금 알림', {
+          body: body,
+          icon: 'https://odols7582.github.io/odols/icon-192.png',
+          badge: 'https://odols7582.github.io/odols/icon-192.png',
+          tag: 'split-due', renotify: true, vibrate:[200,100,200],
+          data: { url: 'https://odols7582.github.io/odols/' }
+        });
+        else new Notification('💰 미수금 알림', { body: body });
+      }).catch(function(){ try{ new Notification('💰 미수금 알림', { body: body }); }catch(e){} });
+    } catch(e){}
+  }
+}
+// 앱이 열려있는 동안 1시간마다 재알림
+function startSplitReminderTimer(){
+  if(splitReminderTimer) return;
+  splitReminderTimer = setInterval(checkSplitReminders, 60*60*1000);
+}
 
 // ── 수정 모달 ─────────────────────────────────────
 window.openEditModal = function(id) {
@@ -6071,11 +6181,38 @@ function updateInstallmentPreview() {
   }
 }
 
-// 금액 입력시 할부 미리보기 업데이트
+// ── N빵 (나눠받기) ─────────────────────────────────
+window.toggleSplit = function(checkbox) {
+  var opts = document.getElementById('splitOptions');
+  if(checkbox.checked) {
+    opts.style.display = 'flex';
+    updateSplitPreview();
+  } else {
+    opts.style.display = 'none';
+    document.getElementById('splitPreview').textContent = '';
+  }
+};
+
+function updateSplitPreview() {
+  var total = parseNum(document.getElementById('expenseAmount').value);
+  var n = parseInt(document.getElementById('splitCount').value) || 0;
+  var el = document.getElementById('splitPreview');
+  if(!el) return;
+  if(total > 0 && n >= 2) {
+    var per = Math.round(total / n);
+    var collect = total - per; // 나 빼고 받을 돈
+    el.innerHTML = '인당 '+fmt(per)+'원 · <span style="color:#F04452;">받을 돈 '+fmt(collect)+'원</span>';
+  } else {
+    el.textContent = '';
+  }
+}
+
+// 금액 입력시 할부/N빵 미리보기 업데이트
 document.addEventListener('DOMContentLoaded', function(){
   var amtEl = document.getElementById('expenseAmount');
   if(amtEl) amtEl.addEventListener('input', function(){
     if(document.getElementById('installmentCheck').checked) updateInstallmentPreview();
+    if(document.getElementById('splitCheck') && document.getElementById('splitCheck').checked) updateSplitPreview();
   });
 });
 
@@ -6139,11 +6276,24 @@ window.addExpense = async function(){
       var dateStr = document.getElementById('expenseDate').value || now2.toISOString().slice(0,10);
       var dateObj = new Date(dateStr);
       var period = getPeriodKey(dateObj);
-      await addDoc(collection(db,'records'),{
+      var recData = {
         type:'expense', amount:amt, category:cat, payment:payment,
         memo:memo, person:currentUser.person, addedBy:currentUser.id,
         date:dateStr, period:period, createdAt:now2.getTime()
-      });
+      };
+      // N빵 (나눠받기) 정보
+      var isSplit = document.getElementById('splitCheck') && document.getElementById('splitCheck').checked;
+      if(isSplit){
+        var splitN = parseInt(document.getElementById('splitCount').value) || 0;
+        if(splitN < 2){ toast('N빵 인원을 2명 이상 입력해주세요'); btn.disabled=false; window._addingExpense=false; syncStatus('ok'); return; }
+        var per = Math.round(amt / splitN);
+        recData.split = true;
+        recData.splitCount = splitN;
+        recData.splitPerPerson = per;
+        recData.splitCollect = amt - per; // 나 빼고 받을 돈
+        recData.splitReceived = false;
+      }
+      await addDoc(collection(db,'records'), recData);
       // 예산 초과 경고
       if(budgets[cat]) {
         var spent = records.filter(function(r){return r.type==='expense'&&r.category===cat;}).reduce(function(a,r){return a+r.amount;},0)+amt;
@@ -6161,6 +6311,14 @@ window.addExpense = async function(){
     }
     document.getElementById('expenseAmount').value='';
     document.getElementById('expenseMemo').value='';
+    // N빵 폼 초기화
+    var _sc = document.getElementById('splitCheck');
+    if(_sc && _sc.checked){
+      _sc.checked = false;
+      document.getElementById('splitOptions').style.display = 'none';
+      document.getElementById('splitCount').value = '2';
+      document.getElementById('splitPreview').textContent = '';
+    }
   } catch(e){ toast('저장 실패'); console.error(e); }
   btn.disabled = false;
   window._addingExpense = false;
