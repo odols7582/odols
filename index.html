@@ -628,7 +628,7 @@
     </div>
     <div class="chart-box" style="margin-bottom:12px;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
-        <div class="chart-title" style="margin:0;">📆 요일별 지출 패턴</div>
+        <div class="chart-title" style="margin:0;">📆 요일별 지출 패턴 <span style="font-size:10px;font-weight:600;color:var(--muted);">할부 2회차~ 제외</span></div>
       </div>
       <select id="dowCatFilter" class="finput" onchange="renderDowChart()" style="font-size:12px;padding:8px 10px;margin-bottom:10px;">
         <option value="">🏷 전체 카테고리</option>
@@ -2817,6 +2817,7 @@ function renderDowChart() {
   records.forEach(function(r){
     if(r.type!=='expense') return;
     if(!r.date) return;
+    if(r.installment && r.installmentIndex !== 1) return;   // 할부 2회차부터 제외 (1회차는 실제 구매일)
     if(f){
       if(f.indexOf('group:')===0){
         if(getCatGroup(r.category) !== f.slice(6)) return;
@@ -2882,6 +2883,7 @@ window.toggleDowRecords = function(dow) {
   var labels = ['일','월','화','수','목','금','토'];
   var list = records.filter(function(r){
     if(r.type!=='expense' || !r.date) return false;
+    if(r.installment && r.installmentIndex !== 1) return false;   // 할부 2회차부터 제외
     if(new Date(r.date).getDay() !== dow) return false;
     if(f){
       if(f.indexOf('group:')===0) return getCatGroup(r.category) === f.slice(6);
