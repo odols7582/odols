@@ -973,6 +973,11 @@
     <button onclick="addSettleRow()" style="width:100%;padding:11px;background:var(--surface2);color:var(--sub);border:1px dashed var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px;">+ 항목 추가</button>
   </div>
 
+  <div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,.05);">
+    <div style="font-size:12px;font-weight:700;margin-bottom:8px;">📝 메모</div>
+    <textarea id="settleMemo" placeholder="예: 8월 여행비 미포함 / 보너스 반영" oninput="saveSettleDebounced()" style="width:100%;min-height:64px;resize:vertical;background:var(--surface2);border:1px solid transparent;border-radius:8px;padding:9px 10px;font-size:12px;font-family:inherit;line-height:1.6;outline:none;color:var(--text);"></textarea>
+  </div>
+
   <div style="display:flex;gap:6px;margin-bottom:12px;">
     <button onclick="saveSettleNow()" class="submit-btn" style="background:linear-gradient(135deg,#0F766E,#14B8A6);">💾 정산 저장</button>
     <button onclick="newSettle()" class="submit-btn" style="background:var(--surface2);color:var(--sub);flex:0 0 110px;">＋ 새 정산</button>
@@ -1039,6 +1044,14 @@
     <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px;">기존에 <b>카페</b>로 입력된 내역과 예산을 <b>음료</b>로 일괄 변경해요.</div>
     <button class="submit-btn" onclick="migrateCafeToDrink()" style="background:#0F766E;">카페 → 음료로 변경</button>
     <div id="cafeMigrateResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
+  </div>
+
+  <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">🧹 중복 내역 정리</div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px;">날짜·금액·지출처·카테고리·메모·할부회차가 <b>모두 같은 내역</b>을 찾아 1건만 남기고 지워요.</div>
+    <button class="submit-btn" onclick="findDuplicates()" style="background:var(--surface2);color:var(--sub);margin-bottom:6px;">🔍 중복 찾기</button>
+    <button class="submit-btn" onclick="removeDuplicates()" style="background:#F06595;">🧹 중복 삭제</button>
+    <div id="dupResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
   </div>
 </div>
 <div id="notifContent" style="display:none;">
@@ -2970,7 +2983,7 @@ window.fixInstallmentDates = async function() {
       items.forEach(function(it){
         var idx = it.data.installmentIndex;
         if(idx === 1) return; // 1회차는 입력일 유지
-        // 1회차 결제주기 + (회차-1) 달 → 그 달 20일
+        // 1회차 결제주기 + (회차-1) 달 → 그 달 22일
         var tY = baseY, tM = baseM + (idx - 1);
         while(tM > 12){ tM -= 12; tY += 1; }
         var newDate = tY+'-'+String(tM).padStart(2,'0')+'-22';
@@ -4699,6 +4712,78 @@ function renderCardCycleSettings() {
   }).join('');
 }
 
+// ── 중복 내역 정리 ────────────────────────────────
+function dupKeyOf(r) {
+  return [r.date||'', r.amount||0, r.type||'', r.payment||'', r.category||'',
+          (r.memo||'').trim(), r.installmentIndex||0, r.installmentMonths||0].join('|');
+}
+
+function scanDuplicates() {
+  return getDocs(collection(db,'records')).then(function(snap){
+    var map = {};
+    snap.forEach(function(d){
+      var r = d.data();
+      var k = dupKeyOf(r);
+      if(!map[k]) map[k] = [];
+      map[k].push({ id:d.id, createdAt:r.createdAt||0, data:r });
+    });
+    var groups = [];
+    for(var k in map){ if(map[k].length > 1) groups.push(map[k]); }
+    return groups;
+  });
+}
+
+window.findDuplicates = function() {
+  var el = document.getElementById('dupResult');
+  if(el) el.textContent = '검사 중...';
+  scanDuplicates().then(function(groups){
+    var extra = groups.reduce(function(a,g){ return a + (g.length-1); }, 0);
+    if(!groups.length){
+      if(el) el.textContent = '✅ 중복이 없어요';
+      toast('중복 내역이 없어요');
+      return;
+    }
+    var sample = groups.slice(0,3).map(function(g){
+      var r = g[0].data;
+      return '· '+(r.date||'')+' '+fmt(r.amount)+'원 '+(r.memo||r.category||'')+' ×'+g.length;
+    }).join('\n');
+    if(el) el.innerHTML = '⚠️ '+groups.length+'종류 · 삭제 대상 '+extra+'건<br><span style="font-weight:400;color:var(--muted);white-space:pre-line;font-size:11px;">'+esc(sample)+'</span>';
+    toast('중복 '+extra+'건 발견');
+  }).catch(function(e){
+    console.error(e);
+    if(el) el.textContent = '❌ '+e.message;
+  });
+};
+
+window.removeDuplicates = function() {
+  var el = document.getElementById('dupResult');
+  if(el) el.textContent = '검사 중...';
+  scanDuplicates().then(async function(groups){
+    var extra = groups.reduce(function(a,g){ return a + (g.length-1); }, 0);
+    if(!extra){
+      if(el) el.textContent = '✅ 삭제할 중복이 없어요';
+      toast('중복 내역이 없어요');
+      return;
+    }
+    if(!confirm('중복 '+extra+'건을 삭제할까요?\n\n같은 내역이 여러 건이면 가장 먼저 등록된 1건만 남아요.')) {
+      if(el) el.textContent = '';
+      return;
+    }
+    var promises = [];
+    groups.forEach(function(g){
+      g.sort(function(a,b){ return (a.createdAt||0) - (b.createdAt||0); });
+      g.slice(1).forEach(function(x){ promises.push(deleteDoc(doc(db,'records',x.id))); });
+    });
+    await Promise.all(promises);
+    if(el) el.textContent = '✅ '+extra+'건 삭제 완료!';
+    toast(extra+'건 정리됐어요 🧹');
+  }).catch(function(e){
+    console.error(e);
+    if(el) el.textContent = '❌ '+e.message;
+    toast('삭제 실패');
+  });
+};
+
 // ── 카테고리명 변경: 카페 → 음료 ──────────────────
 window.migrateCafeToDrink = async function() {
   var el = document.getElementById('cafeMigrateResult');
@@ -5056,7 +5141,8 @@ window.applyReperiod = async function() {
   } catch(e){ console.error(e); toast('이동 실패'); }
 };
 
-var settleData = { autoOn:true, rows:[] };
+var settleData = { autoOn:true, rows:[], memo:'' };
+var settleSaveTimer = null;
 var settleAutoAmts = {}; // 지출처별 사용자 수정값 저장
 
 var settleKey = null;      // 현재 편집 중인 월분
@@ -5076,6 +5162,7 @@ function nextSettleSeq(period) {
 }
 
 function loadSettleData(id) {
+  if(settleSaveTimer){ clearTimeout(settleSaveTimer); settleSaveTimer = null; }
   settleId = id || settleId;
   if(!settleId){ settleKey = settleKey || currentKey; settleId = settleKey+'-1'; }
   return getDoc(doc(db,'settlements',settleId)).then(function(d){
@@ -5084,10 +5171,12 @@ function loadSettleData(id) {
       settleKey = data.period || settleId;
       settleData.autoOn = data.autoOn !== false;
       settleData.rows = data.rows || [];
+      settleData.memo = data.memo || '';
       settleAutoAmts = data.autoAmts || {};
     } else {
       settleData.autoOn = true;
       settleData.rows = [];
+      settleData.memo = '';
       settleAutoAmts = {};
     }
     var sc = document.getElementById('settleContent');
@@ -5126,6 +5215,7 @@ function renderSettleHistory() {
       '<div onclick="openSettleDoc(\''+s.id+'\')" style="flex:1;min-width:0;cursor:pointer;">'+
         '<div style="font-size:12px;font-weight:700;">'+settleTitle(s)+'</div>'+
         '<div style="font-size:10px;color:var(--muted);margin-top:2px;">수입 '+fmt(s.income||0)+' · 지출 '+fmt(s.expense||0)+'</div>'+
+        (s.memo?'<div style="font-size:10px;color:var(--sub);margin-top:3px;">📝 '+esc(s.memo)+'</div>':'')+
       '</div>'+
       '<div onclick="openSettleDoc(\''+s.id+'\')" style="font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;color:'+(remain<0?'#F04452':'#1971C2')+';">'+(remain<0?'-':'')+fmt(remain)+'원</div>'+
       '<button onclick="openSettleDoc(\''+s.id+'\')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px 3px;">✏️</button>'+
@@ -5135,8 +5225,17 @@ function renderSettleHistory() {
 }
 
 window.openSettleDoc = function(id) {
-  loadSettleData(id).then(function(){ renderSettle(); renderSettleHistory(); });
+  loadSettleData(id).then(function(){
+    return loadSettleRecords();
+  }).then(function(){
+    renderSettle(); renderSettleHistory(); scrollSheetTop();
+  });
 };
+
+function scrollSheetTop() {
+  var bg = document.getElementById('moreSheetBg');
+  if(bg && bg.firstElementChild) bg.firstElementChild.scrollTop = 0;
+}
 
 window.deleteSettle = async function(id) {
   var s = settleHistory.find(function(x){ return x.id===id; });
@@ -5157,11 +5256,13 @@ window.deleteSettle = async function(id) {
 };
 
 window.newSettle = function() {
+  if(settleSaveTimer){ clearTimeout(settleSaveTimer); settleSaveTimer = null; }
   settleKey = settleKey || currentKey;
   var seq = nextSettleSeq(settleKey);
   settleId = settleKey+'-'+seq;
   settleData.autoOn = true;
   settleData.rows = [];
+  settleData.memo = '';
   settleAutoAmts = {};
   renderSettle();
   renderSettleHistory();
@@ -5174,9 +5275,10 @@ window.moveSettleMonth = function(delta) {
   if(list.length){
     openSettleDoc(list[0].id);
   } else {
+    if(settleSaveTimer){ clearTimeout(settleSaveTimer); settleSaveTimer = null; }
     settleId = settleKey+'-1';
-    settleData.autoOn = true; settleData.rows = []; settleAutoAmts = {};
-    renderSettle(); renderSettleHistory();
+    settleData.autoOn = true; settleData.rows = []; settleData.memo = ''; settleAutoAmts = {};
+    loadSettleRecords().then(function(){ renderSettle(); renderSettleHistory(); scrollSheetTop(); });
   }
 };
 
@@ -5197,6 +5299,8 @@ function saveSettleData() {
     autoAmts[inp.dataset.key] = parseNum(inp.value);
   });
   settleAutoAmts = autoAmts;
+  var memoEl = document.getElementById('settleMemo');
+  settleData.memo = memoEl ? memoEl.value.trim() : (settleData.memo||'');
   // 합계 계산해서 함께 저장
   var incSum = 0, expSum = 0;
   if(settleData.autoOn){
@@ -5204,21 +5308,30 @@ function saveSettleData() {
   }
   rows.forEach(function(r){ if(r.type==='income') incSum += r.amt; else expSum += r.amt; });
   return setDoc(doc(db,'settlements',settleId), {
-    period: settleKey, seq: seq, autoOn: settleData.autoOn, rows: rows, autoAmts: autoAmts,
+    period: settleKey, seq: seq, autoOn: settleData.autoOn, rows: rows, autoAmts: autoAmts, memo: settleData.memo||'',
     income: incSum, expense: expSum, remain: incSum-expSum, updatedAt: Date.now()
   }).then(function(){ loadSettleHistory(); });
 }
 
+var settleRecords = null; // 선택 월분의 내역 (현재 월분이면 null)
+
 function getSettleAutoData() {
-  // 지출처별 자동집계 (현금 제외)
+  var src = settleRecords || records;
   var result = [];
   CARD_PAYMENTS.forEach(function(c){
-    var sum = records.filter(function(r){
+    var sum = src.filter(function(r){
       return r.type==='expense' && r.payment===c.payment;
     }).reduce(function(a,r){return a+r.amount;},0);
     if(sum>0) result.push({key:c.key, name:c.name, payment:c.payment, amount:sum});
   });
   return result;
+}
+
+function loadSettleRecords() {
+  if(!settleKey || settleKey === currentKey){ settleRecords = null; return Promise.resolve(); }
+  return getDocs(query(collection(db,'records'), where('period','==',settleKey))).then(function(snap){
+    settleRecords = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+  }).catch(function(){ settleRecords = null; });
 }
 
 function renderSettle() {
@@ -5254,6 +5367,8 @@ function renderSettle() {
     settleData.rows = [{type:'income', name:'', amt:0}];
   }
   rowsEl.innerHTML = settleData.rows.map(function(r){ return settleRowHtml(r.type, r.name, r.amt); }).join('');
+  var memoEl = document.getElementById('settleMemo');
+  if(memoEl) memoEl.value = settleData.memo || '';
 
   setTimeout(function(){ initNumFormat(); calcSettle(); }, 50);
 }
@@ -5332,7 +5447,6 @@ window.saveSettleNow = function() {
   }).catch(function(e){ console.error(e); toast('저장 실패'); });
 };
 
-var settleSaveTimer = null;
 window.saveSettleDebounced = function() {
   if(settleSaveTimer) clearTimeout(settleSaveTimer);
   settleSaveTimer = setTimeout(function(){ saveSettleData(); }, 800);
@@ -5492,6 +5606,7 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 window.addExpense = async function(){
+  if(window._addingExpense) return;   // 중복 등록 방지
   var amt = parseNum(document.getElementById('expenseAmount').value);
   if(!amt){toast('금액을 입력해주세요');return;}
   var cat = document.getElementById('expenseCategory').value;
@@ -5506,26 +5621,27 @@ window.addExpense = async function(){
   }
 
   var btn = document.getElementById('expenseSubmitBtn');
+  window._addingExpense = true;
   btn.disabled = true; syncStatus('ing');
 
   try {
     if(isInstallment) {
-      // 할부: N개월에 걸쳐 분할 입력 (1회차 입력일, 2회차부터 매월 20일 고정)
+      // 할부: N개월에 걸쳐 분할 입력 (1회차는 입력일, 2회차부터 매월 22일)
       var perMonth = Math.ceil(amt / months);
       var last = amt - perMonth * (months - 1); // 마지막달 나머지
       var now = new Date();
+      var basePeriod = getPeriodKey(now); // 1회차가 속한 월분
       var promises = [];
       for(var i = 0; i < months; i++) {
         var dateStr, period;
         if(i === 0) {
           // 1회차: 입력한 오늘 날짜 그대로
           dateStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-          period = getPeriodKey(now);
+          period = basePeriod;
         } else {
-          // 2회차부터: 한 달씩 뒤로 + 무조건 20일
-          var d = new Date(now.getFullYear(), now.getMonth() + i, 22);
-          dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-22';
-          period = getPeriodKey(d);
+          // 2회차부터: 1회차 월분 기준 i개월 뒤 월분의 22일
+          period = shiftPeriodKey(basePeriod, i);
+          dateStr = period+'-22';
         }
         var monthAmt = (i === months-1) ? last : perMonth;
         promises.push(addDoc(collection(db,'records'),{
@@ -5573,6 +5689,7 @@ window.addExpense = async function(){
     document.getElementById('expenseMemo').value='';
   } catch(e){ toast('저장 실패'); console.error(e); }
   btn.disabled = false;
+  window._addingExpense = false;
 };
 
 function showBudgetAlert(cat, spent, budget) {
