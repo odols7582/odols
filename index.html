@@ -327,20 +327,17 @@
 <div class="header">
   <div class="header-left">
     <div class="header-avatar" id="headerAvatar"></div>
-    <div>
+    <div style="min-width:0;">
       <div class="header-name" id="headerName">가계부</div>
-      <button id="appVersionBtn" onclick="openChangelog()" title="업데이트 내역 보기" style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;background:var(--surface2);border:1px solid var(--border);border-radius:99px;padding:2px 9px;font-size:9px;color:var(--sub);font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:-.2px;line-height:1.3;">
-        <span>🆕</span><span id="appVersionInfo"></span><span style="opacity:.5;">›</span>
-      </button>
+      <button id="appVersionBtn" onclick="openChangelog()" title="업데이트 내역 보기" style="background:none;border:none;padding:0;margin-top:1px;font-size:10px;color:var(--muted);font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:-.2px;line-height:1.2;"><span id="appVersionInfo"></span></button>
     </div>
   </div>
   <div class="header-right">
-    <div class="sync-wrap">
-      <div class="sync-dot" id="syncDot"></div>
-      <span id="syncText">연결 중</span>
-    </div>
+    <button id="syncBtn" onclick="showSyncStatus()" title="동기화 상태" style="background:none;border:none;cursor:pointer;padding:8px 6px;display:flex;align-items:center;">
+      <span class="sync-dot" id="syncDot"></span>
+    </button>
+    <span id="syncText" style="display:none;">연결 중</span>
     <button class="btn-notif" id="notifBtn" onclick="setupNotification()" title="알림 설정">🔔</button>
-    <button class="btn-sm" onclick="showDebug()" style="font-size:12px;">🔧</button>
     <button class="btn-sm" onclick="logout()">로그아웃</button>
   </div>
 </div>
@@ -355,6 +352,7 @@
     <div id="changelogBody" style="padding:16px 18px;max-height:60vh;overflow-y:auto;"></div>
     <div style="display:flex;gap:8px;padding:14px 18px;border-top:1px solid var(--border);">
       <button onclick="forceRefresh()" style="flex:1;padding:11px;background:var(--p1);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🔄 전체 새로고침 (최신 버전 받기)</button>
+      <button onclick="closeChangelog();showDebug();" title="디버그 정보" style="padding:11px 14px;background:var(--surface2);color:var(--sub);border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🔧</button>
     </div>
   </div>
 </div>
@@ -1456,10 +1454,11 @@ const firebaseConfig = {
 const VAPID_KEY = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
 
 // ── 앱 버전 정보 (배포할 때마다 갱신) ────────────────
-const APP_VERSION = 'v1.3.0';
+const APP_VERSION = 'v1.3.1';
 const APP_BUILD_DATE = '2026-07-24';
 // 업데이트 내역 (최신순) — 배포할 때마다 맨 위에 추가
 const CHANGELOG = [
+  { v:'v1.3.1', d:'2026-07-24', items:['모바일 상단바 정리 (이름·버전·동기화 간결화, 디버그는 업데이트 내역 안으로 이동)'] },
   { v:'v1.3.0', d:'2026-07-24', items:['상단 버전 배지를 눌러 업데이트 내역 확인 (+ 전체 새로고침)'] },
   { v:'v1.2.1', d:'2026-07-24', items:['헤더에 버전 표시 겸 전체 새로고침 버튼 추가'] },
   { v:'v1.2.0', d:'2026-07-24', items:['카드 알림 감지 → 임시 지출 대기 (작성하기 / 삭제)'] },
@@ -1580,9 +1579,14 @@ function periodRangeLabel(key) { var r=getPeriodRange(key); return r.start.slice
 // ── 싱크 ──────────────────────────────────────────
 function syncStatus(s) {
   var dot=document.getElementById('syncDot'), txt=document.getElementById('syncText');
-  dot.className='sync-dot '+(s==='ok'?'ok':s==='ing'?'ing':'');
-  txt.textContent=s==='ok'?'실시간 연결':s==='ing'?'동기화 중':'연결 끊김';
+  if(dot) dot.className='sync-dot '+(s==='ok'?'ok':s==='ing'?'ing':'');
+  if(txt) txt.textContent=s==='ok'?'실시간 연결':s==='ing'?'동기화 중':'연결 끊김';
 }
+// 동기화 점 탭 → 현재 상태 토스트
+window.showSyncStatus = function(){
+  var t = document.getElementById('syncText');
+  toast('🔄 ' + (t ? t.textContent : '동기화 상태'));
+};
 
 // ── 초기화 ────────────────────────────────────────
 async function init() {
@@ -1656,7 +1660,7 @@ function showMain() {
   document.getElementById('mainApp').style.display='block';
   var av=document.getElementById('headerAvatar');
   av.textContent=currentUser.emoji; av.className='header-avatar '+currentUser.class;
-  document.getElementById('headerName').textContent=currentUser.name+'으로 로그인';
+  document.getElementById('headerName').textContent=currentUser.name;
   renderAppVersion();
   document.getElementById('expenseWho').textContent=currentUser.emoji+' '+currentUser.name;
   document.getElementById('expenseWho').className='who-badge '+currentUser.class;
