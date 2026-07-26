@@ -137,6 +137,15 @@ exports.dailyReport = onSchedule(
     const title = "📊 오늘의 가계부 (" + (now.getMonth() + 1) + "/" + now.getDate() + ")";
     const body = lines.join("\n");
 
+    // 보고서를 알림함(reports)에도 저장 — 앱에서 팝업/목록으로 표시 (푸시 실패해도 남음)
+    await db.collection("reports").doc(todayStr).set({
+      period: period,
+      date: todayStr,
+      title: title,
+      body: body,
+      createdAt: Date.now(),
+    });
+
     // FCM 토큰 (fcmTokens 컬렉션)
     const tokSnap = await db.collection("fcmTokens").get();
     const tokDocs = tokSnap.docs

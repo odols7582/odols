@@ -1,7 +1,7 @@
 {
-  "name": "오소리 & 부엉이 가계부",
-  "short_name": "우리가계부",
-  "description": "오소리와 부엉이의 스마트 가계부",
+  "name": "계비서",
+  "short_name": "계비서",
+  "description": "우리집 재무 담당 비서, 계비서",
   "start_url": "/odols/",
   "display": "standalone",
   "background_color": "#0D0D0F",

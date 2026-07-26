@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>오소리 & 부엉이 가계부</title>
+<title>계비서</title>
 <link rel="manifest" href="/odols/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="우리가계부">
+<meta name="apple-mobile-web-app-title" content="계비서">
 <meta name="theme-color" content="#E8EAED">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -337,6 +337,7 @@
       <span class="sync-dot" id="syncDot"></span>
     </button>
     <span id="syncText" style="display:none;">연결 중</span>
+    <button id="reportInboxBtn" onclick="openReportInbox()" title="보고서 알림함" style="position:relative;background:none;border:none;font-size:12px;cursor:pointer;padding:4px;line-height:1;">📬<span id="reportUnreadDot" style="display:none;position:absolute;top:2px;right:2px;width:8px;height:8px;background:#F04452;border-radius:50%;border:1px solid var(--bg);"></span></button>
     <button class="btn-notif" id="notifBtn" onclick="setupNotification()" title="알림 설정">🔔</button>
     <button class="btn-sm" onclick="logout()">로그아웃</button>
   </div>
@@ -354,6 +355,17 @@
       <button onclick="forceRefresh()" style="flex:1;padding:11px;background:var(--p1);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🔄 전체 새로고침 (최신 버전 받기)</button>
       <button onclick="closeChangelog();showDebug();" title="디버그 정보" style="padding:11px 14px;background:var(--surface2);color:var(--sub);border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🔧</button>
     </div>
+  </div>
+</div>
+
+<!-- 보고서 알림함 모달 -->
+<div id="reportInboxModal" onclick="if(event.target===this)closeReportInbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;align-items:flex-start;justify-content:center;padding:50px 16px 16px;overflow-y:auto;">
+  <div style="width:100%;max-width:420px;background:var(--surface);border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.25);overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);">
+      <span style="font-size:14px;font-weight:800;color:var(--text);">📬 보고서 알림함</span>
+      <button onclick="closeReportInbox()" style="background:none;border:none;font-size:18px;color:var(--muted);cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div id="reportInboxBody" style="padding:16px 18px;max-height:65vh;overflow-y:auto;"></div>
   </div>
 </div>
 
@@ -1454,10 +1466,11 @@ const firebaseConfig = {
 const VAPID_KEY = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
 
 // ── 앱 버전 정보 (배포할 때마다 갱신) ────────────────
-const APP_VERSION = 'v1.3.2';
-const APP_BUILD_DATE = '2026-07-25 11:40';
+const APP_VERSION = 'v1.4.0';
+const APP_BUILD_DATE = '2026-07-26 21:50';
 // 업데이트 내역 (최신순) — 배포할 때마다 맨 위에 추가
 const CHANGELOG = [
+  { v:'v1.4.0', d:'2026-07-26 21:50', items:['앱 이름을 "계비서"로 변경 (재무 담당 비서)','📬 보고서 알림함 추가 + 앱 실행 시 최신 보고서 팝업'] },
   { v:'v1.3.2', d:'2026-07-25 11:40', items:['업데이트 날짜 정정 + 시각(시간) 표시 추가'] },
   { v:'v1.3.1', d:'2026-07-25 11:35', items:['모바일 상단바 정리 (이름·버전·동기화 간결화, 디버그는 업데이트 내역 안으로 이동)'] },
   { v:'v1.3.0', d:'2026-07-25 10:52', items:['상단 버전 배지를 눌러 업데이트 내역 확인 (+ 전체 새로고침)'] },
@@ -1501,6 +1514,62 @@ window.openChangelog = function(){
 };
 window.closeChangelog = function(){
   var m = document.getElementById('changelogModal');
+  if(m) m.style.display = 'none';
+};
+
+// ── 보고서 알림함 (매일 11시 보고서 저장/팝업) ─────────
+var reportsUnsub = null;
+window.reports = [];
+var _reportsFirstLoad = true;
+function subscribeReports(){
+  if(reportsUnsub) return;
+  var q = query(collection(db,'reports'), orderBy('createdAt','desc'));
+  reportsUnsub = onSnapshot(q, function(snap){
+    window.reports = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    renderReportBadge();
+    // 앱 실행 후 첫 로드 시, 아직 안 본 최신 보고서가 있으면 팝업
+    if(_reportsFirstLoad){
+      _reportsFirstLoad = false;
+      var latest = window.reports[0];
+      var lastSeen = parseInt(localStorage.getItem('lastSeenReportAt')||'0');
+      if(latest && (latest.createdAt||0) > lastSeen) openReportInbox();
+    }
+  }, function(e){ console.error('reports 구독 오류:', e); });
+}
+function renderReportBadge(){
+  var dot = document.getElementById('reportUnreadDot');
+  if(!dot) return;
+  var latest = (window.reports||[])[0];
+  var lastSeen = parseInt(localStorage.getItem('lastSeenReportAt')||'0');
+  dot.style.display = (latest && (latest.createdAt||0) > lastSeen) ? 'block' : 'none';
+}
+window.openReportInbox = function(){
+  var body = document.getElementById('reportInboxBody');
+  if(body){
+    var list = window.reports || [];
+    if(!list.length){
+      body.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:24px 8px;text-align:center;line-height:1.8;">아직 받은 보고서가 없어요<br><span style="font-size:11px;">매일 밤 11시에 도착해요 📊</span></div>';
+    } else {
+      body.innerHTML = list.map(function(r, i){
+        return '<div style="background:'+(i===0?'#EFF6FF':'var(--surface2)')+';border-radius:12px;padding:12px 14px;margin-bottom:10px;'+(i===0?'border:1px solid var(--p1);':'')+'">'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;gap:8px;">'+
+            '<span style="font-size:12px;font-weight:800;color:var(--text);">'+esc(r.title||'보고서')+'</span>'+
+            (i===0?'<span style="font-size:9px;font-weight:700;color:#fff;background:var(--p1);border-radius:99px;padding:1px 6px;white-space:nowrap;">최신</span>':'')+
+          '</div>'+
+          '<div style="font-size:12px;color:var(--sub);line-height:1.75;white-space:pre-line;">'+esc(r.body||'')+'</div>'+
+        '</div>';
+      }).join('');
+    }
+  }
+  // 읽음 처리
+  var latest = (window.reports||[])[0];
+  if(latest) localStorage.setItem('lastSeenReportAt', String(latest.createdAt||Date.now()));
+  renderReportBadge();
+  var m = document.getElementById('reportInboxModal');
+  if(m) m.style.display = 'flex';
+};
+window.closeReportInbox = function(){
+  var m = document.getElementById('reportInboxModal');
   if(m) m.style.display = 'none';
 };
 
@@ -1647,6 +1716,8 @@ window.logout = function() {
   if(unsub) unsub();
   if(splitReminderTimer){ clearInterval(splitReminderTimer); splitReminderTimer=null; }
   if(pendingUnsub){ pendingUnsub(); pendingUnsub=null; }
+  if(reportsUnsub){ reportsUnsub(); reportsUnsub=null; }
+  _reportsFirstLoad = true;
   document.getElementById('mainApp').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   pinBuffer=''; selectedUserId=null;
@@ -1701,6 +1772,7 @@ function showMain() {
   try { subscribeLoans(); } catch(e){ console.error('loans 오류:', e); }
   try { loadAccts(); } catch(e){ console.error('accts 오류:', e); }
   try { subscribePendingExpenses(); } catch(e){ console.error('pending 오류:', e); }
+  try { subscribeReports(); } catch(e){ console.error('reports 오류:', e); }
   bindKeys();
   checkNotifStatus();
   try { startSplitReminderTimer(); } catch(e){ console.error('splitReminder 오류:', e); }
