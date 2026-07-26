@@ -139,13 +139,43 @@ exports.dailyReport = onSchedule(
 
     // FCM 토큰 (fcmTokens 컬렉션)
     const tokSnap = await db.collection("fcmTokens").get();
-    const tokens = tokSnap.docs.map((d) => (d.data() || {}).token).filter(Boolean);
-    if (!tokens.length) { console.log("FCM 토큰 없음 - 전송 생략"); return; }
+    const tokDocs = tokSnap.docs
+      .map((d) => ({ id: d.id, userId: (d.data() || {}).userId || d.id, token: (d.data() || {}).token }))
+      .filter((t) => t.token);
+    if (!tokDocs.length) { console.log("FCM 토큰 없음 - 전송 생략"); return; }
 
     const res = await admin.messaging().sendEachForMulticast({
-      tokens,
+      tokens: tokDocs.map((t) => t.token),
       notification: { title, body },
+      webpush: {
+        notification: {
+          title, body,
+          icon: "https://odols7582.github.io/odols/icon-192.png",
+          badge: "https://odols7582.github.io/odols/icon-192.png",
+        },
+        fcmOptions: { link: "https://odols7582.github.io/odols/" },
+      },
     });
-    console.log("보고서 전송:", res.successCount + "/" + tokens.length, "\n" + body);
+
+    // 토큰별 결과 로깅 + 무효 토큰 자동 정리
+    const INVALID = [
+      "messaging/registration-token-not-registered",
+      "messaging/invalid-registration-token",
+      "messaging/invalid-argument",
+    ];
+    await Promise.all(res.responses.map(async (r, i) => {
+      const t = tokDocs[i];
+      if (r.success) {
+        console.log("✅ 전송 성공:", t.userId);
+      } else {
+        const code = r.error && r.error.code;
+        console.error("❌ 전송 실패:", t.userId, "|", code, "|", r.error && r.error.message);
+        if (INVALID.indexOf(code) >= 0) {
+          await db.collection("fcmTokens").doc(t.id).delete().catch(() => {});
+          console.log("🗑 만료 토큰 삭제:", t.userId, "(앱에서 알림 다시 허용하면 새 토큰 생성됨)");
+        }
+      }
+    }));
+    console.log("보고서 전송:", res.successCount + "/" + tokDocs.length, "\n" + body);
   }
 );
