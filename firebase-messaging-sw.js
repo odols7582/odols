@@ -17,8 +17,8 @@ messaging.onBackgroundMessage(function(payload) {
   var body = (payload.notification && payload.notification.body) || '새 알림이 있어요!';
   self.registration.showNotification(title, {
     body: body,
-    icon: 'https://odols7582.github.io/odols/icon-192.png',
-    badge: 'https://odols7582.github.io/odols/icon-192.png',
+    icon: 'https://odols7582.github.io/odols/icon-192-v2.png',
+    badge: 'https://odols7582.github.io/odols/icon-192-v2.png',
     tag: 'gaegyebu-' + Date.now(),
     vibrate: [200, 100, 200],
     data: { url: 'https://odols7582.github.io/odols/' }

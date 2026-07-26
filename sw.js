@@ -34,8 +34,8 @@ messaging.onBackgroundMessage(function(payload) {
 
   return self.registration.showNotification(title, {
     body: body,
-    icon: APP_URL + 'icon-192.png',
-    badge: APP_URL + 'icon-192.png',
+    icon: APP_URL + 'icon-192-v2.png',
+    badge: APP_URL + 'icon-192-v2.png',
     tag: 'gaegyebu-' + Date.now(),
     requireInteraction: false,
     vibrate: [200, 100, 200],

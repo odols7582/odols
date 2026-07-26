@@ -159,8 +159,8 @@ exports.dailyReport = onSchedule(
       webpush: {
         notification: {
           title, body,
-          icon: "https://odols7582.github.io/odols/icon-192.png",
-          badge: "https://odols7582.github.io/odols/icon-192.png",
+          icon: "https://odols7582.github.io/odols/icon-192-v2.png",
+          badge: "https://odols7582.github.io/odols/icon-192-v2.png",
         },
         fcmOptions: { link: "https://odols7582.github.io/odols/" },
       },
