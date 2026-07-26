@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>계비서</title>
 <link rel="manifest" href="/odols/manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦭</text></svg>">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -46,7 +47,7 @@
   /* 로그인 */
   .login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:500;padding:24px;}
   .login-box{width:100%;max-width:360px;text-align:center;}
-  .login-logo{font-size:12px;margin-bottom:14px;}
+  .login-logo{font-size:52px;margin-bottom:14px;line-height:1;}
   .login-title{font-size:12px;font-weight:700;margin-bottom:6px;color:var(--text);letter-spacing:-.6px;}
   .login-sub{font-size:12px;color:var(--muted);margin-bottom:30px;}
   .user-select{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:26px;}
@@ -285,7 +286,7 @@
 
 <div class="login-screen" id="loginScreen" style="display:none;">
   <div class="login-box">
-    <div class="login-logo">🏠</div>
+    <div class="login-logo">🦭</div>
     <div class="login-title">오소리 & 부엉이</div>
     <div class="login-sub">누구세요?</div>
     <div class="user-select">
@@ -1466,10 +1467,11 @@ const firebaseConfig = {
 const VAPID_KEY = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
 
 // ── 앱 버전 정보 (배포할 때마다 갱신) ────────────────
-const APP_VERSION = 'v1.4.0';
-const APP_BUILD_DATE = '2026-07-26 21:50';
+const APP_VERSION = 'v1.4.1';
+const APP_BUILD_DATE = '2026-07-26 22:52';
 // 업데이트 내역 (최신순) — 배포할 때마다 맨 위에 추가
 const CHANGELOG = [
+  { v:'v1.4.1', d:'2026-07-26 22:52', items:['로고를 하프물범 🦭으로 변경 (로그인 화면·브라우저 탭·앱 아이콘)'] },
   { v:'v1.4.0', d:'2026-07-26 21:50', items:['앱 이름을 "계비서"로 변경 (재무 담당 비서)','📬 보고서 알림함 추가 + 앱 실행 시 최신 보고서 팝업'] },
   { v:'v1.3.2', d:'2026-07-25 11:40', items:['업데이트 날짜 정정 + 시각(시간) 표시 추가'] },
   { v:'v1.3.1', d:'2026-07-25 11:35', items:['모바일 상단바 정리 (이름·버전·동기화 간결화, 디버그는 업데이트 내역 안으로 이동)'] },
