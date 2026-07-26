@@ -103,14 +103,18 @@ exports.dailyReport = onSchedule(
     });
     over.sort((a, b) => b.diff - a.diff);
 
-    // 4) 미수금 + 카드 예상(실부담)
-    const due = records.filter((r) => r.split && !r.splitReceived);
-    const dueTotal = due.reduce((a, r) => a + (r.splitCollect || 0), 0);
-    let cardTotal = 0, cardCollected = 0;
+    // 4) 카드 미납내역(납부완료 안 한 카드 합) + 실부담
+    // 카드별 납부완료 플래그: settings/cardAmounts_{월분} 의 paid_{key}
+    let cardData = {};
+    const cdoc = await db.collection("settings").doc("cardAmounts_" + period).get();
+    if (cdoc.exists) cardData = cdoc.data() || {};
+    let cardTotal = 0, cardCollected = 0, cardUnpaid = 0;
     CARD_PAYMENTS.forEach((cp) => {
-      cardTotal += records
+      const t = records
         .filter((r) => r.type === "expense" && r.payment === cp.payment)
         .reduce((a, r) => a + (r.amount || 0), 0);
+      cardTotal += t;
+      if (cardData["paid_" + cp.key] !== true) cardUnpaid += t; // 아직 납부완료 안 된 카드 = 미납
       cardCollected += records
         .filter((r) => r.split && r.splitReceived && r.payment === cp.payment)
         .reduce((a, r) => a + (r.splitCollect || 0), 0);
@@ -132,7 +136,7 @@ exports.dailyReport = onSchedule(
           : "✅ 모든 예산 이내"
       );
     }
-    lines.push("📥 미수금 " + fmt(dueTotal) + "원 · 카드 실부담 " + fmt(cardReal) + "원");
+    lines.push("💳 카드 미납 " + fmt(cardUnpaid) + "원 · 실부담 " + fmt(cardReal) + "원");
 
     const title = "📊 오늘의 가계부 (" + (now.getMonth() + 1) + "/" + now.getDate() + ")";
     const body = lines.join("\n");
