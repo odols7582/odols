@@ -490,6 +490,7 @@
         <option value="국민 신용카드(오소리)">💳 국민 신용카드(오소리)</option>
         <option value="삼성 신용카드(오소리)">💳 삼성 신용카드(오소리)</option>
         <option value="백채 신용카드">💳 백채 신용카드</option>
+        <option value="농협 신용카드(부엉이)">💳 농협 신용카드(부엉이)</option>
         <option value="현금(오소리)">💵 현금(오소리)</option>
         <option value="현금(우리통장)">💵 현금(우리통장)</option>
         <option value="현금(부엉이)">💵 현금(부엉이)</option>
@@ -591,6 +592,7 @@
         <option value="국민 신용카드(오소리)">국민 신용카드(오소리)</option>
         <option value="삼성 신용카드(오소리)">삼성 신용카드(오소리)</option>
         <option value="백채 신용카드">백채 신용카드</option>
+        <option value="농협 신용카드(부엉이)">농협 신용카드(부엉이)</option>
         <option value="휴대폰결제(부엉이)">휴대폰결제(부엉이)</option>
         <option value="현금(오소리)">현금(오소리)</option>
         <option value="현금(우리통장)">현금(우리통장)</option>
@@ -912,7 +914,7 @@
       <div><label class="flabel">매월 몇 일</label><input class="finput" id="fixedDay" type="number" placeholder="15" min="1" max="31"></div>
       <div><label class="flabel">지출처</label>
         <select class="finput" id="fixedPayment">
-          <option value="신한 신용카드(오소리)">💳 신한(오소리)</option><option value="국민 신용카드(오소리)">💳 국민(오소리)</option><option value="삼성 신용카드(오소리)">💳 삼성(오소리)</option><option value="백채 신용카드">💳 백채</option><option value="현금(오소리)">💵 현금(오소리)</option><option value="현금(우리통장)">💵 우리통장</option><option value="현금(부엉이)">💵 현금(부엉이)</option><option value="휴대폰결제(부엉이)">📱 휴대폰(부엉이)</option>
+          <option value="신한 신용카드(오소리)">💳 신한(오소리)</option><option value="국민 신용카드(오소리)">💳 국민(오소리)</option><option value="삼성 신용카드(오소리)">💳 삼성(오소리)</option><option value="백채 신용카드">💳 백채</option><option value="농협 신용카드(부엉이)">💳 농협(부엉이)</option><option value="현금(오소리)">💵 현금(오소리)</option><option value="현금(우리통장)">💵 우리통장</option><option value="현금(부엉이)">💵 현금(부엉이)</option><option value="휴대폰결제(부엉이)">📱 휴대폰(부엉이)</option>
         </select>
       </div>
     </div>
@@ -1430,6 +1432,7 @@
         <option value="국민 신용카드(오소리)">💳 국민 신용카드(오소리)</option>
         <option value="삼성 신용카드(오소리)">💳 삼성 신용카드(오소리)</option>
         <option value="백채 신용카드">💳 백채 신용카드</option>
+        <option value="농협 신용카드(부엉이)">💳 농협 신용카드(부엉이)</option>
         <option value="현금(오소리)">💵 현금(오소리)</option>
         <option value="현금(우리통장)">💵 현금(우리통장)</option>
         <option value="현금(부엉이)">💵 현금(부엉이)</option>
@@ -1467,10 +1470,11 @@ const firebaseConfig = {
 const VAPID_KEY = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
 
 // ── 앱 버전 정보 (배포할 때마다 갱신) ────────────────
-const APP_VERSION = 'v1.4.2';
-const APP_BUILD_DATE = '2026-07-26 23:00';
+const APP_VERSION = 'v1.4.3';
+const APP_BUILD_DATE = '2026-08-31 20:36';
 // 업데이트 내역 (최신순) — 배포할 때마다 맨 위에 추가
 const CHANGELOG = [
+  { v:'v1.4.3', d:'2026-08-31 20:36', items:['지출처에 "농협 신용카드(부엉이)" 추가 (카드 요약·정산·미납 추적 포함)'] },
   { v:'v1.4.2', d:'2026-07-26 23:00', items:['앱 아이콘 캐시 문제 수정 — 아이콘 파일명 변경으로 하프물범 강제 적용 (재설치 시 반영)'] },
   { v:'v1.4.1', d:'2026-07-26 22:52', items:['로고를 하프물범 🦭으로 변경 (로그인 화면·브라우저 탭·앱 아이콘)'] },
   { v:'v1.4.0', d:'2026-07-26 21:50', items:['앱 이름을 "계비서"로 변경 (재무 담당 비서)','📬 보고서 알림함 추가 + 앱 실행 시 최신 보고서 팝업'] },
@@ -5247,6 +5251,7 @@ var CARD_PAYMENTS = [
   { key: 'kukmin',  name: '국민 신용카드', color: '#FF6600', payment: '국민 신용카드(오소리)' },
   { key: 'samsung', name: '삼성 신용카드', color: '#1428A0', payment: '삼성 신용카드(오소리)' },
   { key: 'baekchai',name: '백채 신용카드', color: '#059669', payment: '백채 신용카드' },
+  { key: 'nonghyup_b', name: '농협 신용카드(부엉이)', color: '#0A8043', payment: '농협 신용카드(부엉이)' },
   { key: 'phone_b', name: '휴대폰결제(부엉이)', color: '#7C3AED', payment: '휴대폰결제(부엉이)' }
 ];
 

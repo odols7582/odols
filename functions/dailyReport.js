@@ -20,6 +20,7 @@ const CARD_PAYMENTS = [
   { key: "kukmin",  payment: "국민 신용카드(오소리)" },
   { key: "samsung", payment: "삼성 신용카드(오소리)" },
   { key: "baekchai", payment: "백채 신용카드" },
+  { key: "nonghyup_b", payment: "농협 신용카드(부엉이)" },
   { key: "phone_b", payment: "휴대폰결제(부엉이)" },
 ];
 const INVEST_CATS = ["주식 매수", "코인 매수", "적금/예금"];
