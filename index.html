@@ -569,6 +569,21 @@
     <button class="submit-btn" id="incomeSubmitBtn" style="background:var(--income);" onclick="addIncome()">수입 추가</button>
   </div>
 
+  <!-- 일괄입력 -->
+  <div style="margin-bottom:12px;">
+    <button onclick="toggleBulk()" id="bulkToggleBtn" style="width:100%;padding:12px;background:var(--surface);border:1px dashed var(--border2);border-radius:14px;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit;box-shadow:var(--shadow2);">📝 일괄입력 (여러 건 한번에) ▾</button>
+    <div id="bulkPanel" style="display:none;background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:14px;margin-top:8px;">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="flex:1;"><label class="flabel">공통 날짜</label><input class="finput" id="bulkDate" type="date" style="font-size:12px;padding:8px;"></div>
+        <div style="flex:1.3;"><label class="flabel">공통 지출처 (지출용)</label><select class="finput" id="bulkPayment" style="font-size:12px;padding:8px;"></select></div>
+      </div>
+      <div id="bulkRows"></div>
+      <button onclick="addBulkRow()" style="width:100%;padding:9px;background:var(--surface2);border:1px dashed var(--border2);border-radius:10px;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit;margin-bottom:10px;">+ 행 추가</button>
+      <button onclick="submitBulk()" id="bulkSubmitBtn" style="width:100%;padding:12px;background:linear-gradient(135deg,#0F766E,#14B8A6);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">전체 등록</button>
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6;">💡 각 행에서 <b>지출/수입</b> 선택 → 금액·카테고리·메모 입력. 날짜·지출처는 위 공통값이 적용돼요. 금액 빈 행은 무시됩니다.</div>
+    </div>
+  </div>
+
   <!-- 내역 -->
   <div id="recordsSection">
     <div class="records-header">
@@ -1470,10 +1485,11 @@ const firebaseConfig = {
 const VAPID_KEY = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
 
 // ── 앱 버전 정보 (배포할 때마다 갱신) ────────────────
-const APP_VERSION = 'v1.4.3';
-const APP_BUILD_DATE = '2026-08-31 20:36';
+const APP_VERSION = 'v1.4.4';
+const APP_BUILD_DATE = '2026-08-31 20:45';
 // 업데이트 내역 (최신순) — 배포할 때마다 맨 위에 추가
 const CHANGELOG = [
+  { v:'v1.4.4', d:'2026-08-31 20:45', items:['📝 일괄입력 기능 추가 — 지출·수입 여러 건을 한 번에 등록 (접이식 패널)'] },
   { v:'v1.4.3', d:'2026-08-31 20:36', items:['지출처에 "농협 신용카드(부엉이)" 추가 (카드 요약·정산·미납 추적 포함)'] },
   { v:'v1.4.2', d:'2026-07-26 23:00', items:['앱 아이콘 캐시 문제 수정 — 아이콘 파일명 변경으로 하프물범 강제 적용 (재설치 시 반영)'] },
   { v:'v1.4.1', d:'2026-07-26 22:52', items:['로고를 하프물범 🦭으로 변경 (로그인 화면·브라우저 탭·앱 아이콘)'] },
@@ -6611,6 +6627,90 @@ window.addIncome=async function(){
 };
 
 window.delRecord=async function(id){try{await deleteDoc(doc(db,'records',id));toast('삭제됨');}catch(e){toast('삭제 실패');}};
+
+// ── 일괄입력 ─────────────────────────────────────
+var _bulkRowSeq = 0;
+function updateBulkTypeButtons(wrap, type){
+  var exp = wrap.querySelector('.bt-exp'), inc = wrap.querySelector('.bt-inc');
+  var base = 'border:none;border-radius:8px;padding:6px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;';
+  var off = 'background:var(--surface2);color:var(--sub);';
+  exp.style.cssText = base + (type==='expense' ? 'background:#F04452;color:#fff;' : off);
+  inc.style.cssText = base + (type==='income'  ? 'background:#3182F6;color:#fff;' : off);
+}
+window.addBulkRow = function(){
+  var rows = document.getElementById('bulkRows');
+  if(!rows) return;
+  var id = 'bulkRow_' + (_bulkRowSeq++);
+  var wrap = document.createElement('div');
+  wrap.className = 'bulk-row'; wrap.id = id;
+  wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px;background:var(--surface2);border-radius:10px;margin-bottom:8px;';
+  wrap.innerHTML =
+    '<div class="bulk-type" data-type="expense" style="display:flex;gap:3px;flex-shrink:0;">'+
+      '<button type="button" class="bt-exp" onclick="setBulkRowType(this,\'expense\')">지출</button>'+
+      '<button type="button" class="bt-inc" onclick="setBulkRowType(this,\'income\')">수입</button>'+
+    '</div>'+
+    '<input class="finput bulk-amt" type="number" inputmode="numeric" placeholder="금액" style="width:78px;font-size:12px;padding:7px;">'+
+    '<select class="finput bulk-cat" style="flex:1;min-width:88px;font-size:12px;padding:7px;"></select>'+
+    '<input class="finput bulk-memo" type="text" placeholder="메모" style="flex:1;min-width:78px;font-size:12px;padding:7px;">'+
+    '<button type="button" onclick="removeBulkRow(\''+id+'\')" style="background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;padding:0 4px;flex-shrink:0;">×</button>';
+  rows.appendChild(wrap);
+  var src = document.getElementById('expenseCategory');
+  wrap.querySelector('.bulk-cat').innerHTML = src ? src.innerHTML : '';
+  updateBulkTypeButtons(wrap, 'expense');
+};
+window.removeBulkRow = function(id){ var el = document.getElementById(id); if(el) el.remove(); };
+window.setBulkRowType = function(btn, type){
+  var wrap = btn.closest('.bulk-row');
+  wrap.querySelector('.bulk-type').dataset.type = type;
+  var src = document.getElementById(type==='income' ? 'incomeCategory' : 'expenseCategory');
+  wrap.querySelector('.bulk-cat').innerHTML = src ? src.innerHTML : '';
+  updateBulkTypeButtons(wrap, type);
+};
+window.toggleBulk = function(){
+  var p = document.getElementById('bulkPanel'), btn = document.getElementById('bulkToggleBtn');
+  var show = p.style.display === 'none';
+  p.style.display = show ? 'block' : 'none';
+  btn.innerHTML = '📝 일괄입력 (여러 건 한번에) ' + (show ? '▴' : '▾');
+  if(show){
+    var d = document.getElementById('bulkDate');
+    if(d && !d.value) d.value = new Date().toISOString().slice(0,10);
+    var pay = document.getElementById('bulkPayment'), ep = document.getElementById('expensePayment');
+    if(pay && !pay.innerHTML && ep) pay.innerHTML = ep.innerHTML;
+    var rows = document.getElementById('bulkRows');
+    if(rows && !rows.children.length){ addBulkRow(); addBulkRow(); addBulkRow(); }
+  }
+};
+window.submitBulk = async function(){
+  if(!currentUser){ toast('로그인이 필요해요'); return; }
+  var dateStr = document.getElementById('bulkDate').value || new Date().toISOString().slice(0,10);
+  var period = getPeriodKey(new Date(dateStr));
+  var payment = document.getElementById('bulkPayment').value;
+  var items = [];
+  Array.from(document.querySelectorAll('#bulkRows .bulk-row')).forEach(function(w){
+    var amt = parseNum(w.querySelector('.bulk-amt').value);
+    if(!amt) return; // 빈 금액 행 무시
+    var type = w.querySelector('.bulk-type').dataset.type;
+    var rec = {
+      type: type, amount: amt,
+      category: w.querySelector('.bulk-cat').value,
+      memo: w.querySelector('.bulk-memo').value.trim(),
+      person: currentUser.person, addedBy: currentUser.id,
+      date: dateStr, period: period, createdAt: Date.now() + items.length
+    };
+    if(type === 'expense') rec.payment = payment;
+    items.push(rec);
+  });
+  if(!items.length){ toast('입력된 금액이 없어요'); return; }
+  var btn = document.getElementById('bulkSubmitBtn');
+  btn.disabled = true; btn.textContent = '등록 중...'; syncStatus('ing');
+  try{
+    await Promise.all(items.map(function(rec){ return addDoc(collection(db,'records'), rec); }));
+    toast(items.length + '건 일괄 등록됐어요 ✅');
+    document.getElementById('bulkRows').innerHTML = '';
+    addBulkRow(); addBulkRow(); addBulkRow();
+  }catch(e){ console.error(e); toast('일괄 등록 실패'); }
+  btn.disabled = false; btn.textContent = '전체 등록';
+};
 
 function bindKeys(){
   document.getElementById('expenseAmount').addEventListener('keypress',function(e){if(e.key==='Enter')addExpense();});
