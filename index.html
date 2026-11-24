@@ -1138,6 +1138,16 @@
     <button class="submit-btn" onclick="removeDuplicates()" style="background:#F06595;">🧹 중복 삭제</button>
     <div id="dupResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;"></div>
   </div>
+
+  <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+    <div style="font-size:12px;font-weight:700;color:#F04452;margin-bottom:6px;">⚠️ 전체 데이터 초기화</div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px;">가계부 내역·정산·대출·목표·D-DAY·일정·할일·일기·위시 등 <b>모든 데이터를 삭제</b>해요. 삭제한 데이터는 <b>복구할 수 없어요.</b><br>푸시 알림 설정(fcmTokens)은 유지돼요.</div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);margin-bottom:8px;"><input type="checkbox" id="resetIncludeSettings"> 설정(카테고리·카드 결제일·예산·계좌)도 함께 삭제</label>
+    <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);margin-bottom:10px;"><input type="checkbox" id="resetBackup" checked> 삭제 전 백업 파일(JSON) 자동 저장</label>
+    <input class="finput" id="resetConfirmText" placeholder="확인을 위해 '초기화'를 입력하세요" style="margin-bottom:8px;">
+    <button class="submit-btn" onclick="resetAllData()" style="background:#F04452;">🗑 전체 데이터 초기화</button>
+    <div id="resetResult" style="font-size:12px;color:var(--p1);font-weight:600;margin-top:10px;text-align:center;min-height:18px;white-space:pre-line;"></div>
+  </div>
 </div>
 <div id="notifContent" style="display:none;">
   <div class="fgroup"><label class="flabel">메시지</label><input class="finput" id="manualNotifMsg" type="text" placeholder="메시지 입력" maxlength="50"></div>
@@ -1485,10 +1495,11 @@ const firebaseConfig = {
 const VAPID_KEY = "BGdlNiBefJMO52VUME8s2nIbaL4oTwENKr9v2r_vWMPb3fPiGk62JzNcOCnJKr2mNBYUEyEpkwu7nf63W0k4Sfw";
 
 // ── 앱 버전 정보 (배포할 때마다 갱신) ────────────────
-const APP_VERSION = 'v1.4.5';
-const APP_BUILD_DATE = '2026-09-18 20:25';
+const APP_VERSION = 'v1.4.6';
+const APP_BUILD_DATE = '2026-11-25 12:00';
 // 업데이트 내역 (최신순) — 배포할 때마다 맨 위에 추가
 const CHANGELOG = [
+  { v:'v1.4.6', d:'2026-11-25 12:00', items:['🗑 전체 데이터 초기화 기능 추가 (삭제 전 JSON 백업, 확인 문구 입력)'] },
   { v:'v1.4.5', d:'2026-09-18 20:25', items:['🚛 "이사" 대분류 추가 (가구·가전 구매, 업체 비용, 부동산 중개비, 인테리어/수리, 이사 잡비)'] },
   { v:'v1.4.4', d:'2026-08-31 20:45', items:['📝 일괄입력 기능 추가 — 지출·수입 여러 건을 한 번에 등록 (접이식 패널)'] },
   { v:'v1.4.3', d:'2026-08-31 20:36', items:['지출처에 "농협 신용카드(부엉이)" 추가 (카드 요약·정산·미납 추적 포함)'] },
@@ -5394,6 +5405,73 @@ window.removeDuplicates = function() {
     if(el) el.textContent = '❌ '+e.message;
     toast('삭제 실패');
   });
+};
+
+// ── 전체 데이터 초기화 ──────────────────────────────
+window.resetAllData = async function() {
+  var el = document.getElementById('resetResult');
+  var txt = (document.getElementById('resetConfirmText')||{}).value || '';
+  if(txt.trim() !== '초기화'){ if(el) el.textContent = "확인란에 '초기화'를 정확히 입력해 주세요"; return; }
+  var incSettings = !!(document.getElementById('resetIncludeSettings')||{}).checked;
+  var doBackup = !!(document.getElementById('resetBackup')||{}).checked;
+  if(!confirm('정말 모든 데이터를 삭제할까요?\n삭제 후에는 복구할 수 없어요.')) return;
+  var cols = ['records','settlements','goals','loans','ddays','schedules','todos','notifications','diaries','reports','wishes','pendingExpenses'];
+  var subs = { goals:['logs'], loans:['payments'] };
+  try {
+    if(el) el.textContent = '데이터 불러오는 중...';
+    var plan = [];   // {ref, col}
+    var backup = {};
+    async function addCol(name){
+      var snap = await getDocs(collection(db, name));
+      backup[name] = [];
+      for(const d of snap.docs){
+        backup[name].push({ id:d.id, data:d.data() });
+        var sc = subs[name] || [];
+        for(const sn of sc){
+          var ss = await getDocs(collection(db, name, d.id, sn));
+          ss.forEach(function(x){
+            backup[name+'/'+d.id+'/'+sn] = backup[name+'/'+d.id+'/'+sn] || [];
+            backup[name+'/'+d.id+'/'+sn].push({ id:x.id, data:x.data() });
+            plan.push({ ref:x.ref, col:name+'/'+sn });
+          });
+        }
+        plan.push({ ref:d.ref, col:name });
+      }
+    }
+    for(const c of cols){ await addCol(c); }
+    if(incSettings){
+      var st = await getDocs(collection(db,'settings'));
+      backup.settings = [];
+      st.forEach(function(d){ backup.settings.push({ id:d.id, data:d.data() }); plan.push({ ref:d.ref, col:'settings' }); });
+    }
+    if(doBackup){
+      var blob = new Blob([JSON.stringify(backup)], {type:'application/json'});
+      var a = document.createElement('a');
+      var t = new Date(); var pad = function(n){ return String(n).padStart(2,'0'); };
+      a.href = URL.createObjectURL(blob);
+      a.download = 'gaegyebu_backup_'+t.getFullYear()+pad(t.getMonth()+1)+pad(t.getDate())+'_'+pad(t.getHours())+pad(t.getMinutes())+'.json';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+    if(el) el.textContent = '삭제 중... (0/'+plan.length+')';
+    var done = 0, counts = {};
+    // 하위 컬렉션이 먼저 오도록 이미 plan 순서가 구성됨
+    for(var i=0;i<plan.length;i+=20){
+      var chunk = plan.slice(i,i+20);
+      await Promise.all(chunk.map(function(p){ return deleteDoc(p.ref); }));
+      chunk.forEach(function(p){ counts[p.col] = (counts[p.col]||0)+1; });
+      done += chunk.length;
+      if(el) el.textContent = '삭제 중... ('+done+'/'+plan.length+')';
+    }
+    var lines = Object.keys(counts).map(function(k){ return k+': '+counts[k]+'건'; });
+    if(el) el.textContent = '✅ 초기화 완료 (총 '+done+'건)\n'+(lines.join(' · ')||'삭제할 데이터가 없었어요');
+    var ci = document.getElementById('resetConfirmText'); if(ci) ci.value = '';
+    toast('데이터 초기화 완료');
+    if(incSettings){ setTimeout(function(){ location.reload(); }, 1500); }
+  } catch(e){
+    console.error('초기화 오류:', e);
+    if(el) el.textContent = '❌ 실패: '+e.message+'\n일부만 삭제됐을 수 있어요. 다시 시도해 주세요.';
+    toast('초기화 실패');
+  }
 };
 
 // ── 카테고리명 변경: 카페 → 음료 ──────────────────
